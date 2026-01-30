@@ -1,0 +1,42 @@
+# --- Build Directories ---
+build/
+bin/
+lib/
+
+# --- C++ Compiled Files ---
+*.o
+*.obj
+*.so
+*.a
+*.dll
+*.dylib
+
+# --- Executables ---
+# Ignore all files with no extension (common for Linux binaries)
+!*.*
+# But keep directories
+!*/
+# Or specifically ignore your game name
+Game
+*.exe
+*.out
+*.app
+
+# --- CMake Generated Files ---
+# (In case you accidentally run 'cmake .' in the root instead of 'build/')
+CMakeCache.txt
+CMakeFiles/
+cmake_install.cmake
+Makefile
+CTestTestfile.cmake
+
+# --- IDE & Editor Settings ---
+.vscode/
+.idea/
+*.swp
+*~
+*.user
+
+# --- OS Generated ---
+.DS_Store
+Thumbs.db
