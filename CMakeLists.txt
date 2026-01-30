@@ -16,15 +16,17 @@ add_library(glad vendor/glad/src/glad.c)
 target_include_directories(glad PUBLIC vendor/glad/include)
 
 # --- 3. Setup Your Game ---
-add_executable(Game 
+add_executable(game 
     src/main.cpp
+    src/opengl_window.cpp
+    src/opengl_window.hpp
     # add other source files here
     # example: src/Game.cpp, src/Renderer.cpp, etc.
 )
 
 # --- 4. Link Everything ---
-target_link_libraries(Game glfw glad)
-target_include_directories(Game PUBLIC vendor/glm)
+target_link_libraries(game glfw glad)
+target_include_directories(game PUBLIC vendor/glm)
 
 find_package(Threads REQUIRED)
-target_link_libraries(Game Threads::Threads ${CMAKE_DL_LIBS})
+target_link_libraries(game Threads::Threads ${CMAKE_DL_LIBS})
