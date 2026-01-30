@@ -1,0 +1,2 @@
+- FIX window fullscreen issue:
+    DESC: when window return back from fullscreen, the window reduces in height and y position moves down with each 'F' press
