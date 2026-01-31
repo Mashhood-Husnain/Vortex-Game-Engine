@@ -1,9 +1,13 @@
-# --- Build Directories ---
-build/
-bin/
-lib/
+# --- 1. General Ignores ---
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
+*.swp
+*~
+*.user
 
-# --- C++ Compiled Files ---
+# --- 2. C++ Compilation Artifacts ---
 *.o
 *.obj
 *.so
@@ -11,28 +15,23 @@ lib/
 *.dll
 *.dylib
 
-# --- Executables ---
-!*.*
-!*/
-Game
-*.exe
-*.out
-*.app
+# --- 3. Build Directories ---
+build/
+bin/
+lib/
+cmake-build-debug/
 
-# --- CMake Generated Files ---
+# --- 4. Generated CMake Files (Root level) ---
 CMakeCache.txt
 CMakeFiles/
 cmake_install.cmake
 Makefile
 CTestTestfile.cmake
+compile_commands.json
 
-# --- IDE & Editor Settings ---
-.vscode/
-.idea/
-*.swp
-*~
-*.user
-
-# --- OS Generated ---
-.DS_Store
-Thumbs.db
+# --- 5. Executables ---
+# Ignore all executables by default
+*.exe
+*.out
+*.app
+game
