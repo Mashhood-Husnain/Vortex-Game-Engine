@@ -5,6 +5,7 @@
 #include <glm/glm.hpp>
 #include <iostream>
 #include <string>
+#include <functional>
 
 class OpenGLWindow
 {
@@ -27,7 +28,7 @@ public:
     OpenGLWindow(std::string window_name, int width=800, int height=600);
     ~OpenGLWindow();
 
-    void run();
+    void run(std::function<void()> draw_callback);
 
 };
 

@@ -134,13 +134,15 @@ void OpenGLWindow::set_fullscreen()
     glfwFocusWindow(window);
 }
 
-void OpenGLWindow::run()
+void OpenGLWindow::run(std::function<void()> draw_callback)
 {
     while(!glfwWindowShouldClose(window))
     {
         // rendering
         glClearColor(bg_color.r, bg_color.g, bg_color.b, bg_color.a);
         glClear(GL_COLOR_BUFFER_BIT);
+
+        draw_callback();
         
         // swap buffers and poll IO
         glfwSwapBuffers(window);
