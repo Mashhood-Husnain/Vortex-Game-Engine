@@ -23,6 +23,14 @@ foreach(SHADER ${SHADER_FILES})
     configure_file(${SHADER} ${CMAKE_BINARY_DIR}/shaders/${SHADER_NAME} COPYONLY)
 endforeach()
 
+# Get all model files
+file(GLOB MODEL_FILES "${CMAKE_SOURCE_DIR}/src/models/*")
+
+foreach(MODEL ${MODEL_FILES})
+    get_filename_component(MODEL_NAME ${MODEL} NAME)
+    configure_file(${MODEL} ${CMAKE_BINARY_DIR}/models/${MODEL_NAME} COPYONLY)
+endforeach()
+
 # --- 3. Setup Your Game ---
 add_executable(game 
     src/main.cpp
@@ -32,6 +40,8 @@ add_executable(game
     src/opengl_shaders.hpp
     src/opengl_camera.cpp
     src/opengl_camera.hpp
+    src/opengl_stlreader.cpp
+    src/opengl_stlreader.hpp
     # add other source files here
     # example: src/Game.cpp, src/Renderer.cpp, etc.
 )
