@@ -43,6 +43,7 @@ void OpenGLWindow::framebuffer_size_callback(GLFWwindow* window, int width, int 
         glViewport(0, 0, width, height);
         app->default_window_width = width;
         app->default_window_height = height;
+        app->camera->aspect_ratio = static_cast<float>(width) / height;
     }
 }
 
@@ -67,7 +68,7 @@ void OpenGLWindow::key_callback(GLFWwindow* window, int key, int scancode, int a
     }
 }
 
-OpenGLWindow::OpenGLWindow(std::string window_name, int width, int height)
+OpenGLWindow::OpenGLWindow(std::string window_name, OpenGLCamera* camera, int width, int height)
 {
     // Initialize GLFW;
     if (!glfwInit())
@@ -85,6 +86,8 @@ OpenGLWindow::OpenGLWindow(std::string window_name, int width, int height)
     default_window_width = width;
     default_window_height = height;
     this->window_name = window_name;
+    this->camera = camera;
+    camera->aspect_ratio =static_cast<float>(default_window_width) / static_cast<float>(default_window_height);
     window = glfwCreateWindow(width, height, window_name.c_str(), nullptr, nullptr);
     if (window == nullptr)
     {
@@ -93,9 +96,12 @@ OpenGLWindow::OpenGLWindow(std::string window_name, int width, int height)
         exit(EXIT_FAILURE);
     }
     glfwMakeContextCurrent(window);
+    glfwSwapInterval(1);
     glfwSetWindowUserPointer(window, this);
     glfwSetFramebufferSizeCallback(window, framebuffer_size_callback);
     glfwSetKeyCallback(window, key_callback);
+    glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
+    glfwSetCursorPosCallback(window, mouse_callback);
 
     // Initialize GLAD
     if (!gladLoadGLLoader((GLADloadproc)glfwGetProcAddress))
@@ -127,25 +133,91 @@ void OpenGLWindow::set_fullscreen()
 
         glfwSetWindowMonitor(window, monitor, 0, 0, mode->width, mode->height, mode->refreshRate);
         glfwFocusWindow(window);
+        glfwSwapInterval(1);
         return;
     }
 
     glfwSetWindowMonitor(window, nullptr, stored_window_x_pos, stored_window_y_pos, stored_window_width, stored_window_height, 0);
     glfwFocusWindow(window);
+    glfwSwapInterval(1);
+}
+
+void OpenGLWindow::check_camera_movement()
+{
+    if (glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS)
+    {
+        camera->processKeyboard("FORWARD", deltaTime);
+    }
+    if (glfwGetKey(window, GLFW_KEY_S) == GLFW_PRESS)
+    {
+        camera->processKeyboard("BACKWARD", deltaTime);
+    }
+    if (glfwGetKey(window, GLFW_KEY_A) == GLFW_PRESS)
+    {
+        camera->processKeyboard("LEFT", deltaTime);
+    }
+    if (glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS)
+    {
+        camera->processKeyboard("RIGHT", deltaTime);
+    }
+    if (glfwGetKey(window, GLFW_KEY_Q) == GLFW_PRESS)
+    {
+        camera->processKeyboard("UP", deltaTime);
+    }
+    if (glfwGetKey(window, GLFW_KEY_E) == GLFW_PRESS)
+    {
+        camera->processKeyboard("DOWN", deltaTime);
+    }
+}
+
+void OpenGLWindow::mouse_callback(GLFWwindow* window, double xposIn, double yposIn)
+{
+    auto* app = static_cast<OpenGLWindow*>(glfwGetWindowUserPointer(window));
+
+    if (app)
+    {
+        float xpos = static_cast<float>(xposIn);
+        float ypos = static_cast<float>(yposIn);
+
+        if (app->first_mouse)
+        {
+            app->mouse_last_x = xpos;
+            app->mouse_last_y = ypos;
+            app->first_mouse = false;
+        }
+
+        float xoffset = xpos - app->mouse_last_x;
+        float yoffset = app->mouse_last_y - ypos;
+
+        app->mouse_last_x = xpos;
+        app->mouse_last_y = ypos;
+
+        app->camera->processMouseMovement(xoffset, yoffset);
+    }
 }
 
 void OpenGLWindow::run(std::function<void()> draw_callback)
 {
     while(!glfwWindowShouldClose(window))
     {
+        glfwPollEvents();
+
+        float currentFrame = static_cast<float>(glfwGetTime());
+        deltaTime = currentFrame - lastFrame;
+        lastFrame = currentFrame;
+
+        check_camera_movement();
+        
         // rendering
         glClearColor(bg_color.r, bg_color.g, bg_color.b, bg_color.a);
         glClear(GL_COLOR_BUFFER_BIT);
+
+        // std::cout << "mouse X: "<< mouse_last_x << "mouse Y: "<< mouse_last_y << std::endl;
+        // std::cout << camera->aspect_ratio << std::endl;
 
         draw_callback();
         
         // swap buffers and poll IO
         glfwSwapBuffers(window);
-        glfwPollEvents();
     }
 }

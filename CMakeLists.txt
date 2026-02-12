@@ -15,7 +15,13 @@ add_subdirectory(vendor/glfw)
 add_library(glad vendor/glad/src/glad.c)
 target_include_directories(glad PUBLIC vendor/glad/include)
 
-file(COPY ${CMAKE_SOURCE_DIR}/src/shaders DESTINATION ${CMAKE_BINARY_DIR})
+# Get all shader files
+file(GLOB SHADER_FILES "${CMAKE_SOURCE_DIR}/src/shaders/*")
+
+foreach(SHADER ${SHADER_FILES})
+    get_filename_component(SHADER_NAME ${SHADER} NAME)
+    configure_file(${SHADER} ${CMAKE_BINARY_DIR}/shaders/${SHADER_NAME} COPYONLY)
+endforeach()
 
 # --- 3. Setup Your Game ---
 add_executable(game 
@@ -24,6 +30,8 @@ add_executable(game
     src/opengl_window.hpp
     src/opengl_shaders.cpp
     src/opengl_shaders.hpp
+    src/opengl_camera.cpp
+    src/opengl_camera.hpp
     # add other source files here
     # example: src/Game.cpp, src/Renderer.cpp, etc.
 )

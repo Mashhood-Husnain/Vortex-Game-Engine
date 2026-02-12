@@ -7,6 +7,8 @@
 #include <string>
 #include <functional>
 
+#include "opengl_camera.hpp"
+
 class OpenGLWindow
 {
     GLFWwindow *window = nullptr;
@@ -19,13 +21,22 @@ class OpenGLWindow
     int stored_window_y_pos;
     int stored_window_width;
     int stored_window_height;
+    OpenGLCamera *camera = nullptr;
+    float deltaTime = 0.0f;
+    float lastFrame = 0.0f;
+    float mouse_last_x = default_window_width / 2;
+    float mouse_last_y = default_window_height / 2;
+    bool first_mouse = true;
 
     GLFWmonitor* get_current_monitor(GLFWwindow* window);
     static void framebuffer_size_callback(GLFWwindow* window, int width, int height);
     static void key_callback(GLFWwindow* window, int key, int scancode, int action, int mods);
+    static void mouse_callback(GLFWwindow* window, double xposIn, double yposIn);
     void set_fullscreen();
+    void check_camera_movement();
 public:
-    OpenGLWindow(std::string window_name, int width=800, int height=600);
+
+    OpenGLWindow(std::string window_name, OpenGLCamera* camera, int width=800, int height=600);
     ~OpenGLWindow();
 
     void run(std::function<void()> draw_callback);
