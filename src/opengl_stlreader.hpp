@@ -14,6 +14,7 @@
 struct Vertex
 {
     glm::vec3 position;
+    glm::vec3 normal;
 };
 
 class STLModel
@@ -25,6 +26,9 @@ class STLModel
 public:
     unsigned VAO, VBO;
     std::vector<Vertex> vertices;
+    glm::vec3 position = glm::vec3(0.0f);
+    glm::vec3 rotation = glm::vec3(0.0f);
+    float scale = 1.0f;
 
     STLModel(const std::string& model_path);
     void draw(const openGLShader& shader, OpenGLCamera& camera);

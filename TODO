@@ -1,6 +1,12 @@
+PENDING ISSUES:
 - FIX window fullscreen issue:
     DESC: when window return back from fullscreen, the window reduces in height and y position moves down with each 'F' press
 - FIX window tearing issue:
     DESC: window tears when in fullscreen mode
+
+----------------------------------------------------------------------------------------------------------------------------------------------
+----------------------------------------------------------------------------------------------------------------------------------------------
+
+SOLVED ISSUES:
 - FIX camera pointing issue:
     DESC: whenever resizing the window, the camera points somewhere else from where the camera was looking before

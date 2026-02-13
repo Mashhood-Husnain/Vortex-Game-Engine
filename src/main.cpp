@@ -9,9 +9,12 @@ int main() {
     OpenGLWindow window("OpenGL Window", &camera);    
     openGLShader default_shader("shaders/default.vert", "shaders/default.frag");
 
-    STLModel cube("models/cube.stl");
+    STLModel cube("models/disfigured_cube.stl");
 
     window.run([&](){
+
+        cube.rotation.y += 50.0f * window.deltaTime;
+
         cube.draw(default_shader, camera);
     });
 

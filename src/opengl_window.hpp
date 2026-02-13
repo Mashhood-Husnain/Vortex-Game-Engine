@@ -22,11 +22,10 @@ class OpenGLWindow
     int stored_window_width;
     int stored_window_height;
     OpenGLCamera *camera = nullptr;
-    float deltaTime = 0.0f;
-    float lastFrame = 0.0f;
     float mouse_last_x = default_window_width / 2;
     float mouse_last_y = default_window_height / 2;
     bool first_mouse = true;
+    float lastFrame = 0.0f; // related with deltaTime
 
     GLFWmonitor* get_current_monitor(GLFWwindow* window);
     static void framebuffer_size_callback(GLFWwindow* window, int width, int height);
@@ -35,6 +34,7 @@ class OpenGLWindow
     void set_fullscreen();
     void check_camera_movement();
 public:
+    float deltaTime = 0.0f;
 
     OpenGLWindow(std::string window_name, OpenGLCamera* camera, int width=800, int height=600);
     ~OpenGLWindow();

@@ -95,8 +95,8 @@ OpenGLWindow::OpenGLWindow(std::string window_name, OpenGLCamera* camera, int wi
         glfwTerminate();
         exit(EXIT_FAILURE);
     }
+    // initialize window
     glfwMakeContextCurrent(window);
-    glfwSwapInterval(1);
     glfwSetWindowUserPointer(window, this);
     glfwSetFramebufferSizeCallback(window, framebuffer_size_callback);
     glfwSetKeyCallback(window, key_callback);
@@ -109,6 +109,15 @@ OpenGLWindow::OpenGLWindow(std::string window_name, OpenGLCamera* camera, int wi
         std::cerr << "Failed to initialize GLAD" << std::endl;
         exit(EXIT_FAILURE);
     }
+
+    // enable depth
+    glEnable(GL_DEPTH_TEST);
+    glDepthFunc(GL_LESS);
+
+    // enable culling of back faces
+    glEnable(GL_CULL_FACE);
+    glCullFace(GL_BACK);
+    glFrontFace(GL_CCW);
 
     stored_window_width = width;
     stored_window_height = height;
@@ -133,13 +142,13 @@ void OpenGLWindow::set_fullscreen()
 
         glfwSetWindowMonitor(window, monitor, 0, 0, mode->width, mode->height, mode->refreshRate);
         glfwFocusWindow(window);
-        glfwSwapInterval(1);
+        first_mouse = true;
         return;
     }
 
     glfwSetWindowMonitor(window, nullptr, stored_window_x_pos, stored_window_y_pos, stored_window_width, stored_window_height, 0);
+    first_mouse = true;
     glfwFocusWindow(window);
-    glfwSwapInterval(1);
 }
 
 void OpenGLWindow::check_camera_movement()
@@ -210,7 +219,7 @@ void OpenGLWindow::run(std::function<void()> draw_callback)
         
         // rendering
         glClearColor(bg_color.r, bg_color.g, bg_color.b, bg_color.a);
-        glClear(GL_COLOR_BUFFER_BIT);
+        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
         // std::cout << "mouse X: "<< mouse_last_x << "mouse Y: "<< mouse_last_y << std::endl;
         // std::cout << camera->aspect_ratio << std::endl;
