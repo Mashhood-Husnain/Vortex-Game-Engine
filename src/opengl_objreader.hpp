@@ -31,6 +31,6 @@ public:
     unsigned int texture_id = 0;
 
     OpenGLModel(const std::string& model_path);
-    void draw(const OpenGLShader& shader, OpenGLCamera& camera);
+    void draw(const OpenGLShader& shader, OpenGLCamera& camera, bool wireframe);
 };
 

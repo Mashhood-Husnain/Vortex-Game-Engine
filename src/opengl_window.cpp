@@ -64,6 +64,9 @@ void OpenGLWindow::key_callback(GLFWwindow* window, int key, int scancode, int a
                 app->is_fullscreen = !app->is_fullscreen;
                 app->set_fullscreen();
                 break;
+            case GLFW_KEY_T:
+                app->show_wireframe = !app->show_wireframe;
+                break;
         }
     }
 }
@@ -229,4 +232,9 @@ void OpenGLWindow::run(std::function<void()> draw_callback)
         // swap buffers and poll IO
         glfwSwapBuffers(window);
     }
+}
+
+GLFWwindow* OpenGLWindow::get_window_ptr()
+{
+    return window;
 }

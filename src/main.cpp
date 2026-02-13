@@ -10,15 +10,20 @@ int main() {
     OpenGLShader default_shader("shaders/default.vert", "shaders/default.frag");
 
     // OpenGLModel cube("models/disfigured_cube.obj");
-    OpenGLModel plane("models/flat_plane.obj");
-    OpenGLModel drawer("models/drawer.obj");
+    // OpenGLModel plane("models/flat_plane.obj");
+    // OpenGLModel drawer("models/drawer.obj");
+
+    // plane.scale = 5.0f;
+    // cube.position.x += 5.0f;
+
+    OpenGLModel environ("models/test_environment.obj");
 
     window.run([&](){
         // cube.draw(default_shader, camera);
+        // drawer.draw(default_shader, camera);
+        // plane.draw(default_shader, camera);
 
-        drawer.draw(default_shader, camera);
-        plane.draw(default_shader, camera);
-
+        environ.draw(default_shader, camera, window.show_wireframe);
     });
 
     return 0;

@@ -5,7 +5,8 @@ OpenGLModel::OpenGLModel(const std::string& path)
     load_obj(path);
     setup_mesh();
 }
-void OpenGLModel::draw(const OpenGLShader& shader, OpenGLCamera& camera)
+
+void OpenGLModel::draw(const OpenGLShader& shader, OpenGLCamera& camera, bool wireframe)
 {
     glUseProgram(shader.shader_program);
 
@@ -32,16 +33,21 @@ void OpenGLModel::draw(const OpenGLShader& shader, OpenGLCamera& camera)
         glBindTexture(GL_TEXTURE_2D, texture_id);
     }
 
-    // // temporary 
-    // glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
-    // glLineWidth(2.0f);
+    if (wireframe)
+    {
+        glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
+        glLineWidth(2.0f);
+    }
+    else
+    {
+        glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
+    }
 
     glBindVertexArray(VAO);
     glDrawArrays(GL_TRIANGLES, 0, vertices.size());
     glBindVertexArray(0);
 
-    // // temporary 
-    // glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
+    glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
 }
 
 void OpenGLModel::load_obj(const std::string& path)

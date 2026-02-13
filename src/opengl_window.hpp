@@ -35,11 +35,12 @@ class OpenGLWindow
     void check_camera_movement();
 public:
     float deltaTime = 0.0f;
+    bool show_wireframe = false;
 
     OpenGLWindow(std::string window_name, OpenGLCamera* camera, int width=800, int height=600);
     ~OpenGLWindow();
 
     void run(std::function<void()> draw_callback);
-
+    GLFWwindow* get_window_ptr();
 };
 
