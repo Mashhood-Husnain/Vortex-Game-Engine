@@ -8,7 +8,7 @@
 #include <fstream>
 #include <sstream>
 
-class openGLShader
+class OpenGLShader
 {
     std::string vertex_shader_code;
     std::string fragment_shader_code;
@@ -18,5 +18,5 @@ class openGLShader
 public:
     unsigned int shader_program;
 
-    openGLShader(std::string vertex_path, std::string fragment_path);
+    OpenGLShader(std::string vertex_path, std::string fragment_path);
 };

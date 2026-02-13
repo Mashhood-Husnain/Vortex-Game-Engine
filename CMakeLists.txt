@@ -40,8 +40,8 @@ add_executable(game
     src/opengl_shaders.hpp
     src/opengl_camera.cpp
     src/opengl_camera.hpp
-    src/opengl_stlreader.cpp
-    src/opengl_stlreader.hpp
+    src/opengl_objreader.cpp
+    src/opengl_objreader.hpp
     # add other source files here
     # example: src/Game.cpp, src/Renderer.cpp, etc.
 )

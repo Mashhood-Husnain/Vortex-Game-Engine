@@ -1,6 +1,6 @@
 #include "opengl_shaders.hpp"
 
-bool openGLShader::read_shader(std::string& vertex_path, std::string& fragment_path)
+bool OpenGLShader::read_shader(std::string& vertex_path, std::string& fragment_path)
 {
     std::ifstream vertex_file(vertex_path);
     std::ifstream fragment_file(fragment_path);
@@ -25,7 +25,7 @@ bool openGLShader::read_shader(std::string& vertex_path, std::string& fragment_p
     return true;
 }
 
-void openGLShader::init_shader()
+void OpenGLShader::init_shader()
 {
     const char* vertex_shader_source = vertex_shader_code.c_str();
     const char* fragment_shader_source = fragment_shader_code.c_str();
@@ -50,7 +50,7 @@ void openGLShader::init_shader()
     glDeleteShader(fragment_shader);
 }
 
-openGLShader::openGLShader(std::string vertex_path, std::string fragment_path)
+OpenGLShader::OpenGLShader(std::string vertex_path, std::string fragment_path)
 {
     if (!read_shader(vertex_path, fragment_path)) exit(EXIT_FAILURE);;
     init_shader();

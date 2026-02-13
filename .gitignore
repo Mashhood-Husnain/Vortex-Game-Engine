@@ -9,7 +9,6 @@ Thumbs.db
 
 # --- 2. C++ Compilation Artifacts ---
 *.o
-*.obj
 *.so
 *.a
 *.dll

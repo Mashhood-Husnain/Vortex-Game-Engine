@@ -15,21 +15,22 @@ struct Vertex
 {
     glm::vec3 position;
     glm::vec3 normal;
+    glm::vec2 tex_coords;
 };
 
-class STLModel
+class OpenGLModel
 {
-    void load_stl(const std::string& path);
-    void load_ascii(const std::string& path);
-    void load_binary(const std::string& path);
+    unsigned int VAO, VBO;
+    std::vector<Vertex> vertices;
+    void load_obj(const std::string& path);
     void setup_mesh();
 public:
-    unsigned VAO, VBO;
-    std::vector<Vertex> vertices;
     glm::vec3 position = glm::vec3(0.0f);
     glm::vec3 rotation = glm::vec3(0.0f);
     float scale = 1.0f;
+    unsigned int texture_id = 0;
 
-    STLModel(const std::string& model_path);
-    void draw(const openGLShader& shader, OpenGLCamera& camera);
+    OpenGLModel(const std::string& model_path);
+    void draw(const OpenGLShader& shader, OpenGLCamera& camera);
 };
+
