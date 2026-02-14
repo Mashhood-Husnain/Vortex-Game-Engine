@@ -135,6 +135,8 @@ OpenGLWindow::OpenGLWindow(std::string window_name, OpenGLCamera* camera, int wi
 
 OpenGLWindow::~OpenGLWindow()
 {
+    window = nullptr;
+    camera = nullptr;
     glfwDestroyWindow(window);
     glfwTerminate();
 }

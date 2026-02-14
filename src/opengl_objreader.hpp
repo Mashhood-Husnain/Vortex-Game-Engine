@@ -33,7 +33,7 @@ class OpenGLModel
 public:
     glm::vec3 position = glm::vec3(0.0f);
     glm::vec3 rotation = glm::vec3(0.0f);
-    float scale = 1.0f;
+    glm::vec3 scale = glm::vec3(1.0f);
     unsigned int texture_id = 0;
     unsigned int roughness_id = 0;
     unsigned int metallic_id = 0;
