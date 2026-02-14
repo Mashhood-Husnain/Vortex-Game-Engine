@@ -73,9 +73,11 @@ void OpenGLModel::parse_mtl(const std::string& mtl_filepath)
     std::ifstream file(mtl_filepath);
     if (!file.is_open())
     {
-        std::cerr << "Failed to open MTL: " << mtl_filepath << std::endl;
+        std::cerr << "[MTL ERROR] Failed to open: " << mtl_filepath << std::endl;
         return;
     }
+
+    std::cout << "[MTL] Reading material: " << mtl_filepath << std::endl;
 
     std::string line;
     while(std::getline(file, line))
@@ -90,7 +92,7 @@ void OpenGLModel::parse_mtl(const std::string& mtl_filepath)
             ss >> tex_filename;
 
             std::string full_tex_path = mtl_dir + tex_filename;
-            std::cout << "Loading Texture: " << full_tex_path << std::endl;
+            std::cout << "      + Diffuse Map found: " << tex_filename << std::endl;
             texture_id = load_texture(full_tex_path.c_str());
         }
         else if (prefix == "map_Ns")
@@ -99,7 +101,7 @@ void OpenGLModel::parse_mtl(const std::string& mtl_filepath)
             ss >> rough_filename;
 
             std::string full_rough_path = mtl_dir + rough_filename;
-            std::cout << "Loading Rougness: " << full_rough_path << std::endl;
+            std::cout << "      + Roughness Map found: " << rough_filename << std::endl;
             roughness_id = load_texture(full_rough_path.c_str());
         }
         else if (prefix == "map_refl")
@@ -108,7 +110,7 @@ void OpenGLModel::parse_mtl(const std::string& mtl_filepath)
             ss >> metallic_filename;
 
             std::string full_metallic_path = mtl_dir + metallic_filename;
-            std::cout << "Loading Metallic: " << full_metallic_path << std::endl;
+            std::cout << "      + Metallic Map found: " << metallic_filename << std::endl;
             metallic_id = load_texture(full_metallic_path.c_str());
         }
         else if (prefix == "map_Bump")
@@ -117,7 +119,7 @@ void OpenGLModel::parse_mtl(const std::string& mtl_filepath)
             while(ss >> normal_filename);
 
             std::string full_normal_path = mtl_dir + normal_filename;
-            std::cout << "Loading Normal: " << full_normal_path << std::endl;
+            std::cout << "      + Normal Map found: " << normal_filename << std::endl;
             normal_id = load_texture(full_normal_path.c_str());
         }
     }
@@ -149,10 +151,15 @@ unsigned int OpenGLModel::load_texture(const std::string& path)
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 
+        std::cout << "[TEXTURE] Successfully loaded: " << path 
+                  << " (" << width << "x" << height << ", "
+                  << nrComponents << " channels)" << std::endl;
+
         stbi_image_free(data);
     } else
     {
-        std::cerr << "Texture failed to load at: " << path << std::endl;
+        std::cerr << "[TEXTURE ERROR] Failed to load: " << path << std::endl;
+        std::cerr << "               Reason: " << stbi_failure_reason() << std::endl;
         stbi_image_free(data);
     }
 
@@ -174,7 +181,8 @@ void OpenGLModel::load_obj(const std::string& path)
         model_name = filename.substr(0, last_dot);
     }
 
-    std::cout << "Loading model: " << model_name << " from " << obj_dir << std::endl;
+    std::cout << "-------------------------------------------------------" << std::endl;
+    std::cout << "[MODEL] Loading: " << path << std::endl;
 
     std::vector<glm::vec3> temp_positions;
     std::vector<glm::vec2> temp_tex_coords;
@@ -183,7 +191,11 @@ void OpenGLModel::load_obj(const std::string& path)
     std::ifstream file(path);
     if (!file.is_open())
     {
-        std::cerr << "Failed to open OBJ: " << path << std::endl;
+        std::cerr << "[MODEL ERROR] Could not open OBJ file: " << path << std::endl;
+        if (!std::filesystem::exists(path))
+        {
+            std::cerr << "              Check: File does not exist at this path." << std::endl;
+        }
         return;
     }
 
@@ -272,6 +284,13 @@ void OpenGLModel::load_obj(const std::string& path)
                 vertices.push_back(v);
             }
         }
+    }
+
+    if (!vertices.empty())
+    {
+        std::cout << "[MODEL] Success: '" << model_name << "' loaded." << std::endl;
+        std::cout << "        -> Vertices: " << vertices.size() << std::endl;
+        std::cout << "        -> VAO ID:   " << VAO << std::endl;
     }
 }
 

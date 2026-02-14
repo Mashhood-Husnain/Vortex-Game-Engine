@@ -91,6 +91,9 @@ OpenGLWindow::OpenGLWindow(std::string window_name, OpenGLCamera* camera, int wi
     this->window_name = window_name;
     this->camera = camera;
     camera->aspect_ratio =static_cast<float>(default_window_width) / static_cast<float>(default_window_height);
+
+    glfwWindowHint(GLFW_VISIBLE, GLFW_FALSE);
+
     window = glfwCreateWindow(width, height, window_name.c_str(), nullptr, nullptr);
     if (window == nullptr)
     {
@@ -112,6 +115,9 @@ OpenGLWindow::OpenGLWindow(std::string window_name, OpenGLCamera* camera, int wi
         std::cerr << "Failed to initialize GLAD" << std::endl;
         exit(EXIT_FAILURE);
     }
+
+    // V-sync
+    glfwSwapInterval(1);
 
     // enable depth
     glEnable(GL_DEPTH_TEST);
@@ -210,6 +216,8 @@ void OpenGLWindow::mouse_callback(GLFWwindow* window, double xposIn, double ypos
 
 void OpenGLWindow::run(std::function<void()> draw_callback)
 {
+    glfwShowWindow(window);
+
     while(!glfwWindowShouldClose(window))
     {
         glfwPollEvents();
