@@ -27,6 +27,7 @@ cmake_install.cmake
 Makefile
 CTestTestfile.cmake
 compile_commands.json
+src/models/
 
 # --- 5. Executables ---
 # Ignore all executables by default
