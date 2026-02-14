@@ -23,12 +23,16 @@ foreach(SHADER ${SHADER_FILES})
     configure_file(${SHADER} ${CMAKE_BINARY_DIR}/shaders/${SHADER_NAME} COPYONLY)
 endforeach()
 
-# Get all model files
-file(GLOB MODEL_FILES "${CMAKE_SOURCE_DIR}/src/models/*")
+# Get all files within the models directory
+file(GLOB_RECURSE MODEL_FILES "${CMAKE_SOURCE_DIR}/src/models/*")
 
 foreach(MODEL ${MODEL_FILES})
-    get_filename_component(MODEL_NAME ${MODEL} NAME)
-    configure_file(${MODEL} ${CMAKE_BINARY_DIR}/models/${MODEL_NAME} COPYONLY)
+    # 1. Get the path relative to the source 'models' folder
+    # Example: src/models/mtl/textures/house.png -> mtl/textures/house.png
+    file(RELATIVE_PATH REL_PATH "${CMAKE_SOURCE_DIR}/src/models" ${MODEL})
+
+    # 2. Copy the file while preserving the relative directory structure
+    configure_file(${MODEL} "${CMAKE_BINARY_DIR}/models/${REL_PATH}" COPYONLY)
 endforeach()
 
 # --- 3. Setup Your Game ---
@@ -42,6 +46,8 @@ add_executable(game
     src/opengl_camera.hpp
     src/opengl_objreader.cpp
     src/opengl_objreader.hpp
+    src/stb_image.cpp
+    src/stb_image.h
     # add other source files here
     # example: src/Game.cpp, src/Renderer.cpp, etc.
 )
