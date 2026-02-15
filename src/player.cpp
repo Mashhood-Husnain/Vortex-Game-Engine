@@ -3,12 +3,20 @@
 Player::Player(const std::string& name, OpenGLCamera* camera, OpenGLModel* player_body, OpenGLShader* shader, glm::vec3 starting_position)
 {
     player_name = name;
-    player_camera = camera;
-    if (camera) player_camera->anchored = true;
+    if (camera)
+    {
+        player_camera = camera;
+        player_camera->anchored = true;
+    }
     player_position = starting_position;
     this->player_body = player_body;
     player_shader = shader;
-    update_player_vectors();
+    player_height = player_body->model_height;
+    
+    if (camera)
+    {
+        update_player_vectors();
+    }
 }
 
 void Player::update_player_vectors()
@@ -36,15 +44,25 @@ void Player::processKeyboard(const std::string& direction, float deltaTime)
     player_camera->position = player_position + player_head_offset;
 }
 
-void Player::update(GLFWwindow* window, float deltaTime) {
-    
-    // apply gravity for when jump mechanics get written
-    check_player_movement(window, deltaTime);
+void Player::update(GLFWwindow* window, float deltaTime)
+{
     player_body->position = player_position;
-    player_body->draw(*player_shader, *player_camera, false);
-    if (player_camera->anchored)
+    if (player_camera)
     {
-        player_camera->position = player_position + player_head_offset;
+        // apply gravity for when jump mechanics get written
+
+        player_head_offset = glm::vec3(0.0f, player_height * player_body->scale.y * 0.95f, 0.0f);
+        check_player_movement(window, deltaTime);
+
+        if (player_camera->anchored)
+        {
+            player_camera->position = player_position + player_head_offset;
+            player_body->rotation.y = 90.0f - player_camera->yaw;
+        }
+        else
+        {
+            player_body->draw(*player_shader, *player_camera, false);
+        }
     }
 }
 

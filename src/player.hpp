@@ -14,12 +14,11 @@
 class Player
 {
     std::string player_name;
-    glm::vec3 player_position;
     OpenGLCamera* player_camera = nullptr;
-    float movement_speed = 10.0f;
-    glm::vec3 player_head_offset = glm::vec3(0.0f, 5.8f, 0.0f);
-    OpenGLModel *player_body = nullptr;
+    float movement_speed = 5.0f;
+    glm::vec3 player_head_offset;
     OpenGLShader *player_shader = nullptr;
+    float player_height;
 
     glm::vec3 front;
     glm::vec3 right;
@@ -29,7 +28,9 @@ class Player
     void check_player_movement(GLFWwindow* window, float deltaTime);
     void processKeyboard(const std::string& direction, float deltaTime);
 
-    public:
+public:
+    OpenGLModel *player_body = nullptr;
+    glm::vec3 player_position;
     Player(const std::string& name, OpenGLCamera* camera, OpenGLModel* player_body, OpenGLShader* shader, glm::vec3 starting_position=glm::vec3(0.0f, 0.0f, 10.0f));
     void update(GLFWwindow* window, float deltaTime);
     ~Player();

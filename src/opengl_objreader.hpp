@@ -23,7 +23,10 @@ struct Vertex
 
 class OpenGLModel
 {
-    unsigned int VAO, VBO;
+    unsigned int VAO=0;
+    unsigned int VBO=0;
+    float min_y=0.0f;
+    float max_y=0.0f;
     std::string model_name;
     std::vector<Vertex> vertices;
     void load_obj(const std::string& path);
@@ -34,10 +37,11 @@ public:
     glm::vec3 position = glm::vec3(0.0f);
     glm::vec3 rotation = glm::vec3(0.0f);
     glm::vec3 scale = glm::vec3(1.0f);
-    unsigned int texture_id = 0;
-    unsigned int roughness_id = 0;
-    unsigned int metallic_id = 0;
-    unsigned int normal_id = 0;
+    unsigned int texture_id=0;
+    unsigned int roughness_id=0;
+    unsigned int metallic_id=0;
+    unsigned int normal_id=0;
+    float model_height=0.0f;
 
     OpenGLModel(const std::string& model_path);
     void draw(const OpenGLShader& shader, OpenGLCamera& camera, bool wireframe);

@@ -4,13 +4,20 @@ OpenGLModel::OpenGLModel(const std::string& path)
 {
     load_obj(path);
     setup_mesh();
+
+    if (!vertices.empty())
+    {
+        std::cout << "[MODEL] Success: '" << model_name << "' loaded." << std::endl;
+        std::cout << "        -> Vertices: " << vertices.size() << std::endl;
+        std::cout << "        -> VAO ID:   " << VAO << std::endl;
+    }
 }
 
 void OpenGLModel::draw(const OpenGLShader& shader, OpenGLCamera& camera, bool wireframe)
 {
     glUseProgram(shader.shader_program);
 
-    // --- 1. Matrices ---
+    // matrices (order matters: translate->rotate->scale)
     glm::mat4 model_matrix = glm::mat4(1.0f);
     model_matrix = glm::translate(model_matrix, position);
     model_matrix = glm::rotate(model_matrix, glm::radians(rotation.x), glm::vec3(1, 0, 0));
@@ -18,7 +25,7 @@ void OpenGLModel::draw(const OpenGLShader& shader, OpenGLCamera& camera, bool wi
     model_matrix = glm::rotate(model_matrix, glm::radians(rotation.z), glm::vec3(0, 0, 1));
     model_matrix = glm::scale(model_matrix, glm::vec3(scale));
 
-    // --- 2. Uniforms ---
+    // uniforms
     glUniformMatrix4fv(glGetUniformLocation(shader.shader_program, "model"), 1, GL_FALSE, glm::value_ptr(model_matrix));
     glUniformMatrix4fv(glGetUniformLocation(shader.shader_program, "view"), 1, GL_FALSE, glm::value_ptr(camera.getViewMatrix()));
     glUniformMatrix4fv(glGetUniformLocation(shader.shader_program, "projection"), 1, GL_FALSE, glm::value_ptr(glm::perspective(glm::radians(45.0f), camera.aspect_ratio, 0.1f, 100.0f)));
@@ -28,40 +35,42 @@ void OpenGLModel::draw(const OpenGLShader& shader, OpenGLCamera& camera, bool wi
     glUniform3fv(glGetUniformLocation(shader.shader_program, "viewPos"), 1, glm::value_ptr(camera.position));
     // glUniform4f(glGetUniformLocation(shader.shader_program, "u_Color"), 1.0f, 1.0f, 1.0f, 1.0f);
 
-    // --- 3. Textures (Multi-Sampling) ---
+    // textures (multi-sampling)
     glUniform1i(glGetUniformLocation(shader.shader_program, "u_hasTexture"), texture_id != 0);
     glUniform1i(glGetUniformLocation(shader.shader_program, "u_hasRoughness"), roughness_id != 0);
     glUniform1i(glGetUniformLocation(shader.shader_program, "u_hasMetallic"), metallic_id != 0);
 
-    // Slot 0: Diffuse
+    // 0 - diffuse
     glActiveTexture(GL_TEXTURE0);
     glBindTexture(GL_TEXTURE_2D, texture_id); // If 0, it unbinds
     glUniform1i(glGetUniformLocation(shader.shader_program, "u_diffuseMap"), 0);
 
-    // Slot 1: Roughness
+    // 1 - roughness
     glActiveTexture(GL_TEXTURE1);
     glBindTexture(GL_TEXTURE_2D, roughness_id);
     glUniform1i(glGetUniformLocation(shader.shader_program, "u_roughnessMap"), 1);
 
-    // Slot 2: Metallic
+    // 2 - metallic
     glActiveTexture(GL_TEXTURE2);
     glBindTexture(GL_TEXTURE_2D, metallic_id);
     glUniform1i(glGetUniformLocation(shader.shader_program, "u_metallicMap"), 2);
 
-    // --- 4. Rendering Mode ---
-    if (wireframe) {
+    // rendering wireframe
+    if (wireframe)
+    {
         glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
         glLineWidth(2.0f);
-    } else {
+    } else
+    {
         glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
     }
 
-    // --- 5. Draw ---
+    // draw
     glBindVertexArray(VAO);
     glDrawArrays(GL_TRIANGLES, 0, (GLsizei)vertices.size());
     glBindVertexArray(0);
 
-    // Reset state
+    // reset wireframe
     glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
 }
 
@@ -156,7 +165,8 @@ unsigned int OpenGLModel::load_texture(const std::string& path)
                   << nrComponents << " channels)" << std::endl;
 
         stbi_image_free(data);
-    } else
+    }
+    else
     {
         std::cerr << "[TEXTURE ERROR] Failed to load: " << path << std::endl;
         std::cerr << "               Reason: " << stbi_failure_reason() << std::endl;
@@ -168,6 +178,9 @@ unsigned int OpenGLModel::load_texture(const std::string& path)
 
 void OpenGLModel::load_obj(const std::string& path)
 {
+    min_y = 1e10f;
+    max_y = -1e10f;
+
     size_t last_slash = path.find_last_of("/\\");
     std::string obj_dir = (last_slash == std::string::npos) ? "" : path.substr(0, last_slash + 1);
     std::string filename = (last_slash == std::string::npos) ? path : path.substr(last_slash + 1);
@@ -176,7 +189,8 @@ void OpenGLModel::load_obj(const std::string& path)
     if (last_dot == std::string::npos)
     {
         model_name = filename;
-    } else
+    }
+    else
     {
         model_name = filename.substr(0, last_dot);
     }
@@ -215,10 +229,13 @@ void OpenGLModel::load_obj(const std::string& path)
             std::string path2 = obj_dir + "../mtl/" + mtl_filename;
 
             std::ifstream check_file(path1);
-            if (check_file.is_open()) {
+            if (check_file.is_open())
+            {
                 check_file.close();
                 parse_mtl(path1);
-            } else {
+            }
+            else
+            {
                 parse_mtl(path2);
             }
         }
@@ -227,6 +244,9 @@ void OpenGLModel::load_obj(const std::string& path)
             glm::vec3 v;
             ss >> v.x >> v.y >> v.z;
             temp_positions.push_back(v);
+
+            if (v.y < min_y) min_y = v.y;
+            if (v.y > max_y) max_y = v.y;
         } 
         else if (prefix == "vt")
         {
@@ -286,12 +306,7 @@ void OpenGLModel::load_obj(const std::string& path)
         }
     }
 
-    if (!vertices.empty())
-    {
-        std::cout << "[MODEL] Success: '" << model_name << "' loaded." << std::endl;
-        std::cout << "        -> Vertices: " << vertices.size() << std::endl;
-        std::cout << "        -> VAO ID:   " << VAO << std::endl;
-    }
+    model_height = max_y - min_y;
 }
 
 void OpenGLModel::setup_mesh()
