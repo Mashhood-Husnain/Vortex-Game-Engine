@@ -48,6 +48,8 @@ add_executable(game
     src/opengl_objreader.hpp
     src/stb_image.cpp
     src/stb_image.h
+    src/player.cpp
+    src/player.hpp
     # add other source files here
     # example: src/Game.cpp, src/Renderer.cpp, etc.
 )

@@ -17,6 +17,7 @@ OpenGLCamera::OpenGLCamera(glm::vec3 position, glm::vec3 up, float yaw, float pi
         : position(position), world_up(up), yaw(yaw), pitch(pitch), front(glm::vec3(0.0f, 0.0f, -1.0f))
 {
         update_camera_vectors();
+        anchored = false;
 }
 
 glm::mat4 OpenGLCamera::getViewMatrix()
@@ -49,4 +50,16 @@ void OpenGLCamera::processMouseMovement(float xoffset, float yoffset)
     if (pitch < -89.0f) pitch = -89.0f;
 
     update_camera_vectors();
+}
+
+void OpenGLCamera::check_camera_movement(GLFWwindow* window, float deltaTime)
+{
+    if (anchored) return;
+
+    if (glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS) processKeyboard("FORWARD", deltaTime);
+    if (glfwGetKey(window, GLFW_KEY_S) == GLFW_PRESS) processKeyboard("BACKWARD", deltaTime);
+    if (glfwGetKey(window, GLFW_KEY_A) == GLFW_PRESS) processKeyboard("LEFT", deltaTime);
+    if (glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS) processKeyboard("RIGHT", deltaTime);
+    if (glfwGetKey(window, GLFW_KEY_Q) == GLFW_PRESS) processKeyboard("UP", deltaTime);
+    if (glfwGetKey(window, GLFW_KEY_E) == GLFW_PRESS) processKeyboard("DOWN", deltaTime);
 }

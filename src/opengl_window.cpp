@@ -67,6 +67,10 @@ void OpenGLWindow::key_callback(GLFWwindow* window, int key, int scancode, int a
             case GLFW_KEY_T:
                 app->show_wireframe = !app->show_wireframe;
                 break;
+            // temporary solution
+            case GLFW_KEY_R:
+                app->camera->anchored = !app->camera->anchored;
+                break;
         }
     }
 }
@@ -162,34 +166,6 @@ void OpenGLWindow::set_fullscreen()
     glfwFocusWindow(window);
 }
 
-void OpenGLWindow::check_camera_movement()
-{
-    if (glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS)
-    {
-        camera->processKeyboard("FORWARD", deltaTime);
-    }
-    if (glfwGetKey(window, GLFW_KEY_S) == GLFW_PRESS)
-    {
-        camera->processKeyboard("BACKWARD", deltaTime);
-    }
-    if (glfwGetKey(window, GLFW_KEY_A) == GLFW_PRESS)
-    {
-        camera->processKeyboard("LEFT", deltaTime);
-    }
-    if (glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS)
-    {
-        camera->processKeyboard("RIGHT", deltaTime);
-    }
-    if (glfwGetKey(window, GLFW_KEY_Q) == GLFW_PRESS)
-    {
-        camera->processKeyboard("UP", deltaTime);
-    }
-    if (glfwGetKey(window, GLFW_KEY_E) == GLFW_PRESS)
-    {
-        camera->processKeyboard("DOWN", deltaTime);
-    }
-}
-
 void OpenGLWindow::mouse_callback(GLFWwindow* window, double xposIn, double yposIn)
 {
     auto* app = static_cast<OpenGLWindow*>(glfwGetWindowUserPointer(window));
@@ -228,7 +204,7 @@ void OpenGLWindow::run(std::function<void()> draw_callback)
         deltaTime = currentFrame - lastFrame;
         lastFrame = currentFrame;
 
-        check_camera_movement();
+        camera->check_camera_movement(window, deltaTime);
         
         // rendering
         glClearColor(bg_color.r, bg_color.g, bg_color.b, bg_color.a);

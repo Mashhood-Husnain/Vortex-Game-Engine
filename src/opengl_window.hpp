@@ -32,7 +32,6 @@ class OpenGLWindow
     static void key_callback(GLFWwindow* window, int key, int scancode, int action, int mods);
     static void mouse_callback(GLFWwindow* window, double xposIn, double yposIn);
     void set_fullscreen();
-    void check_camera_movement();
 public:
     float deltaTime = 0.0f;
     bool show_wireframe = false;

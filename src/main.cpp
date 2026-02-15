@@ -2,6 +2,8 @@
 #include "opengl_shaders.hpp"
 #include "opengl_camera.hpp"
 #include "opengl_objreader.hpp"
+#include "player.hpp"
+
 
 int main() {
     OpenGLCamera camera;
@@ -16,21 +18,24 @@ int main() {
     // cube.position.x += 5.0f;
 
     // OpenGLModel environ("models/test_environment.obj");
-    // OpenGLModel house("models/obj/abandoned_house.obj");
+    OpenGLModel house("models/obj/abandoned_house.obj");
     // OpenGLModel ground("models/obj/ground.obj");
-    // OpenGLModel capsule("models/obj/capsule.obj");
-    OpenGLModel forest_house("models/obj/forest_house.obj");
+    OpenGLModel body("models/obj/capsule.obj");
+    // OpenGLModel forest_house("models/obj/forest_house.obj");
+
+    Player player("Mashhood", &camera, &body, &default_shader);
 
     window.run([&](){
+        player.update(window.get_window_ptr(), window.deltaTime);
         // capsule.draw(default_shader, camera, window.deltaTime);
-        forest_house.draw(default_shader, camera, window.show_wireframe);
+        // forest_house.draw(default_shader, camera, window.show_wireframe);
 
         // cube.draw(default_shader, camera);
         // drawer.draw(default_shader, camera, window.show_wireframe);
         // plane.draw(default_shader, camera, window.show_wireframe);
 
         // environ.draw(default_shader, camera, window.show_wireframe);
-        // house.draw(default_shader, camera, window.show_wireframe);
+        house.draw(default_shader, camera, window.show_wireframe);
         // ground.draw(default_shader, camera, window.show_wireframe);
     });
 

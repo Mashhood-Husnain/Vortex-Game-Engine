@@ -1,0 +1,66 @@
+#include "player.hpp"
+
+Player::Player(const std::string& name, OpenGLCamera* camera, OpenGLModel* player_body, OpenGLShader* shader, glm::vec3 starting_position)
+{
+    player_name = name;
+    player_camera = camera;
+    if (camera) player_camera->anchored = true;
+    player_position = starting_position;
+    this->player_body = player_body;
+    player_shader = shader;
+    update_player_vectors();
+}
+
+void Player::update_player_vectors()
+{
+    glm::vec3 new_front;
+    new_front.x = cos(glm::radians(player_camera->yaw));
+    new_front.y = 0.0f;
+    new_front.z = sin(glm::radians(player_camera->yaw));
+    front = glm::normalize(new_front);
+
+    right = glm::normalize(glm::cross(front, world_up));
+}
+
+void Player::processKeyboard(const std::string& direction, float deltaTime)
+{
+    update_player_vectors();
+
+    float velocity = movement_speed * deltaTime;
+
+    if (direction == "FORWARD")  player_position += front * velocity;
+    if (direction == "BACKWARD") player_position -= front * velocity;
+    if (direction == "LEFT")     player_position -= right * velocity;
+    if (direction == "RIGHT")    player_position += right * velocity;
+    
+    player_camera->position = player_position + player_head_offset;
+}
+
+void Player::update(GLFWwindow* window, float deltaTime) {
+    
+    // apply gravity for when jump mechanics get written
+    check_player_movement(window, deltaTime);
+    player_body->position = player_position;
+    player_body->draw(*player_shader, *player_camera, false);
+    if (player_camera->anchored)
+    {
+        player_camera->position = player_position + player_head_offset;
+    }
+}
+
+Player::~Player()
+{
+    player_camera = nullptr;
+    player_body = nullptr;
+    player_shader = nullptr;
+}
+
+void Player::check_player_movement(GLFWwindow* window, float deltaTime)
+{
+    if (!player_camera->anchored) return;
+
+    if (glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS) processKeyboard("FORWARD", deltaTime);
+    if (glfwGetKey(window, GLFW_KEY_S) == GLFW_PRESS) processKeyboard("BACKWARD", deltaTime);
+    if (glfwGetKey(window, GLFW_KEY_A) == GLFW_PRESS) processKeyboard("LEFT", deltaTime);
+    if (glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS) processKeyboard("RIGHT", deltaTime);
+}
