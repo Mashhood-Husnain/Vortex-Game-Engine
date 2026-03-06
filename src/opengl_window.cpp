@@ -68,6 +68,7 @@ void OpenGLWindow::key_callback(GLFWwindow* window, int key, int scancode, int a
                 app->show_wireframe = !app->show_wireframe;
                 break;
             // temporary solution
+            // disabled for now, until i clean up the player code and come up with a better solution
             case GLFW_KEY_R:
                 app->camera->anchored = !app->camera->anchored;
                 break;

@@ -3,7 +3,8 @@ PENDING ISSUES:
     DESC: when window return back from fullscreen, the window reduces in height and y position moves down with each 'F' press
 - FIX window tearing issue:
     DESC: window tears when in fullscreen mode
-- FIX player-camera anchor:
+- FIX player-camera anchor: when camera is not specified for a player, the camera must not be anchored when 'R' is pressed
+- CLEAN player logic: it's a fucking mess
 
 ----------------------------------------------------------------------------------------------------------------------------------------------
 ----------------------------------------------------------------------------------------------------------------------------------------------

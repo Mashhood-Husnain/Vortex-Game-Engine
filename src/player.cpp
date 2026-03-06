@@ -46,6 +46,8 @@ void Player::processKeyboard(const std::string& direction, float deltaTime)
 
 void Player::update(GLFWwindow* window, float deltaTime)
 {
+    if (!player_body) return;
+
     player_body->position = player_position;
     if (player_camera)
     {

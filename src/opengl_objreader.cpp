@@ -8,6 +8,7 @@ OpenGLModel::OpenGLModel(const std::string& path)
     if (!vertices.empty())
     {
         std::cout << "[MODEL] Success: '" << model_name << "' loaded." << std::endl;
+        std::cout << "[MODEL] Total Objects Loaded: " << objects.size() << std::endl;
         std::cout << "        -> Vertices: " << vertices.size() << std::endl;
         std::cout << "        -> VAO ID:   " << VAO << std::endl;
     }
@@ -17,19 +18,9 @@ void OpenGLModel::draw(const OpenGLShader& shader, OpenGLCamera& camera, bool wi
 {
     glUseProgram(shader.shader_program);
 
-    // matrices (order matters: translate->rotate->scale)
-    glm::mat4 model_matrix = glm::mat4(1.0f);
-    model_matrix = glm::translate(model_matrix, position);
-    model_matrix = glm::rotate(model_matrix, glm::radians(rotation.x), glm::vec3(1, 0, 0));
-    model_matrix = glm::rotate(model_matrix, glm::radians(rotation.y), glm::vec3(0, 1, 0));
-    model_matrix = glm::rotate(model_matrix, glm::radians(rotation.z), glm::vec3(0, 0, 1));
-    model_matrix = glm::scale(model_matrix, glm::vec3(scale));
-
-    // uniforms
-    glUniformMatrix4fv(glGetUniformLocation(shader.shader_program, "model"), 1, GL_FALSE, glm::value_ptr(model_matrix));
     glUniformMatrix4fv(glGetUniformLocation(shader.shader_program, "view"), 1, GL_FALSE, glm::value_ptr(camera.getViewMatrix()));
     glUniformMatrix4fv(glGetUniformLocation(shader.shader_program, "projection"), 1, GL_FALSE, glm::value_ptr(glm::perspective(glm::radians(45.0f), camera.aspect_ratio, 0.1f, 100.0f)));
-    
+
     glm::vec3 light_pos(10.0f, 10.0f, 10.0f);
     glUniform3fv(glGetUniformLocation(shader.shader_program, "lightPos"), 1, glm::value_ptr(light_pos));
     glUniform3fv(glGetUniformLocation(shader.shader_program, "viewPos"), 1, glm::value_ptr(camera.position));
@@ -65,12 +56,26 @@ void OpenGLModel::draw(const OpenGLShader& shader, OpenGLCamera& camera, bool wi
         glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
     }
 
-    // draw
     glBindVertexArray(VAO);
-    glDrawArrays(GL_TRIANGLES, 0, (GLsizei)vertices.size());
-    glBindVertexArray(0);
+    for (const auto& obj : objects)
+    {
+        if (obj.vertex_count == 0) continue;
 
-    // reset wireframe
+        glm::mat4 model_matrix = glm::mat4(1.0f);
+        model_matrix = glm::translate(model_matrix, this->position + obj.position);
+
+        glm::vec3 total_rot = this->rotation + obj.rotation;
+        model_matrix = glm::rotate(model_matrix, glm::radians(total_rot.x), glm::vec3(1, 0, 0));
+        model_matrix = glm::rotate(model_matrix, glm::radians(total_rot.y), glm::vec3(0, 1, 0));
+        model_matrix = glm::rotate(model_matrix, glm::radians(total_rot.z), glm::vec3(0, 0, 1));
+        model_matrix = glm::scale(model_matrix, glm::vec3(this->scale * obj.scale));
+
+        glUniformMatrix4fv(glGetUniformLocation(shader.shader_program, "model"), 1, GL_FALSE, glm::value_ptr(model_matrix));
+
+        glDrawArrays(GL_TRIANGLES, obj.vertex_offset, obj.vertex_count);
+    }
+
+    glBindVertexArray(0);
     glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
 }
 
@@ -213,6 +218,8 @@ void OpenGLModel::load_obj(const std::string& path)
         return;
     }
 
+    OpenGLModel_Object *current_obj = nullptr;
+
     std::string line;
     while (std::getline(file, line))
     {
@@ -239,6 +246,25 @@ void OpenGLModel::load_obj(const std::string& path)
                 parse_mtl(path2);
             }
         }
+        else if (prefix == "o")
+        {
+            if (current_obj != nullptr)
+            {
+                current_obj->vertex_count = (int)vertices.size() - current_obj->vertex_offset;
+            }
+
+            OpenGLModel_Object new_obj;
+            ss >> new_obj.name;
+
+            new_obj.vertex_offset = (int)vertices.size();
+            new_obj.vertex_count = 0;
+            new_obj.position = glm::vec3(0.0f);
+            new_obj.rotation = glm::vec3(0.0f);
+            new_obj.scale = glm::vec3(1.0f);
+
+            objects.push_back(new_obj);
+            current_obj = &objects.back();
+        }
         else if (prefix == "v")
         {
             glm::vec3 v;
@@ -262,6 +288,15 @@ void OpenGLModel::load_obj(const std::string& path)
         } 
         else if (prefix == "f")
         {
+            if (current_obj == nullptr)
+            {
+                OpenGLModel_Object default_obj;
+                default_obj.name = "default";
+                default_obj.vertex_offset = 0;
+                objects.push_back(default_obj);
+                current_obj = &objects.back();
+            }
+
             for (int i = 0; i < 3; i++)
             {
                 std::string vertexData;
@@ -280,7 +315,7 @@ void OpenGLModel::load_obj(const std::string& path)
                 int vtIdx = vtStr.empty() ? 0 : std::stoi(vtStr);
                 int vnIdx = vnStr.empty() ? 0 : std::stoi(vnStr);
 
-                Vertex v;
+                OpenGLModel_Vertex v;
                 v.position = temp_positions[vIdx - 1];
 
                 if (vtIdx > 0 && vtIdx <= temp_tex_coords.size())
@@ -306,7 +341,42 @@ void OpenGLModel::load_obj(const std::string& path)
         }
     }
 
+    if (current_obj != nullptr)
+    {
+        current_obj->vertex_count = (int)vertices.size() - current_obj->vertex_offset;
+    }
+
     model_height = max_y - min_y;
+
+    for (auto &obj : objects)
+    {
+        if (obj.vertex_count == 0) continue;
+
+        glm::vec3 min_p(1e10f), max_p(-1e10f);
+        glm::vec3 centroid(0.0f);
+        for (int i = 0; i < obj.vertex_count; i++)
+        {
+            glm::vec3 p = vertices[obj.vertex_offset + i].position;
+            centroid += p;
+
+            if (p.x < min_p.x) min_p.x = p.x;
+            if (p.y < min_p.y) min_p.y = p.y;
+            if (p.z < min_p.z) min_p.z = p.z;
+            if (p.x > max_p.x) max_p.x = p.x;
+            if (p.y > max_p.y) max_p.y = p.y;
+            if (p.z > max_p.z) max_p.z = p.z;
+        }
+        centroid /= (float)obj.vertex_count;
+
+        for (int i = 0; i < obj.vertex_count; i++)
+        {
+            vertices[obj.vertex_offset + i].position -= centroid;
+        }
+
+        obj.position = centroid;
+        obj.b_min = min_p - centroid;
+        obj.b_max = max_p - centroid;
+    }
 }
 
 void OpenGLModel::setup_mesh()
@@ -316,19 +386,39 @@ void OpenGLModel::setup_mesh()
 
     glBindVertexArray(VAO);
     glBindBuffer(GL_ARRAY_BUFFER, VBO);
-    glBufferData(GL_ARRAY_BUFFER, vertices.size() * sizeof(Vertex), vertices.data(), GL_STATIC_DRAW);
+    glBufferData(GL_ARRAY_BUFFER, vertices.size() * sizeof(OpenGLModel_Vertex), vertices.data(), GL_STATIC_DRAW);
 
     // Position (Location 0)
     glEnableVertexAttribArray(0);
-    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, sizeof(Vertex), (void*)0);
+    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, sizeof(OpenGLModel_Vertex), (void*)0);
 
     // Normal (Location 1)
     glEnableVertexAttribArray(1);
-    glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, sizeof(Vertex), (void*)sizeof(glm::vec3));
+    glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, sizeof(OpenGLModel_Vertex), (void*)offsetof(OpenGLModel_Vertex, normal));
 
     // TexCoords (Location 2)
     glEnableVertexAttribArray(2);
-    glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, sizeof(Vertex), (void*)(2 * sizeof(glm::vec3)));
+    glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, sizeof(OpenGLModel_Vertex), (void*)offsetof(OpenGLModel_Vertex, tex_coords));
 
     glBindVertexArray(0);
+}
+
+std::vector<OpenGLModel_Object>& OpenGLModel::get_objects()
+{
+    return objects;
+}
+
+bool check_collision(const OpenGLModel_Object &a, const OpenGLModel_Object &b)
+{
+    bool x_axis = a.get_world_min().x <= b.get_world_max().x && a.get_world_max().x >= b.get_world_min().x;
+    bool y_axis = a.get_world_min().y <= b.get_world_max().y && a.get_world_max().y >= b.get_world_min().y;
+    bool z_axis = a.get_world_min().z <= b.get_world_max().z && a.get_world_max().z >= b.get_world_min().z;
+
+    return x_axis && y_axis && z_axis;
+}
+
+OpenGLModel::~OpenGLModel()
+{
+    if (VAO != 0) glDeleteVertexArrays(1, &VAO);
+    if (VBO != 0) glDeleteBuffers(1, &VBO);
 }

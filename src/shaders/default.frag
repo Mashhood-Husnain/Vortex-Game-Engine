@@ -17,6 +17,9 @@ uniform bool u_hasTexture;
 uniform bool u_hasRoughness;
 uniform bool u_hasMetallic;
 
+uniform vec3 u_fogColor; // temp fog color
+uniform float u_fogDensity; // temp fog density
+
 void main()
 {
     vec3 diffuseCol = vec3(0.5); // Default grey
@@ -56,4 +59,13 @@ void main()
     vec3 specular = spec * mix(vec3(0.3), diffuseCol, metallic);
 
     FragColor = vec4(ambient + diffuse + specular, 1.0);
+    // temp for experiment
+    // vec3 lightResult = ambient + diffuse + specular;
+
+    // float dist = length(viewPos - FragPos);
+    // float fogFactor = exp(-pow(dist * u_fogDensity, 2.0));
+    // fogFactor = clamp(fogFactor, 0.0, 1.0);
+
+    // vec3 finalColor = mix(u_fogColor, lightResult, fogFactor);
+    // FragColor = vec4(finalColor, 1.0);
 }

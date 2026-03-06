@@ -15,7 +15,6 @@ class OpenGLWindow
     int default_window_width = 800;
     int default_window_height = 600;
     std::string window_name;
-    glm::vec4 bg_color = glm::vec4(0.1f, 0.1f, 0.1f, 1.0f);
     bool is_fullscreen = false;
     int stored_window_x_pos;
     int stored_window_y_pos;
@@ -33,6 +32,7 @@ class OpenGLWindow
     static void mouse_callback(GLFWwindow* window, double xposIn, double yposIn);
     void set_fullscreen();
 public:
+    glm::vec4 bg_color = glm::vec4(0.4f, 0.45f, 0.5f, 1.0f);
     float deltaTime = 0.0f;
     bool show_wireframe = false;
 
