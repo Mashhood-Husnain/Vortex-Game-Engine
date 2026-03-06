@@ -26,13 +26,15 @@ struct OpenGLModel_Object
     glm::vec3 position = glm::vec3(0.0f);
     glm::vec3 rotation;
     glm::vec3 scale;
+
     std::string name;
+    // accessing the object from the overal vertices when loaded from OpenGLModel class
     int vertex_offset;
     int vertex_count;
 
+    // for object collision
     glm::vec3 b_min;
     glm::vec3 b_max;
-
     glm::vec3 get_world_min() const {return position + b_min;}
     glm::vec3 get_world_max() const {return position + b_max;};
 };
@@ -67,4 +69,3 @@ public:
     std::vector<OpenGLModel_Object>& get_objects();
     ~OpenGLModel();
 };
-
