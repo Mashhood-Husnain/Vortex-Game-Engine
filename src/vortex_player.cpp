@@ -1,6 +1,6 @@
-#include "player.hpp"
+#include "vortex_player.hpp"
 
-Player::Player(const std::string& name, OpenGLCamera* camera, OpenGLModel* player_body, OpenGLShader* shader, glm::vec3 starting_position)
+Player::Player(const std::string& name, VortexCamera* camera, VortexModel* player_body, VortexShader* shader, glm::vec3 starting_position)
 {
     player_name = name;
     if (camera)

@@ -5,8 +5,8 @@
 
 #include <vector>
 
-#include "opengl_shaders.hpp"
-#include "opengl_camera.hpp"
+#include "vortex_shaders.hpp"
+#include "vortex_camera.hpp"
 #include "global_vars.hpp"
 
 struct ParticleInstance
@@ -47,5 +47,5 @@ public:
     ParticleSystem(int max_particles);
     void emit(glm::vec3 position, float size, glm::vec3 velocity, float life, float gravity_scale, float drag, glm::vec4 particle_color);
     void update(float deltaTime);
-    void draw(OpenGLShader &shader, OpenGLCamera &camera);
+    void draw(VortexShader &shader, VortexCamera &camera);
 };

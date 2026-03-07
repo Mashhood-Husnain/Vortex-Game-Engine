@@ -1,6 +1,6 @@
-#include "opengl_objreader.hpp"
+#include "vortex_objreader.hpp"
 
-OpenGLModel::OpenGLModel(const std::string& path)
+VortexModel::VortexModel(const std::string& path)
 {
     load_obj(path);
     setup_mesh();
@@ -14,7 +14,7 @@ OpenGLModel::OpenGLModel(const std::string& path)
     }
 }
 
-void OpenGLModel::draw(const OpenGLShader& shader, OpenGLCamera& camera, bool wireframe)
+void VortexModel::draw(const VortexShader& shader, VortexCamera& camera, bool wireframe)
 {
     glUseProgram(shader.shader_program);
 
@@ -79,7 +79,7 @@ void OpenGLModel::draw(const OpenGLShader& shader, OpenGLCamera& camera, bool wi
     glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
 }
 
-void OpenGLModel::parse_mtl(const std::string& mtl_filepath)
+void VortexModel::parse_mtl(const std::string& mtl_filepath)
 {
     size_t last_slash = mtl_filepath.find_last_of("/\\");
     std::string mtl_dir = (last_slash == std::string::npos) ? "" : mtl_filepath.substr(0, last_slash + 1);
@@ -139,7 +139,7 @@ void OpenGLModel::parse_mtl(const std::string& mtl_filepath)
     }
 }
 
-unsigned int OpenGLModel::load_texture(const std::string& path)
+unsigned int VortexModel::load_texture(const std::string& path)
 {
     unsigned int textureID;
     glGenTextures(1, &textureID);
@@ -181,7 +181,7 @@ unsigned int OpenGLModel::load_texture(const std::string& path)
     return textureID;
 }
 
-void OpenGLModel::load_obj(const std::string& path)
+void VortexModel::load_obj(const std::string& path)
 {
     min_y = 1e10f;
     max_y = -1e10f;
@@ -218,7 +218,7 @@ void OpenGLModel::load_obj(const std::string& path)
         return;
     }
 
-    OpenGLModel_Object *current_obj = nullptr;
+    VortexModel_Object *current_obj = nullptr;
 
     std::string line;
     while (std::getline(file, line))
@@ -253,7 +253,7 @@ void OpenGLModel::load_obj(const std::string& path)
                 current_obj->vertex_count = (int)vertices.size() - current_obj->vertex_offset;
             }
 
-            OpenGLModel_Object new_obj;
+            VortexModel_Object new_obj;
             ss >> new_obj.name;
 
             new_obj.vertex_offset = (int)vertices.size();
@@ -290,7 +290,7 @@ void OpenGLModel::load_obj(const std::string& path)
         {
             if (current_obj == nullptr)
             {
-                OpenGLModel_Object default_obj;
+                VortexModel_Object default_obj;
                 default_obj.name = "default";
                 default_obj.vertex_offset = 0;
                 objects.push_back(default_obj);
@@ -315,7 +315,7 @@ void OpenGLModel::load_obj(const std::string& path)
                 int vtIdx = vtStr.empty() ? 0 : std::stoi(vtStr);
                 int vnIdx = vnStr.empty() ? 0 : std::stoi(vnStr);
 
-                OpenGLModel_Vertex v;
+                VortexModel_Vertex v;
                 v.position = temp_positions[vIdx - 1];
 
                 if (vtIdx > 0 && vtIdx <= temp_tex_coords.size())
@@ -379,36 +379,36 @@ void OpenGLModel::load_obj(const std::string& path)
     }
 }
 
-void OpenGLModel::setup_mesh()
+void VortexModel::setup_mesh()
 {
     glGenVertexArrays(1, &VAO);
     glGenBuffers(1, &VBO);
 
     glBindVertexArray(VAO);
     glBindBuffer(GL_ARRAY_BUFFER, VBO);
-    glBufferData(GL_ARRAY_BUFFER, vertices.size() * sizeof(OpenGLModel_Vertex), vertices.data(), GL_STATIC_DRAW);
+    glBufferData(GL_ARRAY_BUFFER, vertices.size() * sizeof(VortexModel_Vertex), vertices.data(), GL_STATIC_DRAW);
 
     // Position (Location 0)
     glEnableVertexAttribArray(0);
-    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, sizeof(OpenGLModel_Vertex), (void*)0);
+    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, sizeof(VortexModel_Vertex), (void*)0);
 
     // Normal (Location 1)
     glEnableVertexAttribArray(1);
-    glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, sizeof(OpenGLModel_Vertex), (void*)offsetof(OpenGLModel_Vertex, normal));
+    glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, sizeof(VortexModel_Vertex), (void*)offsetof(VortexModel_Vertex, normal));
 
     // TexCoords (Location 2)
     glEnableVertexAttribArray(2);
-    glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, sizeof(OpenGLModel_Vertex), (void*)offsetof(OpenGLModel_Vertex, tex_coords));
+    glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, sizeof(VortexModel_Vertex), (void*)offsetof(VortexModel_Vertex, tex_coords));
 
     glBindVertexArray(0);
 }
 
-std::vector<OpenGLModel_Object>& OpenGLModel::get_objects()
+std::vector<VortexModel_Object>& VortexModel::get_objects()
 {
     return objects;
 }
 
-bool check_collision(const OpenGLModel_Object &a, const OpenGLModel_Object &b)
+bool check_collision(const VortexModel_Object &a, const VortexModel_Object &b)
 {
     bool x_axis = a.get_world_min().x <= b.get_world_max().x && a.get_world_max().x >= b.get_world_min().x;
     bool y_axis = a.get_world_min().y <= b.get_world_max().y && a.get_world_max().y >= b.get_world_min().y;
@@ -417,7 +417,7 @@ bool check_collision(const OpenGLModel_Object &a, const OpenGLModel_Object &b)
     return x_axis && y_axis && z_axis;
 }
 
-OpenGLModel::~OpenGLModel()
+VortexModel::~VortexModel()
 {
     if (VAO != 0) glDeleteVertexArrays(1, &VAO);
     if (VBO != 0) glDeleteBuffers(1, &VBO);

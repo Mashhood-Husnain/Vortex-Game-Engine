@@ -1,6 +1,6 @@
-#include "opengl_window.hpp"
+#include "vortex_window.hpp"
 
-GLFWmonitor* OpenGLWindow::get_current_monitor(GLFWwindow* window)
+GLFWmonitor* VortexWindow::get_current_monitor(GLFWwindow* window)
 {
     int nmonitors;
     int wx, wy, ww, wh;
@@ -34,9 +34,9 @@ GLFWmonitor* OpenGLWindow::get_current_monitor(GLFWwindow* window)
     return bestmonitor;
 }
 
-void OpenGLWindow::framebuffer_size_callback(GLFWwindow* window, int width, int height)
+void VortexWindow::framebuffer_size_callback(GLFWwindow* window, int width, int height)
 {
-    auto* app = static_cast<OpenGLWindow*>(glfwGetWindowUserPointer(window));
+    auto* app = static_cast<VortexWindow*>(glfwGetWindowUserPointer(window));
 
     if (app)
     {
@@ -47,9 +47,9 @@ void OpenGLWindow::framebuffer_size_callback(GLFWwindow* window, int width, int 
     }
 }
 
-void OpenGLWindow::key_callback(GLFWwindow* window, int key, int scancode, int action, int mods)
+void VortexWindow::key_callback(GLFWwindow* window, int key, int scancode, int action, int mods)
 {
-    auto* app = static_cast<OpenGLWindow*>(glfwGetWindowUserPointer(window));
+    auto* app = static_cast<VortexWindow*>(glfwGetWindowUserPointer(window));
 
     if (!app) return;
 
@@ -76,7 +76,7 @@ void OpenGLWindow::key_callback(GLFWwindow* window, int key, int scancode, int a
     }
 }
 
-OpenGLWindow::OpenGLWindow(std::string window_name, OpenGLCamera* camera, int width, int height)
+VortexWindow::VortexWindow(std::string window_name, VortexCamera* camera, int width, int height)
 {
     // Initialize GLFW;
     if (!glfwInit())
@@ -138,7 +138,7 @@ OpenGLWindow::OpenGLWindow(std::string window_name, OpenGLCamera* camera, int wi
     glfwGetWindowPos(window, &stored_window_x_pos, &stored_window_y_pos);
 }
 
-OpenGLWindow::~OpenGLWindow()
+VortexWindow::~VortexWindow()
 {
     window = nullptr;
     camera = nullptr;
@@ -146,7 +146,7 @@ OpenGLWindow::~OpenGLWindow()
     glfwTerminate();
 }
 
-void OpenGLWindow::set_fullscreen()
+void VortexWindow::set_fullscreen()
 {
     if (is_fullscreen)
     {
@@ -167,9 +167,9 @@ void OpenGLWindow::set_fullscreen()
     glfwFocusWindow(window);
 }
 
-void OpenGLWindow::mouse_callback(GLFWwindow* window, double xposIn, double yposIn)
+void VortexWindow::mouse_callback(GLFWwindow* window, double xposIn, double yposIn)
 {
-    auto* app = static_cast<OpenGLWindow*>(glfwGetWindowUserPointer(window));
+    auto* app = static_cast<VortexWindow*>(glfwGetWindowUserPointer(window));
 
     if (app)
     {
@@ -193,7 +193,7 @@ void OpenGLWindow::mouse_callback(GLFWwindow* window, double xposIn, double ypos
     }
 }
 
-void OpenGLWindow::run(std::function<void()> draw_callback)
+void VortexWindow::run(std::function<void()> draw_callback)
 {
     glfwShowWindow(window);
 
@@ -218,7 +218,7 @@ void OpenGLWindow::run(std::function<void()> draw_callback)
     }
 }
 
-GLFWwindow* OpenGLWindow::get_window_ptr()
+GLFWwindow* VortexWindow::get_window_ptr()
 {
     return window;
 }

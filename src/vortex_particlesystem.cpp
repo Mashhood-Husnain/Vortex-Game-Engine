@@ -1,4 +1,4 @@
-#include "particle_system.hpp"
+#include "vortex_particlesystem.hpp"
 
 ParticleSystem::ParticleSystem(int max_particles)
 {
@@ -68,7 +68,7 @@ void ParticleSystem::update(float deltaTime)
     }
 }
 
-void ParticleSystem::draw(OpenGLShader &shader, OpenGLCamera &camera)
+void ParticleSystem::draw(VortexShader &shader, VortexCamera &camera)
 {
     std::vector<ParticleInstance> instance_data;
     for (const Particle &particle : particles)

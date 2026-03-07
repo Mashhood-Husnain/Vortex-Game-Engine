@@ -1,6 +1,6 @@
-#include "opengl_shaders.hpp"
+#include "vortex_shaders.hpp"
 
-bool OpenGLShader::read_shader(std::string& vertex_path, std::string& fragment_path)
+bool VortexShader::read_shader(std::string& vertex_path, std::string& fragment_path)
 {
     std::ifstream vertex_file(vertex_path);
     std::ifstream fragment_file(fragment_path);
@@ -25,7 +25,7 @@ bool OpenGLShader::read_shader(std::string& vertex_path, std::string& fragment_p
     return true;
 }
 
-void OpenGLShader::init_shader()
+void VortexShader::init_shader()
 {
     const char* vertex_shader_source = vertex_shader_code.c_str();
     const char* fragment_shader_source = fragment_shader_code.c_str();
@@ -50,7 +50,7 @@ void OpenGLShader::init_shader()
     glDeleteShader(fragment_shader);
 }
 
-OpenGLShader::OpenGLShader(std::string vertex_path, std::string fragment_path)
+VortexShader::VortexShader(std::string vertex_path, std::string fragment_path)
 {
     if (!read_shader(vertex_path, fragment_path)) exit(EXIT_FAILURE);;
     init_shader();

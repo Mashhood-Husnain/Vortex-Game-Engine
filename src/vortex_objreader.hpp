@@ -10,25 +10,25 @@
 #include <glad/glad.h>
 #include <filesystem>
 
-#include "opengl_shaders.hpp"
-#include "opengl_camera.hpp"
+#include "vortex_shaders.hpp"
+#include "vortex_camera.hpp"
 #include "stb_image.h"
 
-struct OpenGLModel_Vertex
+struct VortexModel_Vertex
 {
     glm::vec3 position;
     glm::vec3 normal;
     glm::vec2 tex_coords;
 };
 
-struct OpenGLModel_Object
+struct VortexModel_Object
 {
     glm::vec3 position = glm::vec3(0.0f);
     glm::vec3 rotation;
     glm::vec3 scale;
 
     std::string name;
-    // accessing the object from the overal vertices when loaded from OpenGLModel class
+    // accessing the object from the overal vertices when loaded from VortexModel class
     int vertex_offset;
     int vertex_count;
 
@@ -39,17 +39,17 @@ struct OpenGLModel_Object
     glm::vec3 get_world_max() const {return position + b_max;};
 };
 
-bool check_collision(const OpenGLModel_Object &a, const OpenGLModel_Object &b);
+bool check_collision(const VortexModel_Object &a, const VortexModel_Object &b);
 
-class OpenGLModel
+class VortexModel
 {
     unsigned int VAO=0;
     unsigned int VBO=0;
     float min_y=0.0f;
     float max_y=0.0f;
     std::string model_name;
-    std::vector<OpenGLModel_Vertex> vertices;
-    std::vector<OpenGLModel_Object> objects;
+    std::vector<VortexModel_Vertex> vertices;
+    std::vector<VortexModel_Object> objects;
     void load_obj(const std::string& path);
     void parse_mtl(const std::string& mtl_filename);
     unsigned int load_texture(const std::string& texture_path);
@@ -64,8 +64,8 @@ public:
     unsigned int normal_id=0;
     float model_height=0.0f;
 
-    OpenGLModel(const std::string& model_path);
-    void draw(const OpenGLShader& shader, OpenGLCamera& camera, bool wireframe);
-    std::vector<OpenGLModel_Object>& get_objects();
-    ~OpenGLModel();
+    VortexModel(const std::string& model_path);
+    void draw(const VortexShader& shader, VortexCamera& camera, bool wireframe);
+    std::vector<VortexModel_Object>& get_objects();
+    ~VortexModel();
 };

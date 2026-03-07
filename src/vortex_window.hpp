@@ -7,9 +7,9 @@
 #include <string>
 #include <functional>
 
-#include "opengl_camera.hpp"
+#include "vortex_camera.hpp"
 
-class OpenGLWindow
+class VortexWindow
 {
     GLFWwindow *window = nullptr;
     int default_window_width = 800;
@@ -20,7 +20,7 @@ class OpenGLWindow
     int stored_window_y_pos;
     int stored_window_width;
     int stored_window_height;
-    OpenGLCamera *camera = nullptr;
+    VortexCamera *camera = nullptr;
     float mouse_last_x = default_window_width / 2;
     float mouse_last_y = default_window_height / 2;
     bool first_mouse = true;
@@ -36,8 +36,8 @@ public:
     float deltaTime = 0.0f;
     bool show_wireframe = false;
 
-    OpenGLWindow(std::string window_name, OpenGLCamera* camera, int width=800, int height=600);
-    ~OpenGLWindow();
+    VortexWindow(std::string window_name, VortexCamera* camera, int width=800, int height=600);
+    ~VortexWindow();
 
     void run(std::function<void()> draw_callback);
     GLFWwindow* get_window_ptr();

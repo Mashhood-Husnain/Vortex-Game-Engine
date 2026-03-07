@@ -38,20 +38,20 @@ endforeach()
 # --- 3. Setup Your Game ---
 add_executable(game 
     src/main.cpp
-    src/opengl_window.cpp
-    src/opengl_window.hpp
-    src/opengl_shaders.cpp
-    src/opengl_shaders.hpp
-    src/opengl_camera.cpp
-    src/opengl_camera.hpp
-    src/opengl_objreader.cpp
-    src/opengl_objreader.hpp
+    src/vortex_window.cpp
+    src/vortex_window.hpp
+    src/vortex_shaders.cpp
+    src/vortex_shaders.hpp
+    src/vortex_camera.cpp
+    src/vortex_camera.hpp
+    src/vortex_objreader.cpp
+    src/vortex_objreader.hpp
     src/stb_image.cpp
     src/stb_image.h
-    src/player.cpp
-    src/player.hpp
-    src/particle_system.cpp
-    src/particle_system.hpp
+    src/vortex_player.cpp
+    src/vortex_player.hpp
+    src/vortex_particlesystem.cpp
+    src/vortex_particlesystem.hpp
     src/global_vars.hpp
     # add other source files here
     # example: src/Game.cpp, src/Renderer.cpp, etc.

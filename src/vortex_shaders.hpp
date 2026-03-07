@@ -8,7 +8,7 @@
 #include <fstream>
 #include <sstream>
 
-class OpenGLShader
+class VortexShader
 {
     std::string vertex_shader_code;
     std::string fragment_shader_code;
@@ -18,5 +18,5 @@ class OpenGLShader
 public:
     unsigned int shader_program;
 
-    OpenGLShader(std::string vertex_path, std::string fragment_path);
+    VortexShader(std::string vertex_path, std::string fragment_path);
 };

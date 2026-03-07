@@ -1,6 +1,6 @@
-#include "opengl_camera.hpp"
+#include "vortex_camera.hpp"
 
-void OpenGLCamera::update_camera_vectors()
+void VortexCamera::update_camera_vectors()
 {
     glm::vec3 front_temp;
     front_temp.x = cos(glm::radians(yaw)) * cos(glm::radians(pitch));
@@ -13,19 +13,19 @@ void OpenGLCamera::update_camera_vectors()
     up = glm::normalize(glm::cross(right, front));
 }
 
-OpenGLCamera::OpenGLCamera(glm::vec3 position, glm::vec3 up, float yaw, float pitch)
+VortexCamera::VortexCamera(glm::vec3 position, glm::vec3 up, float yaw, float pitch)
         : position(position), world_up(up), yaw(yaw), pitch(pitch), front(glm::vec3(0.0f, 0.0f, -1.0f))
 {
         update_camera_vectors();
         anchored = false;
 }
 
-glm::mat4 OpenGLCamera::getViewMatrix()
+glm::mat4 VortexCamera::getViewMatrix()
 {
     return glm::lookAt(position, position + front, up);
 }
 
-void OpenGLCamera::processKeyboard(const std::string& direction, float deltaTime)
+void VortexCamera::processKeyboard(const std::string& direction, float deltaTime)
 {
     float velocity = movement_speed * deltaTime;
 
@@ -38,7 +38,7 @@ void OpenGLCamera::processKeyboard(const std::string& direction, float deltaTime
 
 }
 
-void OpenGLCamera::processMouseMovement(float xoffset, float yoffset)
+void VortexCamera::processMouseMovement(float xoffset, float yoffset)
 {
     xoffset *= mouse_sensitivity;
     yoffset *= mouse_sensitivity;
@@ -52,7 +52,7 @@ void OpenGLCamera::processMouseMovement(float xoffset, float yoffset)
     update_camera_vectors();
 }
 
-void OpenGLCamera::check_camera_movement(GLFWwindow* window, float deltaTime)
+void VortexCamera::check_camera_movement(GLFWwindow* window, float deltaTime)
 {
     if (anchored) return;
 

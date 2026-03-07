@@ -1,9 +1,9 @@
-#include "opengl_window.hpp"
-#include "opengl_shaders.hpp"
-#include "opengl_camera.hpp"
-#include "opengl_objreader.hpp"
-#include "player.hpp"
-#include "particle_system.hpp"
+#include "vortex_window.hpp"
+#include "vortex_shaders.hpp"
+#include "vortex_camera.hpp"
+#include "vortex_objreader.hpp"
+#include "vortex_player.hpp"
+#include "vortex_particlesystem.hpp"
 
 #include <cstdlib>
 
@@ -58,19 +58,19 @@ void trigger_explosion(glm::vec3 position, ParticleSystem& ps)
 }
 
 int main() {
-    OpenGLCamera camera;
-    OpenGLWindow window("OpenGL Window", &camera);
-    OpenGLShader default_shader("shaders/default.vert", "shaders/default.frag");
-    OpenGLShader particle_shader("shaders/particles.vert", "shaders/particles.frag");
+    VortexCamera camera;
+    VortexWindow window("Vortex Window", &camera);
+    VortexShader default_shader("shaders/default.vert", "shaders/default.frag");
+    VortexShader particle_shader("shaders/particles.vert", "shaders/particles.frag");
 
-    // OpenGLModel house_model("models/obj/abandoned_house.obj");
-    // OpenGLModel player_model("models/obj/player.obj");
+    // VortexModel house_model("models/obj/abandoned_house.obj");
+    // VortexModel player_model("models/obj/player.obj");
 
     // Player player("Mashhood", &camera, &player_model, &default_shader);
     // player_model.scale = glm::vec3(0.7f);
    
-    // OpenGLModel drawer("models/obj/drawer.obj");
-    // OpenGLModel ground("models/obj/ground.obj");    
+    // VortexModel drawer("models/obj/drawer.obj");
+    // VortexModel ground("models/obj/ground.obj");    
     // drawer.position = glm::vec3(0.0f, 0.0f, -5.0f);
     // drawer.scale = glm::vec3(0.2f);
     // ground.scale = glm::vec3(3.0f, 3.0f, 3.0f);
@@ -86,11 +86,11 @@ int main() {
     //     // ground.draw(default_shader, camera, window.show_wireframe);
 
     //     total_time += window.deltaTime;
-    //     std::vector<OpenGLModel_Object>& house_parts = house_model.get_objects();
+    //     std::vector<VortexModel_Object>& house_parts = house_model.get_objects();
 
     //     for (size_t i = 0; i <house_parts.size(); i++)
     //     {
-    //         OpenGLModel_Object& part = house_parts[i];
+    //         VortexModel_Object& part = house_parts[i];
 
     //         float movement = sin(total_time * 2.0f + i) * 0.5f;
     //         float pulse = 1.0f + sin(total_time * 3.0f + i) * 0.2f;
@@ -109,8 +109,8 @@ int main() {
     ParticleSystem particle_system(particles_to_render);
     srand(static_cast<unsigned int>(time(0))); // initalize random seed
 
-    OpenGLModel ground("models/obj/flat_plane.obj");
-    OpenGLModel player_body("models/obj/player.obj");
+    VortexModel ground("models/obj/flat_plane.obj");
+    VortexModel player_body("models/obj/player.obj");
 
     Player player("Mashhood", &camera, &player_body, &default_shader);
 

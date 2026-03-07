@@ -7,17 +7,17 @@
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
 
-#include "opengl_camera.hpp"
-#include "opengl_objreader.hpp"
-#include "opengl_shaders.hpp"
+#include "vortex_camera.hpp"
+#include "vortex_objreader.hpp"
+#include "vortex_shaders.hpp"
 
 class Player
 {
     std::string player_name;
-    OpenGLCamera* player_camera = nullptr;
+    VortexCamera* player_camera = nullptr;
     float movement_speed = 5.0f;
     glm::vec3 player_head_offset;
-    OpenGLShader *player_shader = nullptr;
+    VortexShader *player_shader = nullptr;
     float player_height;
 
     glm::vec3 front;
@@ -29,9 +29,9 @@ class Player
     void processKeyboard(const std::string& direction, float deltaTime);
 
 public:
-    OpenGLModel *player_body = nullptr;
+    VortexModel *player_body = nullptr;
     glm::vec3 player_position;
-    Player(const std::string& name, OpenGLCamera* camera, OpenGLModel* player_body, OpenGLShader* shader, glm::vec3 starting_position=glm::vec3(0.0f, 0.0f, 10.0f));
+    Player(const std::string& name, VortexCamera* camera, VortexModel* player_body, VortexShader* shader, glm::vec3 starting_position=glm::vec3(0.0f, 0.0f, 10.0f));
     void update(GLFWwindow* window, float deltaTime);
     ~Player();
 };
