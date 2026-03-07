@@ -52,6 +52,7 @@ add_executable(game
     src/player.hpp
     src/particle_system.cpp
     src/particle_system.hpp
+    src/global_vars.hpp
     # add other source files here
     # example: src/Game.cpp, src/Renderer.cpp, etc.
 )

@@ -211,9 +211,6 @@ void OpenGLWindow::run(std::function<void()> draw_callback)
         glClearColor(bg_color.r, bg_color.g, bg_color.b, bg_color.a);
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-        // std::cout << "mouse X: "<< mouse_last_x << "mouse Y: "<< mouse_last_y << std::endl;
-        // std::cout << camera->aspect_ratio << std::endl;
-
         draw_callback();
         
         // swap buffers and poll IO

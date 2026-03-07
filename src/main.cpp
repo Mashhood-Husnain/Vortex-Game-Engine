@@ -7,9 +7,59 @@
 
 #include <cstdlib>
 
+void trigger_explosion(glm::vec3 position, ParticleSystem& ps)
+{
+    float debris_size = 0.5f;
+    float debris_lifetime = 2.0f;
+    float debris_gravity = 1.0f;
+    float debris_drag = 0.1f;
+    float smoke_size = 0.5f;
+    float smoke_lifetime = 2.5f;
+    float smoke_gravity = -0.1f;
+    float smoke_drag = 0.8f;
+
+    for (int i = 0; i < 250; i++)
+    {
+        glm::vec3 debris_vel(
+            (rand() % 100 - 50) / 10.0f,
+            (rand() % 100 - 50) / 10.0f,
+            (rand() % 100 - 50) / 10.0f
+        );
+        ps.emit(
+            position,
+            debris_size,
+            debris_vel,
+            debris_lifetime,
+            debris_gravity,
+            debris_drag,
+            COLOR_BROWN
+        );
+
+        float offsetX = (rand() % 100 - 50) / 100.0f;
+        float offsetY = (rand() % 100 - 50) / 100.0f;
+        float offsetZ = (rand() % 100 - 50) / 100.0f;
+        glm::vec3 position_rand = position + glm::vec3(offsetX, offsetY, offsetZ);
+
+        glm::vec3 smoke_vel(
+            (rand() % 100 -50) / 40.0f,
+            (rand() % 100 -50) / 20.0f,
+            (rand() % 100 -50) / 40.0f
+        );
+        ps.emit(
+            position_rand,
+            smoke_size,
+            smoke_vel,
+            smoke_lifetime,
+            smoke_gravity,
+            smoke_drag,
+            COLOR_SMOKE
+        );
+    }
+}
+
 int main() {
     OpenGLCamera camera;
-    OpenGLWindow window("OpenGL Window", &camera);    
+    OpenGLWindow window("OpenGL Window", &camera);
     OpenGLShader default_shader("shaders/default.vert", "shaders/default.frag");
     OpenGLShader particle_shader("shaders/particles.vert", "shaders/particles.frag");
 
@@ -55,35 +105,29 @@ int main() {
     //     house_model.draw(default_shader, camera, window.show_wireframe);
     // });
 
-    ParticleSystem ps(500);
-    srand(static_cast<unsigned int>(time(0)));
+    int particles_to_render = 1000;
+    ParticleSystem particle_system(particles_to_render);
+    srand(static_cast<unsigned int>(time(0))); // initalize random seed
 
-    float spawn_timer = 0.0f;
+    OpenGLModel ground("models/obj/flat_plane.obj");
+    OpenGLModel player_body("models/obj/player.obj");
+
+    Player player("Mashhood", &camera, &player_body, &default_shader);
 
     window.run([&](){
         float dt = window.deltaTime;
-        spawn_timer += dt;
 
-        if (spawn_timer > 0.1f)
+        if (glfwGetKey(window.get_window_ptr(), GLFW_KEY_SPACE) == GLFW_PRESS)
         {
-            for (int i = 0; i < 5; i++)
-            {
-                glm::vec3 origin(0.0f, 2.0f, 0.0f);
-
-                glm::vec3 velocity(
-                    (rand() % 100 - 50) / 25.0f,
-                    (rand() % 100) / 20.0f,
-                    (rand() % 100 - 50) / 25.0f
-                );
-
-                float life = 1.0f + (rand() % 100 / 100.0f);
-                ps.emit(origin, velocity, life);
-            }
-            spawn_timer = 0.0f;
+            trigger_explosion(glm::vec3(0, 1, 0), particle_system);
         }
 
-        ps.update(dt);
-        ps.draw(particle_shader, camera);
+        ground.draw(default_shader, camera, window.show_wireframe);
+        
+        particle_system.update(dt);
+        particle_system.draw(particle_shader, camera);
+
+        player.update(window.get_window_ptr(), window.deltaTime);
     });
 
     return 0;
