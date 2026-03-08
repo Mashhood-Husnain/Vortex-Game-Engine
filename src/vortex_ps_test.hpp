@@ -67,6 +67,6 @@ void ps_circle(glm::vec3 position, ParticleSystem &ps, int no_of_particles)
             sin(angle) * speed
         );
 
-        ps.emit(position, 2.0f, velocity, 2.0f, 1.0f, 0.0f, COLOR_ORANGE);
+        ps.emit(position, 2.0f, velocity, 2.0f, 0.0f, 0.0f, COLOR_ORANGE);
     }
 }

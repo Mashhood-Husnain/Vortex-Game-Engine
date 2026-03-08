@@ -8,7 +8,7 @@
 #include "vortex_ps_test.hpp"
 
 int main() {
-    VortexCamera camera(glm::vec3(0.0f, 20.0f, 0.0f));
+    VortexCamera camera(glm::vec3(-5.0f, 20.0f, 0.0f));
     camera.look_at(glm::vec3(0.0f, 0.0f, 0.0f));
 
     VortexWindow window("Vortex Window", &camera);
@@ -27,7 +27,7 @@ int main() {
 
         if (glfwGetKey(window.get_window_ptr(), GLFW_KEY_SPACE) == GLFW_PRESS)
         {
-            ps_explosion(glm::vec3(0, 1, 0), particle_system, 250);
+            // ps_explosion(glm::vec3(0, 1, 0), particle_system, 250);
             ps_circle(glm::vec3(0, 1, 0), particle_system, 50);
         }
 

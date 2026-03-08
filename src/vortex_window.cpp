@@ -110,7 +110,7 @@ void VortexWindow::draw_world_axis()
 
 void VortexWindow::draw_world_axis_gizmo()
 {
-    glDisable(GL_DEPTH_TEST); 
+    glDisable(GL_DEPTH_TEST);
 
     glUseProgram(worldaxis_shader->shader_program);
 
@@ -273,8 +273,12 @@ void VortexWindow::run(std::function<void()> draw_callback)
 
         draw_callback();
         
-        if (view_world_axis) draw_world_axis();
-        draw_world_axis_gizmo();
+        if (view_world_axis)
+        {
+            draw_world_axis();
+            draw_world_axis_gizmo();
+        }
+        
         // swap buffers and poll IO
         glfwSwapBuffers(window);
     }
