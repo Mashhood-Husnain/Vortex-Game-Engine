@@ -9,7 +9,7 @@
 
 int main() {
     VortexCamera camera(glm::vec3(-5.0f, 20.0f, 0.0f));
-    camera.look_at(glm::vec3(0.0f, 0.0f, 0.0f));
+    camera.look_at(glm::vec3(10.0f, 0.0f, 0.0f));
 
     VortexWindow window("Vortex Window", &camera);
 
@@ -18,7 +18,7 @@ int main() {
 
     ParticleSystem particle_system(1000);
 
-    VortexModel ground("models/obj/flat_plane.obj");
+    VortexModel ground("assets/models/obj/flat_plane.obj");
 
     srand(static_cast<unsigned int>(time(0))); // initalize random seed
 

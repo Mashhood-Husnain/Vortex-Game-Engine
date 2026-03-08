@@ -1,66 +1,55 @@
 cmake_minimum_required(VERSION 3.10)
-project(OpenGLGame)
+project(VortexEngine)
 
-# C++ 17
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
-# --- 1. Setup GLFW (Windowing) ---
+# Vendors
 set(GLFW_BUILD_DOCS OFF CACHE BOOL "" FORCE)
-set(GLFW_BUILD_TESTS OFF CACHE BOOL "" FORCE)
-set(GLFW_BUILD_EXAMPLES OFF CACHE BOOL "" FORCE)
 add_subdirectory(vendor/glfw)
 
-# --- 2. Setup GLAD (OpenGL Loader) ---
+# GLAD
 add_library(glad vendor/glad/src/glad.c)
 target_include_directories(glad PUBLIC vendor/glad/include)
 
-# Get all shader files
-file(GLOB SHADER_FILES "${CMAKE_SOURCE_DIR}/src/shaders/*")
+# STB_IMAGE
+add_library(stb_image vendor/stbimage/stb_image.cpp)
+target_include_directories(stb_image PUBLIC vendor/stbimage)
 
+# Shaders & Assets
+file(GLOB SHADER_FILES "Vortex/shaders/*")
 foreach(SHADER ${SHADER_FILES})
     get_filename_component(SHADER_NAME ${SHADER} NAME)
     configure_file(${SHADER} ${CMAKE_BINARY_DIR}/shaders/${SHADER_NAME} COPYONLY)
 endforeach()
 
-# Get all files within the models directory
-file(GLOB_RECURSE MODEL_FILES "${CMAKE_SOURCE_DIR}/src/models/*")
-
+file(GLOB_RECURSE MODEL_FILES "Vortex/assets/*")
 foreach(MODEL ${MODEL_FILES})
-    # 1. Get the path relative to the source 'models' folder
-    # Example: src/models/mtl/textures/house.png -> mtl/textures/house.png
-    file(RELATIVE_PATH REL_PATH "${CMAKE_SOURCE_DIR}/src/models" ${MODEL})
-
-    # 2. Copy the file while preserving the relative directory structure
-    configure_file(${MODEL} "${CMAKE_BINARY_DIR}/models/${REL_PATH}" COPYONLY)
+    file(RELATIVE_PATH REL_PATH "${CMAKE_SOURCE_DIR}/Vortex/assets" ${MODEL})
+    configure_file(${MODEL} "${CMAKE_BINARY_DIR}/assets/${REL_PATH}" COPYONLY)
 endforeach()
 
-# --- 3. Setup Your Game ---
-add_executable(game 
-    src/main.cpp
-    src/vortex_window.cpp
-    src/vortex_window.hpp
-    src/vortex_shaders.cpp
-    src/vortex_shaders.hpp
-    src/vortex_camera.cpp
-    src/vortex_camera.hpp
-    src/vortex_objreader.cpp
-    src/vortex_objreader.hpp
-    src/stb_image.cpp
-    src/stb_image.h
-    src/vortex_player.cpp
-    src/vortex_player.hpp
-    src/vortex_particlesystem.cpp
-    src/vortex_particlesystem.hpp
-    src/vortex_global_vars.hpp
-    src/vortex_ps_test.hpp
-    # add other source files here
-    # example: src/Game.cpp, src/Renderer.cpp, etc.
+# EXECUTABLE
+add_executable(engine 
+    Vortex/world/main.cpp
+    Vortex/src/vortex_window.cpp
+    Vortex/src/vortex_shaders.cpp
+    Vortex/src/vortex_camera.cpp
+    Vortex/src/vortex_objreader.cpp
+    Vortex/src/vortex_player.cpp
+    Vortex/src/vortex_particlesystem.cpp
 )
 
-# --- 4. Link Everything ---
-target_link_libraries(game glfw glad)
-target_include_directories(game PUBLIC vendor/glm)
+# INCLUDE DIRECTORIES
+target_include_directories(engine PUBLIC 
+    Vortex/include
+    vendor/glm
+    vendor/glad/include
+    vendor/stbimage
+)
+
+# LINKING
+target_link_libraries(engine glfw glad stb_image)
 
 find_package(Threads REQUIRED)
-target_link_libraries(game Threads::Threads ${CMAKE_DL_LIBS})
+target_link_libraries(engine Threads::Threads ${CMAKE_DL_LIBS})
