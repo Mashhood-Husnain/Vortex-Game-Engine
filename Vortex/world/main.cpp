@@ -5,7 +5,7 @@
 #include "vortex_player.hpp"
 #include "vortex_particlesystem.hpp"
 
-#include "vortex_ps_test.hpp"
+#include "test/vortex_ps_test.hpp"
 
 int main() {
     VortexCamera camera(glm::vec3(-5.0f, 20.0f, 0.0f));
