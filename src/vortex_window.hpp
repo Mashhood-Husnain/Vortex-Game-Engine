@@ -3,11 +3,15 @@
 #include <glad/glad.h>
 #include <GLFW/glfw3.h>
 #include <glm/glm.hpp>
+#include <glm/gtc/type_ptr.hpp>
 #include <iostream>
 #include <string>
 #include <functional>
 
 #include "vortex_camera.hpp"
+#include "vortex_shaders.hpp"
+
+#include "vortex_global_vars.hpp"
 
 class VortexWindow
 {
@@ -26,11 +30,19 @@ class VortexWindow
     bool first_mouse = true;
     float lastFrame = 0.0f; // related with deltaTime
 
+    VortexShader *worldaxis_shader = nullptr;
+    unsigned int world_axisVAO;
+    unsigned int world_axisVBO;
+    bool view_world_axis = false;
+
     GLFWmonitor* get_current_monitor(GLFWwindow* window);
     static void framebuffer_size_callback(GLFWwindow* window, int width, int height);
     static void key_callback(GLFWwindow* window, int key, int scancode, int action, int mods);
     static void mouse_callback(GLFWwindow* window, double xposIn, double yposIn);
     void set_fullscreen();
+    void setup_world_axis_buffers();
+    void draw_world_axis();
+    void draw_world_axis_gizmo();
 public:
     glm::vec4 bg_color = glm::vec4(0.4f, 0.45f, 0.5f, 1.0f);
     float deltaTime = 0.0f;

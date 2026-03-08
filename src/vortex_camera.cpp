@@ -14,10 +14,15 @@ void VortexCamera::update_camera_vectors()
 }
 
 VortexCamera::VortexCamera(glm::vec3 position, glm::vec3 up, float yaw, float pitch)
-        : position(position), world_up(up), yaw(yaw), pitch(pitch), front(glm::vec3(0.0f, 0.0f, -1.0f))
 {
-        update_camera_vectors();
-        anchored = false;
+    this->position = position;
+    world_up = up;
+    this->yaw = yaw;
+    this->pitch = pitch;
+    front = glm::vec3(0.0f, 0.0f, -1.0f);
+
+    update_camera_vectors();
+    anchored = false;
 }
 
 glm::mat4 VortexCamera::getViewMatrix()
@@ -62,4 +67,19 @@ void VortexCamera::check_camera_movement(GLFWwindow* window, float deltaTime)
     if (glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS) processKeyboard("RIGHT", deltaTime);
     if (glfwGetKey(window, GLFW_KEY_Q) == GLFW_PRESS) processKeyboard("UP", deltaTime);
     if (glfwGetKey(window, GLFW_KEY_E) == GLFW_PRESS) processKeyboard("DOWN", deltaTime);
+}
+
+glm::mat4 VortexCamera::getProjectionMatrix()
+{
+    return glm::perspective(fov, aspect_ratio, near_plane, far_plane);
+}
+
+void VortexCamera::look_at(glm::vec3 target)
+{
+    glm::vec3 direction = glm::normalize(target-position);
+
+    pitch = glm::degrees(asin(direction.y));
+    yaw = glm::degrees(atan2(direction.z, direction.x));
+
+    update_camera_vectors();
 }

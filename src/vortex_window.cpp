@@ -72,8 +72,65 @@ void VortexWindow::key_callback(GLFWwindow* window, int key, int scancode, int a
             case GLFW_KEY_R:
                 app->camera->anchored = !app->camera->anchored;
                 break;
+            case GLFW_KEY_V:
+                app->view_world_axis = !app->view_world_axis;
         }
     }
+}
+
+void VortexWindow::setup_world_axis_buffers()
+{
+    glGenVertexArrays(1, &world_axisVAO);
+    glGenBuffers(1, &world_axisVBO);
+    glBindVertexArray(world_axisVAO);
+    glBindBuffer(GL_ARRAY_BUFFER, world_axisVBO);
+    glBufferData(GL_ARRAY_BUFFER, sizeof(global_WORLDAXESVERTICES), global_WORLDAXESVERTICES, GL_STATIC_DRAW);
+
+    // position location
+    glEnableVertexAttribArray(0);
+    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(float), (void*)0);
+
+    // color location
+    glEnableVertexAttribArray(1);
+    glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(float), (void*)(3 * sizeof(float)));
+}
+
+void VortexWindow::draw_world_axis()
+{
+    glUseProgram(worldaxis_shader->shader_program);
+
+    glUniformMatrix4fv(glGetUniformLocation(worldaxis_shader->shader_program, "view"), 1, GL_FALSE, glm::value_ptr(camera->getViewMatrix()));
+    glUniformMatrix4fv(glGetUniformLocation(worldaxis_shader->shader_program, "projection"), 1, GL_FALSE, glm::value_ptr(camera->getProjectionMatrix()));
+
+    glLineWidth(2.0f);
+    glBindVertexArray(world_axisVAO);
+    glDrawArrays(GL_LINES, 0, 6);
+    glBindVertexArray(0);
+}
+
+void VortexWindow::draw_world_axis_gizmo()
+{
+    glDisable(GL_DEPTH_TEST); 
+
+    glUseProgram(worldaxis_shader->shader_program);
+
+    glm::mat4 viewRotation = glm::mat4(glm::mat3(camera->getViewMatrix()));
+    glm::mat4 orthoProj = glm::ortho(-10.0f, 10.0f, -10.0f, 10.0f, -1.0f, 10.0f);
+
+    GLint viewport[4];
+    glGetIntegerv(GL_VIEWPORT, viewport);
+    glViewport(10, 10, 100, 100);
+
+    glUniformMatrix4fv(glGetUniformLocation(worldaxis_shader->shader_program, "view"), 1, GL_FALSE, glm::value_ptr(viewRotation));
+    glUniformMatrix4fv(glGetUniformLocation(worldaxis_shader->shader_program, "projection"), 1, GL_FALSE, glm::value_ptr(orthoProj));
+
+    glLineWidth(3.0f);
+    glBindVertexArray(world_axisVAO);
+    glDrawArrays(GL_LINES, 0, 6);
+    glBindVertexArray(0);
+
+    glViewport(viewport[0], viewport[1], viewport[2], viewport[3]);
+    glEnable(GL_DEPTH_TEST);
 }
 
 VortexWindow::VortexWindow(std::string window_name, VortexCamera* camera, int width, int height)
@@ -120,6 +177,9 @@ VortexWindow::VortexWindow(std::string window_name, VortexCamera* camera, int wi
         std::cerr << "Failed to initialize GLAD" << std::endl;
         exit(EXIT_FAILURE);
     }
+
+    worldaxis_shader = new VortexShader("shaders/world_axis.vert", "shaders/world_axis.frag");
+    setup_world_axis_buffers();
 
     // V-sync
     glfwSwapInterval(1);
@@ -213,6 +273,8 @@ void VortexWindow::run(std::function<void()> draw_callback)
 
         draw_callback();
         
+        if (view_world_axis) draw_world_axis();
+        draw_world_axis_gizmo();
         // swap buffers and poll IO
         glfwSwapBuffers(window);
     }

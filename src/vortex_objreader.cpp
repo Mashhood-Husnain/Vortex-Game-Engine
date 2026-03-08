@@ -19,7 +19,7 @@ void VortexModel::draw(const VortexShader& shader, VortexCamera& camera, bool wi
     glUseProgram(shader.shader_program);
 
     glUniformMatrix4fv(glGetUniformLocation(shader.shader_program, "view"), 1, GL_FALSE, glm::value_ptr(camera.getViewMatrix()));
-    glUniformMatrix4fv(glGetUniformLocation(shader.shader_program, "projection"), 1, GL_FALSE, glm::value_ptr(glm::perspective(glm::radians(45.0f), camera.aspect_ratio, 0.1f, 100.0f)));
+    glUniformMatrix4fv(glGetUniformLocation(shader.shader_program, "projection"), 1, GL_FALSE, glm::value_ptr(camera.getProjectionMatrix()));
 
     glm::vec3 light_pos(10.0f, 10.0f, 10.0f);
     glUniform3fv(glGetUniformLocation(shader.shader_program, "lightPos"), 1, glm::value_ptr(light_pos));

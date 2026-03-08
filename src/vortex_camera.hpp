@@ -15,6 +15,9 @@ public:
     glm::vec3 up;
     glm::vec3 right;
     glm::vec3 world_up;
+    float fov = 45.0f;
+    float near_plane = 0.1f;
+    float far_plane = 100.0f;
 
     float yaw, pitch;
 
@@ -29,4 +32,6 @@ public:
     void processKeyboard(const std::string& direction, float deltaTime);
     void processMouseMovement(float xoffset, float yoffset);
     void check_camera_movement(GLFWwindow* window, float deltaTime);
+    glm::mat4 getProjectionMatrix();
+    void look_at(glm::vec3 target);
 };

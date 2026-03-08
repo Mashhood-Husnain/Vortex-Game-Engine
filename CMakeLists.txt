@@ -52,7 +52,8 @@ add_executable(game
     src/vortex_player.hpp
     src/vortex_particlesystem.cpp
     src/vortex_particlesystem.hpp
-    src/global_vars.hpp
+    src/vortex_global_vars.hpp
+    src/vortex_ps_test.hpp
     # add other source files here
     # example: src/Game.cpp, src/Renderer.cpp, etc.
 )

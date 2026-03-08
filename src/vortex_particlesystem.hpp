@@ -7,7 +7,7 @@
 
 #include "vortex_shaders.hpp"
 #include "vortex_camera.hpp"
-#include "global_vars.hpp"
+#include "vortex_global_vars.hpp"
 
 struct ParticleInstance
 {
