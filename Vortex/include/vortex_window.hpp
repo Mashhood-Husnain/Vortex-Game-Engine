@@ -1,3 +1,11 @@
+/*
+ * File: vortex_window.hpp
+ * Project: VortexEngine
+ * Description: Implementation of window
+ * Author: Mashhood Husnain
+ * License: MIT
+ */
+
 #pragma once
 
 #include <glad/glad.h>

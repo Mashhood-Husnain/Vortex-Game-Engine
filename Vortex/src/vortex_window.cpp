@@ -1,3 +1,11 @@
+/*
+ * File: vortex_window.cpp
+ * Project: VortexEngine
+ * Description: Implementation of window
+ * Author: Mashhood Husnain
+ * License: MIT
+ */
+
 #include "vortex_window.hpp"
 
 GLFWmonitor* VortexWindow::get_current_monitor(GLFWwindow* window)
@@ -196,6 +204,8 @@ VortexWindow::VortexWindow(std::string window_name, VortexCamera* camera, int wi
     stored_window_width = width;
     stored_window_height = height;
     glfwGetWindowPos(window, &stored_window_x_pos, &stored_window_y_pos);
+
+    srand(static_cast<unsigned int>(time(0)));
 }
 
 VortexWindow::~VortexWindow()

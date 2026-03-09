@@ -1,3 +1,12 @@
+/*
+ * File: vortex_obj_reader.cpp
+ * Project: VortexEngine
+ * Description: Read object files to load 3D models in the scene
+ * Author: Mashhood Husnain
+ * License: MIT
+ */
+
+
 #include "vortex_objreader.hpp"
 
 VortexModel::VortexModel(const std::string& path)

@@ -1,3 +1,11 @@
+/*
+ * File: vortex_camera.hpp
+ * Project: VortexEngine
+ * Description: Camera implementation
+ * Author: Mashhood Husnain
+ * License: MIT
+ */
+
 #pragma once
 
 #include <glad/glad.h>

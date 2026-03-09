@@ -1,13 +1,21 @@
+/*
+ * File: vortex_particlesystem.cpp
+ * Project: VortexEngine
+ * Description: Implementation of particle system
+ * Author: Mashhood Husnain
+ * License: MIT
+ */
+
 #include "vortex_particlesystem.hpp"
 
 ParticleSystem::ParticleSystem(int max_particles)
 {
     this->max_particles = max_particles;
-    particles.resize(max_particles);
+    particles.resize(this->max_particles);
     setup_buffers();
 }
 
-void ParticleSystem::emit(glm::vec3 position, float size, glm::vec3 velocity, float life, float gravity_scale, float drag, glm::vec4 particle_color, bool reduce_size)
+void ParticleSystem::emit(glm::vec3 position, float size, glm::vec3 velocity, float life, float gravity_scale, float drag, glm::vec4 particle_color, ParticleBehaviour behaviour)
 {
     if (active_count >= particles.size()) return;
 
@@ -23,7 +31,7 @@ void ParticleSystem::emit(glm::vec3 position, float size, glm::vec3 velocity, fl
     particle.drag = drag;
     particle.particle_instance.color = particle_color;
     particle.initial_alpha = particle.particle_instance.color.a;
-    particle.reduce_size = reduce_size;
+    particle.behaviour = behaviour;
 
     active_count++;
 }
@@ -38,6 +46,7 @@ void ParticleSystem::update(float deltaTime)
         particle.life -= deltaTime;
 
         float life_ratio = particle.life / particle.max_life;
+        float particle_size_behaviour;
 
         if (particle.life <= 0.0f)
         {
@@ -47,21 +56,35 @@ void ParticleSystem::update(float deltaTime)
             continue;
         }
 
-        if (particle.reduce_size)
+        switch (particle.behaviour)
         {
-            particle.particle_instance.size = particle.initial_size * (life_ratio * life_ratio);
+            case ParticleBehaviour::GROW:
+                particle_size_behaviour = particle.initial_size + (particle.initial_size * (1.0f - life_ratio));
+            break;
+
+            case ParticleBehaviour::SHRINK:
+                particle_size_behaviour = particle.initial_size * (life_ratio * life_ratio);
+            break;
+        
+            default:
+                particle_size_behaviour = particle.initial_size;
+            break;
         }
 
         particle.velocity.y -= g_dt * particle.gravity_scale;
         particle.velocity *= 1.0f - (particle.drag * deltaTime);
         particle.particle_instance.position += particle.velocity * deltaTime;
+        particle.particle_instance.size = particle_size_behaviour;
 
         if (particle.gravity_scale < 0.0f)
         {
-            float time = glfwGetTime();
-            particle.particle_instance.position.x += sin(particle.particle_instance.position.y + time) * 0.01f;
-            particle.particle_instance.position.z += cos(particle.particle_instance.position.y + time) * 0.01f;
-            particle.particle_instance.color.a = particle.particle_instance.color.a * life_ratio;
+            float jitterX = ((rand() % 100) / 100.0f - 0.5f) * 0.005f;
+            float jitterZ = ((rand() % 100) / 100.0f - 0.5f) * 0.005f;
+            
+            particle.particle_instance.position.x += jitterX;
+            particle.particle_instance.position.z += jitterZ;
+
+            particle.particle_instance.color.a = particle.initial_alpha * life_ratio;
         }
 
         if (particle.gravity_scale > 0.0f && particle.particle_instance.position.y < 0.0f)
@@ -105,10 +128,31 @@ void ParticleSystem::draw(VortexShader &shader, VortexCamera &camera)
     glBindBuffer(GL_ARRAY_BUFFER, instanceVBO);
     glBufferSubData(GL_ARRAY_BUFFER, 0, instance_data.size() * sizeof(ParticleInstance), instance_data.data());
 
+    glEnable(GL_BLEND);
+    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+    glDepthMask(GL_FALSE);
+
     glBindVertexArray(VAO);
     glDrawArraysInstanced(GL_TRIANGLES, 0, 6, (GLsizei)instance_data.size());
 
     glBindVertexArray(0);
+    glDepthMask(GL_TRUE);
+    glDisable(GL_BLEND);
+}
+
+void ParticleSystem::resize_particles(int no_of_particles)
+{
+    if (VAO != 0) glDeleteVertexArrays(1, &VAO);
+    if (VBO != 0) glDeleteBuffers(1, &VBO);
+    if (instanceVBO != 0) glDeleteBuffers(1, &instanceVBO);
+
+    max_particles = no_of_particles;
+    active_count = 0;
+
+    particles.clear();
+    particles.resize(max_particles);
+
+    setup_buffers();
 }
 
 void ParticleSystem::setup_buffers()
@@ -127,7 +171,7 @@ void ParticleSystem::setup_buffers()
 
     // instance location
     glBindBuffer(GL_ARRAY_BUFFER, instanceVBO);
-    glBufferData(GL_ARRAY_BUFFER, particles.size() * sizeof(ParticleInstance), NULL, GL_DYNAMIC_DRAW);
+    glBufferData(GL_ARRAY_BUFFER, max_particles * sizeof(ParticleInstance), NULL, GL_DYNAMIC_DRAW);
 
     // position
     glEnableVertexAttribArray(1);
@@ -145,4 +189,13 @@ void ParticleSystem::setup_buffers()
     glVertexAttribDivisor(3, 1);
 
     glBindVertexArray(0);
+}
+
+ParticleSystem::~ParticleSystem()
+{
+    if (VAO != 0) glDeleteVertexArrays(1, &VAO);
+    if (VBO != 0) glDeleteBuffers(1, &VBO);
+    if (instanceVBO != 0) glDeleteBuffers(1, &instanceVBO);
+    active_count = 0;
+    particles.clear();
 }

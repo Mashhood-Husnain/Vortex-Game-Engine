@@ -1,3 +1,11 @@
+/*
+ * File: vortex_shaders.hpp
+ * Project: VortexEngine
+ * Description: Implementation for reading shaders
+ * Author: Mashhood Husnain
+ * License: MIT
+ */
+
 #pragma once
 
 #include <glad/glad.h>

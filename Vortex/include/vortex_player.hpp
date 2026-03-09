@@ -1,3 +1,11 @@
+/*
+ * File: vortex_player.hpp
+ * Project: VortexEngine
+ * Description: Implementation of player
+ * Author: Mashhood Husnain
+ * License: MIT
+ */
+
 #pragma once
 
 #include <iostream>

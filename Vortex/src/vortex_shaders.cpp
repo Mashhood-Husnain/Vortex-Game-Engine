@@ -1,3 +1,11 @@
+/*
+ * File: vortex_shaders.cpp
+ * Project: VortexEngine
+ * Description: Implementation for reading shaders
+ * Author: Mashhood Husnain
+ * License: MIT
+ */
+
 #include "vortex_shaders.hpp"
 
 bool VortexShader::read_shader(std::string& vertex_path, std::string& fragment_path)

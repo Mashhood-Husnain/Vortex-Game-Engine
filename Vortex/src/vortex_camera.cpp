@@ -1,3 +1,11 @@
+/*
+ * File: vortex_camera.cpp
+ * Project: VortexEngine
+ * Description: Camera implementation
+ * Author: Mashhood Husnain
+ * License: MIT
+ */
+
 #include "vortex_camera.hpp"
 
 void VortexCamera::update_camera_vectors()

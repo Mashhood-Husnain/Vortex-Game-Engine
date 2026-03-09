@@ -27,7 +27,6 @@ cmake_install.cmake
 Makefile
 CTestTestfile.cmake
 compile_commands.json
-Vortex/assets/
 
 # --- 5. Executables ---
 # Ignore all executables by default

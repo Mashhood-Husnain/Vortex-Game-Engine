@@ -1,3 +1,11 @@
+/*
+ * File: vortex_player.cpp
+ * Project: VortexEngine
+ * Description: Implementation of player
+ * Author: Mashhood Husnain
+ * License: MIT
+ */
+
 #include "vortex_player.hpp"
 
 Player::Player(const std::string& name, VortexCamera* camera, VortexModel* player_body, VortexShader* shader, glm::vec3 starting_position)
