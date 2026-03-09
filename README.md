@@ -1,6 +1,6 @@
 # Vortex Engine
 
-A lightweight, high-performance 2D/3D rendering engine built from scratch using **C++** and **OpenGL**. This project focuses on implementing efficient instanced rendering, modular shader systems, and custom particle physics.
+Vortex Engine is a personal project currently in its early development stages. It serves as a foundational bridge between basic rendering and a complete engine, focusing on low-level systems like memory management and pipeline optimization. While core features such as high-performance particle pooling and instanced rendering are functional, the engine is not yet a finished toolkit. Many standard features, including complex lighting and a scene hierarchy, are still being planned. This project follows a bottom-up approach to ensure a fast and efficient base for future implementations.
 
 ## Prerequisites
 Ensure you have a C++17 compatible compiler and CMake (3.10+) installed.
