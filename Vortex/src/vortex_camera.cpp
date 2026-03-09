@@ -71,12 +71,12 @@ void VortexCamera::check_camera_movement(GLFWwindow* window, float deltaTime)
 
 glm::mat4 VortexCamera::getProjectionMatrix()
 {
-    return glm::perspective(fov, aspect_ratio, near_plane, far_plane);
+    return glm::perspective(fov, aspect_ratio, near_plane, far_plane);;
 }
 
 void VortexCamera::look_at(glm::vec3 target)
 {
-    glm::vec3 direction = glm::normalize(target-position);
+    glm::vec3 direction = glm::normalize(target - position);
 
     pitch = glm::degrees(asin(direction.y));
     yaw = glm::degrees(atan2(direction.z, direction.x));

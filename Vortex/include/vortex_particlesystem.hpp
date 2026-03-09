@@ -31,7 +31,11 @@ struct Particle
     float elasticity = 0.5f;
     float friction = 0.8f;
 
-    bool is_active() const {return life > 0.0f;}
+    bool reduce_size;
+
+    bool is_active() const {
+        return life > 0.0f && particle_instance.size > 0.01;
+    }
 };
 
 class ParticleSystem
@@ -41,11 +45,12 @@ class ParticleSystem
     unsigned int VBO;
     unsigned int instanceVBO;
     int max_particles;
+    int active_count = 0;
 
     void setup_buffers();
 public:
     ParticleSystem(int max_particles);
-    void emit(glm::vec3 position, float size, glm::vec3 velocity, float life, float gravity_scale, float drag, glm::vec4 particle_color);
+    void emit(glm::vec3 position, float size, glm::vec3 velocity, float life, float gravity_scale, float drag, glm::vec4 particle_color, bool reduce_size=true);
     void update(float deltaTime);
     void draw(VortexShader &shader, VortexCamera &camera);
 };

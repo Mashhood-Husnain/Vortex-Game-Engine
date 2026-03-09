@@ -9,15 +9,16 @@
 class VortexCamera
 {
     void update_camera_vectors();
+
+    float fov = 45.0f;
+    float near_plane = 0.1f;
+    float far_plane = 100.0f;
 public:
     glm::vec3 position;
     glm::vec3 front;
     glm::vec3 up;
     glm::vec3 right;
     glm::vec3 world_up;
-    float fov = 45.0f;
-    float near_plane = 0.1f;
-    float far_plane = 100.0f;
 
     float yaw, pitch;
 

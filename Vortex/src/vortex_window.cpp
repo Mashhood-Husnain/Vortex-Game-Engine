@@ -200,6 +200,9 @@ VortexWindow::VortexWindow(std::string window_name, VortexCamera* camera, int wi
 
 VortexWindow::~VortexWindow()
 {
+    delete worldaxis_shader;
+
+    worldaxis_shader = nullptr;
     window = nullptr;
     camera = nullptr;
     glfwDestroyWindow(window);

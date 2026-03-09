@@ -4,7 +4,15 @@
 
 #include <cstdlib>
 
-void ps_explosion(glm::vec3 position, ParticleSystem& ps, int no_of_particles)
+void ps(glm::vec3 position, ParticleSystem &ps, int no_of_particles)
+{
+    for (int i = 0; i < no_of_particles; i++)
+    {
+
+    }
+}
+
+void ps_explosion(glm::vec3 position, ParticleSystem &ps, int no_of_particles)
 {
     float debris_size = 0.5f;
     float debris_lifetime = 2.0f;
@@ -56,6 +64,10 @@ void ps_explosion(glm::vec3 position, ParticleSystem& ps, int no_of_particles)
 
 void ps_circle(glm::vec3 position, ParticleSystem &ps, int no_of_particles)
 {
+    float particle_size = 1.0f;
+    float gravity = 1.0f;
+    float drag = 0.0f;
+
     for (int i = 0; i < no_of_particles; i++)
     {
         float angle = (rand() % 360) * (M_PI / 180.0f);
@@ -67,6 +79,18 @@ void ps_circle(glm::vec3 position, ParticleSystem &ps, int no_of_particles)
             sin(angle) * speed
         );
 
-        ps.emit(position, 2.0f, velocity, 2.0f, 0.0f, 0.0f, COLOR_ORANGE);
+        // 0.5 - 1.5
+        float particle_life = 1.0f + ((rand() % 100) / 100.0f - 0.5f);
+
+        ps.emit(
+            position,
+            particle_size,
+            velocity,
+            particle_life,
+            gravity,
+            drag,
+            COLOR_ORANGE,
+            true
+        );
     }
 }

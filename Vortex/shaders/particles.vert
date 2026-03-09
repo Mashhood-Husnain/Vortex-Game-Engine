@@ -16,7 +16,7 @@ void main() {
     vec3 scaledPos = aPos * aSize;
     
     vec3 billboardPos = instancePos + cameraRight * scaledPos.x + cameraUp * scaledPos.y;
-
+    
     ParticleColor = aColor;
     gl_Position = projection * view * vec4(billboardPos, 1.0);
 }
