@@ -25,10 +25,23 @@ be anchored when 'R' is pressed
 [STATUS] [PENDING]
 
 
+[BUG] [LOW] Shadow Issue:
+[DESC]:
+Shadows suddenly disappear when one object occludes another, the
+shadow becomes visible again once the occlusion is removed. The
+shadow should slowly decrease instead of disappearing
+[STATUS] [PENDING]
+
+
 [REFACTOR] [LOW] Player Logic:
 ----------------------------------------------------------------
 [DESC]:
 it's a fucking mess
+[STATUS] [PENDING]
+
+[REFACTOR] [LOW] ShadowManager:
+[DESC]:
+refactor the ShadowManager class code
 [STATUS] [PENDING]
 
 

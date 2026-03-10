@@ -92,7 +92,7 @@ void VortexWindow::setup_world_axis_buffers()
     glGenBuffers(1, &world_axisVBO);
     glBindVertexArray(world_axisVAO);
     glBindBuffer(GL_ARRAY_BUFFER, world_axisVBO);
-    glBufferData(GL_ARRAY_BUFFER, sizeof(global_WORLDAXESVERTICES), global_WORLDAXESVERTICES, GL_STATIC_DRAW);
+    glBufferData(GL_ARRAY_BUFFER, sizeof(GLOBAL::DEFAULT_VERTICES::WORLD_AXES_VERTICES), GLOBAL::DEFAULT_VERTICES::WORLD_AXES_VERTICES, GL_STATIC_DRAW);
 
     // position location
     glEnableVertexAttribArray(0);
@@ -189,6 +189,8 @@ VortexWindow::VortexWindow(std::string window_name, VortexCamera* camera, int wi
     worldaxis_shader = new VortexShader("shaders/world_axis.vert", "shaders/world_axis.frag");
     setup_world_axis_buffers();
 
+    shadow_manager = new ShadowManager();
+
     // V-sync
     glfwSwapInterval(1);
 
@@ -211,10 +213,13 @@ VortexWindow::VortexWindow(std::string window_name, VortexCamera* camera, int wi
 VortexWindow::~VortexWindow()
 {
     delete worldaxis_shader;
+    delete shadow_manager;
 
     worldaxis_shader = nullptr;
+    shadow_manager = nullptr;
     window = nullptr;
     camera = nullptr;
+
     glfwDestroyWindow(window);
     glfwTerminate();
 }
@@ -275,12 +280,15 @@ void VortexWindow::run(std::function<void()> draw_callback)
         glfwPollEvents();
 
         float currentFrame = static_cast<float>(glfwGetTime());
-        deltaTime = currentFrame - lastFrame;
-        lastFrame = currentFrame;
+        deltaTime = currentFrame - last_frame;
+        last_frame = currentFrame;
 
         camera->check_camera_movement(window, deltaTime);
+
+        shadow_manager->draw_shadow_map(draw_callback);
         
         // rendering
+        glViewport(0, 0, default_window_width, default_window_height);
         glClearColor(bg_color.r, bg_color.g, bg_color.b, bg_color.a);
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 

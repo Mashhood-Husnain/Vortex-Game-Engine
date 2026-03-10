@@ -16,15 +16,15 @@ void ps_smoke(glm::vec3 position, ParticleSystem &ps, int no_of_particles)
 {
     float particle_size = 0.5f;
     float gravity = -0.06f;
-    float drag = 0.7f;
+    float drag = 0.9f;
 
     for (int i = 0; i < no_of_particles; i++)
     {
         float angle = (rand() % 360) * (M_PI / 180.0f);
         float spread = (rand() % 100 / 100.0f) * 0.8f;
 
-        float upward_speed = (rand() % 100 / 40.0f) + 0.8f;
-        float particle_life = 3.0f + ((rand() % 200) / 100.0f);
+        float upward_speed = 0.5f; //(rand() % 100 / 40.0f) + 0.8f;
+        float particle_life = 2.0f + ((rand() % 100) / 100.0f);
 
         glm::vec3 spawn_pos = position;
         spawn_pos.x += ((rand() % 100 / 100.0f) - 0.5f) * 0.5f;
@@ -43,7 +43,7 @@ void ps_smoke(glm::vec3 position, ParticleSystem &ps, int no_of_particles)
             particle_life,
             gravity,
             drag,
-            COLORS::SMOKE,
+            GLOBAL::COLORS::SMOKE,
             ParticleBehaviour::GROW
         );
     }

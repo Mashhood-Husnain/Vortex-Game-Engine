@@ -20,6 +20,9 @@
 
 #include "vortex_shaders.hpp"
 #include "vortex_camera.hpp"
+#include "vortex_window.hpp"
+#include "util/vortex_global_vars.hpp"
+
 #include "stb_image.h"
 
 struct VortexModel_Vertex
@@ -62,6 +65,7 @@ class VortexModel
     void parse_mtl(const std::string& mtl_filename);
     unsigned int load_texture(const std::string& texture_path);
     void setup_mesh();
+    VortexWindow *window;
 public:
     glm::vec3 position = glm::vec3(0.0f);
     glm::vec3 rotation = glm::vec3(0.0f);
@@ -72,8 +76,10 @@ public:
     unsigned int normal_id=0;
     float model_height=0.0f;
 
-    VortexModel(const std::string& model_path);
+    VortexModel(const std::string& model_path, VortexWindow *window);
     void draw(const VortexShader& shader, VortexCamera& camera, bool wireframe);
     std::vector<VortexModel_Object>& get_objects();
     ~VortexModel();
 };
+
+void align_on_top(VortexModel& top_obj, const VortexModel& bottom_obj);

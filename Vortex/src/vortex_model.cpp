@@ -7,10 +7,18 @@
  */
 
 
-#include "vortex_objreader.hpp"
+#include "vortex_model.hpp"
 
-VortexModel::VortexModel(const std::string& path)
+VortexModel::VortexModel(const std::string& path, VortexWindow *window)
 {
+    if (!window)
+    {
+        std::cout << "[MODEL ERROR] 'window' for model not specified" << std::endl;
+        exit(EXIT_FAILURE);
+    }
+
+    this->window = window;
+
     load_obj(path);
     setup_mesh();
 
@@ -25,35 +33,52 @@ VortexModel::VortexModel(const std::string& path)
 
 void VortexModel::draw(const VortexShader& shader, VortexCamera& camera, bool wireframe)
 {
-    glUseProgram(shader.shader_program);
+    const VortexShader*active_shader = &shader;
 
-    glUniformMatrix4fv(glGetUniformLocation(shader.shader_program, "view"), 1, GL_FALSE, glm::value_ptr(camera.getViewMatrix()));
-    glUniformMatrix4fv(glGetUniformLocation(shader.shader_program, "projection"), 1, GL_FALSE, glm::value_ptr(camera.getProjectionMatrix()));
+    if (window->shadow_manager->is_active)
+    {
+        active_shader = window->shadow_manager->shadow_shader;
+    }
 
-    glm::vec3 light_pos(10.0f, 10.0f, 10.0f);
-    glUniform3fv(glGetUniformLocation(shader.shader_program, "lightPos"), 1, glm::value_ptr(light_pos));
-    glUniform3fv(glGetUniformLocation(shader.shader_program, "viewPos"), 1, glm::value_ptr(camera.position));
-    // glUniform4f(glGetUniformLocation(shader.shader_program, "u_Color"), 1.0f, 1.0f, 1.0f, 1.0f);
+    glUseProgram(active_shader->shader_program);
 
-    // textures (multi-sampling)
-    glUniform1i(glGetUniformLocation(shader.shader_program, "u_hasTexture"), texture_id != 0);
-    glUniform1i(glGetUniformLocation(shader.shader_program, "u_hasRoughness"), roughness_id != 0);
-    glUniform1i(glGetUniformLocation(shader.shader_program, "u_hasMetallic"), metallic_id != 0);
+    if (window->shadow_manager->is_active)
+    {
+        glUniformMatrix4fv(glGetUniformLocation(active_shader->shader_program, "lightSpaceMatrix"), 1, GL_FALSE, glm::value_ptr(window->shadow_manager->light_space_matrix));
+    }
+    else
+    {
+        glUniformMatrix4fv(glGetUniformLocation(active_shader->shader_program, "view"), 1, GL_FALSE, glm::value_ptr(camera.getViewMatrix()));
+        glUniformMatrix4fv(glGetUniformLocation(active_shader->shader_program, "projection"), 1, GL_FALSE, glm::value_ptr(camera.getProjectionMatrix()));
 
-    // 0 - diffuse
-    glActiveTexture(GL_TEXTURE0);
-    glBindTexture(GL_TEXTURE_2D, texture_id); // If 0, it unbinds
-    glUniform1i(glGetUniformLocation(shader.shader_program, "u_diffuseMap"), 0);
+        glUniform3fv(glGetUniformLocation(active_shader->shader_program, "lightPos"), 1, glm::value_ptr(GLOBAL::LIGHTPOS));
+        glUniform3fv(glGetUniformLocation(active_shader->shader_program, "viewPos"), 1, glm::value_ptr(camera.position));
 
-    // 1 - roughness
-    glActiveTexture(GL_TEXTURE1);
-    glBindTexture(GL_TEXTURE_2D, roughness_id);
-    glUniform1i(glGetUniformLocation(shader.shader_program, "u_roughnessMap"), 1);
+        // textures (multi-sampling)
+        glUniform1i(glGetUniformLocation(active_shader->shader_program, "u_hasTexture"), texture_id != 0);
+        glUniform1i(glGetUniformLocation(active_shader->shader_program, "u_hasRoughness"), roughness_id != 0);
+        glUniform1i(glGetUniformLocation(active_shader->shader_program, "u_hasMetallic"), metallic_id != 0);
 
-    // 2 - metallic
-    glActiveTexture(GL_TEXTURE2);
-    glBindTexture(GL_TEXTURE_2D, metallic_id);
-    glUniform1i(glGetUniformLocation(shader.shader_program, "u_metallicMap"), 2);
+        // 0 - diffuse
+        glActiveTexture(GL_TEXTURE0);
+        glBindTexture(GL_TEXTURE_2D, texture_id); // If 0, it unbinds
+        glUniform1i(glGetUniformLocation(active_shader->shader_program, "u_diffuseMap"), 0);
+
+        // 1 - roughness
+        glActiveTexture(GL_TEXTURE1);
+        glBindTexture(GL_TEXTURE_2D, roughness_id);
+        glUniform1i(glGetUniformLocation(active_shader->shader_program, "u_roughnessMap"), 1);
+
+        // 2 - metallic
+        glActiveTexture(GL_TEXTURE2);
+        glBindTexture(GL_TEXTURE_2D, metallic_id);
+        glUniform1i(glGetUniformLocation(active_shader->shader_program, "u_metallicMap"), 2);
+
+        glActiveTexture(GL_TEXTURE3);
+        glBindTexture(GL_TEXTURE_2D, window->shadow_manager->shadow_map);
+        glUniform1i(glGetUniformLocation(active_shader->shader_program, "shadowMap"), 3);
+        glUniformMatrix4fv(glGetUniformLocation(active_shader->shader_program, "lightSpaceMatrix"), 1, GL_FALSE, glm::value_ptr(window->shadow_manager->light_space_matrix));
+    }
 
     // rendering wireframe
     if (wireframe)
@@ -79,7 +104,7 @@ void VortexModel::draw(const VortexShader& shader, VortexCamera& camera, bool wi
         model_matrix = glm::rotate(model_matrix, glm::radians(total_rot.z), glm::vec3(0, 0, 1));
         model_matrix = glm::scale(model_matrix, glm::vec3(this->scale * obj.scale));
 
-        glUniformMatrix4fv(glGetUniformLocation(shader.shader_program, "model"), 1, GL_FALSE, glm::value_ptr(model_matrix));
+        glUniformMatrix4fv(glGetUniformLocation(active_shader->shader_program, "model"), 1, GL_FALSE, glm::value_ptr(model_matrix));
 
         glDrawArrays(GL_TRIANGLES, obj.vertex_offset, obj.vertex_count);
     }
@@ -97,7 +122,7 @@ void VortexModel::parse_mtl(const std::string& mtl_filepath)
     if (!file.is_open())
     {
         std::cerr << "[MTL ERROR] Failed to open: " << mtl_filepath << std::endl;
-        return;
+        exit(EXIT_FAILURE);
     }
 
     std::cout << "[MTL] Reading material: " << mtl_filepath << std::endl;
@@ -185,6 +210,7 @@ unsigned int VortexModel::load_texture(const std::string& path)
         std::cerr << "[TEXTURE ERROR] Failed to load: " << path << std::endl;
         std::cerr << "               Reason: " << stbi_failure_reason() << std::endl;
         stbi_image_free(data);
+        exit(EXIT_FAILURE);
     }
 
     return textureID;
@@ -224,7 +250,7 @@ void VortexModel::load_obj(const std::string& path)
         {
             std::cerr << "              Check: File does not exist at this path." << std::endl;
         }
-        return;
+        exit(EXIT_FAILURE);
     }
 
     VortexModel_Object *current_obj = nullptr;
@@ -363,6 +389,7 @@ void VortexModel::load_obj(const std::string& path)
 
         glm::vec3 min_p(1e10f), max_p(-1e10f);
         glm::vec3 centroid(0.0f);
+        
         for (int i = 0; i < obj.vertex_count; i++)
         {
             glm::vec3 p = vertices[obj.vertex_offset + i].position;
@@ -379,12 +406,15 @@ void VortexModel::load_obj(const std::string& path)
 
         for (int i = 0; i < obj.vertex_count; i++)
         {
-            vertices[obj.vertex_offset + i].position -= centroid;
+            vertices[obj.vertex_offset + i].position.x -= centroid.x;
+            vertices[obj.vertex_offset + i].position.z -= centroid.z;
+            vertices[obj.vertex_offset + i].position.y -= min_p.y; 
         }
 
-        obj.position = centroid;
-        obj.b_min = min_p - centroid;
-        obj.b_max = max_p - centroid;
+        obj.position = glm::vec3(centroid.x, min_p.y, centroid.z);
+
+        obj.b_min = min_p - obj.position;
+        obj.b_max = max_p - obj.position;
     }
 }
 
@@ -430,4 +460,12 @@ VortexModel::~VortexModel()
 {
     if (VAO != 0) glDeleteVertexArrays(1, &VAO);
     if (VBO != 0) glDeleteBuffers(1, &VBO);
+}
+
+void align_on_top(VortexModel& top_obj, const VortexModel& bottom_obj)
+{
+    float bottom_surface = bottom_obj.position.y + (bottom_obj.model_height * bottom_obj.scale.y / 2.0f);
+    float top_half_height = (top_obj.model_height * top_obj.scale.y) / 2.0f;
+    
+    top_obj.position.y = bottom_surface + top_half_height;
 }

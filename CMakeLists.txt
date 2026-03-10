@@ -35,9 +35,10 @@ add_executable(engine
     Vortex/src/vortex_window.cpp
     Vortex/src/vortex_shaders.cpp
     Vortex/src/vortex_camera.cpp
-    Vortex/src/vortex_objreader.cpp
+    Vortex/src/vortex_model.cpp
     Vortex/src/vortex_player.cpp
     Vortex/src/vortex_particlesystem.cpp
+    Vortex/src/vortex_shadowmanager.cpp
 )
 
 # INCLUDE DIRECTORIES

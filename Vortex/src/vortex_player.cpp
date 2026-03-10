@@ -52,7 +52,7 @@ void Player::processKeyboard(const std::string& direction, float deltaTime)
     player_camera->position = player_position + player_head_offset;
 }
 
-void Player::update(GLFWwindow* window, float deltaTime)
+void Player::update(VortexWindow *window)
 {
     if (!player_body) return;
 
@@ -62,12 +62,13 @@ void Player::update(GLFWwindow* window, float deltaTime)
         // apply gravity for when jump mechanics get written
 
         player_head_offset = glm::vec3(0.0f, player_height * player_body->scale.y * 0.95f, 0.0f);
-        check_player_movement(window, deltaTime);
+        check_player_movement(window->get_window_ptr(), window->deltaTime);
 
         if (player_camera->anchored)
         {
             player_camera->position = player_position + player_head_offset;
             player_body->rotation.y = 90.0f - player_camera->yaw;
+            player_body->draw(*window->shadow_manager->shadow_shader, *player_camera, false);
         }
         else
         {

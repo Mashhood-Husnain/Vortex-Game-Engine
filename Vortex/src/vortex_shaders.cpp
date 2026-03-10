@@ -8,7 +8,7 @@
 
 #include "vortex_shaders.hpp"
 
-bool VortexShader::read_shader(std::string& vertex_path, std::string& fragment_path)
+bool VortexShader::read_shader(const std::string& vertex_path, const std::string& fragment_path)
 {
     std::ifstream vertex_file(vertex_path);
     std::ifstream fragment_file(fragment_path);
@@ -58,8 +58,20 @@ void VortexShader::init_shader()
     glDeleteShader(fragment_shader);
 }
 
-VortexShader::VortexShader(std::string vertex_path, std::string fragment_path)
+VortexShader::VortexShader(const std::string vertex_path, const std::string fragment_path)
 {
     if (!read_shader(vertex_path, fragment_path)) exit(EXIT_FAILURE);;
     init_shader();
 }
+
+void VortexShader::use()
+{
+    glUseProgram(shader_program);
+}
+
+void VortexShader::setMat4(const std::string &name, const glm::mat4 &mat)
+{
+    GLint location = glGetUniformLocation(shader_program, name.c_str());
+    glUniformMatrix4fv(location, 1, GL_FALSE, glm::value_ptr(mat));
+}
+

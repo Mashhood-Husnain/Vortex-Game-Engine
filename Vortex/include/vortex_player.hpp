@@ -16,8 +16,9 @@
 #include <glm/gtc/matrix_transform.hpp>
 
 #include "vortex_camera.hpp"
-#include "vortex_objreader.hpp"
+#include "vortex_model.hpp"
 #include "vortex_shaders.hpp"
+#include "vortex_window.hpp"
 
 class Player
 {
@@ -40,6 +41,6 @@ public:
     VortexModel *player_body = nullptr;
     glm::vec3 player_position;
     Player(const std::string& name, VortexCamera* camera, VortexModel* player_body, VortexShader* shader, glm::vec3 starting_position=glm::vec3(0.0f, 0.0f, 10.0f));
-    void update(GLFWwindow* window, float deltaTime);
+    void update(VortexWindow *window);
     ~Player();
 };

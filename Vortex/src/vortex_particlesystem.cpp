@@ -38,7 +38,7 @@ void ParticleSystem::emit(glm::vec3 position, float size, glm::vec3 velocity, fl
 
 void ParticleSystem::update(float deltaTime)
 {
-    float g_dt = global_WORLDGRAVITY * deltaTime;
+    float g_dt = GLOBAL::GRAVITY * deltaTime;
 
     for (int i = 0; i < active_count; )
     {
@@ -165,7 +165,7 @@ void ParticleSystem::setup_buffers()
 
     // Quad location
     glBindBuffer(GL_ARRAY_BUFFER, VBO);
-    glBufferData(GL_ARRAY_BUFFER, sizeof(global_DEFAULTPARTICLEVERTICES), global_DEFAULTPARTICLEVERTICES, GL_STATIC_DRAW);
+    glBufferData(GL_ARRAY_BUFFER, sizeof(GLOBAL::DEFAULT_VERTICES::PARTICLE_VERTICES), GLOBAL::DEFAULT_VERTICES::PARTICLE_VERTICES, GL_STATIC_DRAW);
     glEnableVertexAttribArray(0);
     glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), (void*)0);
 
