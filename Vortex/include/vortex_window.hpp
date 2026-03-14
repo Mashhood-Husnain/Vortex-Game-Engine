@@ -19,14 +19,15 @@
 #include "vortex_camera.hpp"
 #include "vortex_shaders.hpp"
 #include "vortex_shadowmanager.hpp"
+#include "vortex_gui.hpp"
 
 #include "util/vortex_global_vars.hpp"
 
 class VortexWindow
 {
     GLFWwindow *window = nullptr;
-    int default_window_width = 800;
-    int default_window_height = 600;
+    int default_window_width;
+    int default_window_height;
     std::string window_name;
     bool is_fullscreen = false;
     int stored_window_x_pos;
@@ -56,9 +57,11 @@ public:
     glm::vec4 bg_color = glm::vec4(0.4f, 0.45f, 0.5f, 1.0f);
     float deltaTime = 0.0f;
     bool show_wireframe = false;
+    bool show_mouse_cursor = false;
     ShadowManager *shadow_manager = nullptr;
+    VortexGUI gui;
 
-    VortexWindow(std::string window_name, VortexCamera* camera, int width=800, int height=600);
+    VortexWindow(std::string window_name, VortexCamera* camera, int width=1050, int height=800);
     ~VortexWindow();
 
     void run(std::function<void()> draw_callback);

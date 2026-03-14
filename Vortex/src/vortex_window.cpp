@@ -82,6 +82,14 @@ void VortexWindow::key_callback(GLFWwindow* window, int key, int scancode, int a
                 break;
             case GLFW_KEY_V:
                 app->view_world_axis = !app->view_world_axis;
+                break;
+            case GLFW_KEY_M:
+                app->show_mouse_cursor = !app->show_mouse_cursor;
+
+                if (app->show_mouse_cursor) glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_NORMAL);
+                else glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
+
+                break;
         }
     }
 }
@@ -207,6 +215,8 @@ VortexWindow::VortexWindow(std::string window_name, VortexCamera* camera, int wi
     stored_window_height = height;
     glfwGetWindowPos(window, &stored_window_x_pos, &stored_window_y_pos);
 
+    gui.init(window);
+
     srand(static_cast<unsigned int>(time(0)));
 }
 
@@ -228,21 +238,24 @@ void VortexWindow::set_fullscreen()
 {
     if (is_fullscreen)
     {
-        glfwGetWindowPos(window, &stored_window_x_pos, &stored_window_y_pos);
-        glfwGetWindowSize(window, &stored_window_width, &stored_window_height);
+        if (glfwGetWindowMonitor(window) == nullptr) 
+        {
+            glfwGetWindowPos(window, &stored_window_x_pos, &stored_window_y_pos);
+            glfwGetWindowSize(window, &stored_window_width, &stored_window_height);
+        }
 
         GLFWmonitor* monitor = get_current_monitor(window);
         const GLFWvidmode* mode = glfwGetVideoMode(monitor);
 
         glfwSetWindowMonitor(window, monitor, 0, 0, mode->width, mode->height, mode->refreshRate);
-        glfwFocusWindow(window);
-        first_mouse = true;
-        return;
     }
-
-    glfwSetWindowMonitor(window, nullptr, stored_window_x_pos, stored_window_y_pos, stored_window_width, stored_window_height, 0);
-    first_mouse = true;
+    else
+    {
+        glfwSetWindowMonitor(window, nullptr, stored_window_x_pos, stored_window_y_pos, stored_window_width, stored_window_height, 0);
+    }
+    
     glfwFocusWindow(window);
+    first_mouse = true;
 }
 
 void VortexWindow::mouse_callback(GLFWwindow* window, double xposIn, double yposIn)
@@ -266,8 +279,10 @@ void VortexWindow::mouse_callback(GLFWwindow* window, double xposIn, double ypos
 
         app->mouse_last_x = xpos;
         app->mouse_last_y = ypos;
-
-        app->camera->processMouseMovement(xoffset, yoffset);
+        if (!app->show_mouse_cursor)
+        {
+            app->camera->processMouseMovement(xoffset, yoffset);
+        }
     }
 }
 
@@ -283,23 +298,33 @@ void VortexWindow::run(std::function<void()> draw_callback)
         deltaTime = currentFrame - last_frame;
         last_frame = currentFrame;
 
-        camera->check_camera_movement(window, deltaTime);
+        if (!show_mouse_cursor)
+        {
+            camera->check_camera_movement(window, deltaTime);
+        }
 
-        shadow_manager->draw_shadow_map(draw_callback);
+        gui.update();
+        gui.show_engine_stats();
+
+        // draw shadow map
+        // shadow_manager->draw_shadow_map(draw_callback, camera);
         
         // rendering
         glViewport(0, 0, default_window_width, default_window_height);
         glClearColor(bg_color.r, bg_color.g, bg_color.b, bg_color.a);
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
+        gui.begin_scene_inspector();
         draw_callback();
+        gui.end_scene_inspector();
         
         if (view_world_axis)
         {
             draw_world_axis();
             draw_world_axis_gizmo();
         }
-        
+
+        gui.render();        
         // swap buffers and poll IO
         glfwSwapBuffers(window);
     }

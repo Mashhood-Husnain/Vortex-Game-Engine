@@ -62,7 +62,10 @@ void Player::update(VortexWindow *window)
         // apply gravity for when jump mechanics get written
 
         player_head_offset = glm::vec3(0.0f, player_height * player_body->scale.y * 0.95f, 0.0f);
-        check_player_movement(window->get_window_ptr(), window->deltaTime);
+        if (!window->show_mouse_cursor)
+        {
+            check_player_movement(window->get_window_ptr(), window->deltaTime);
+        }
 
         if (player_camera->anchored)
         {

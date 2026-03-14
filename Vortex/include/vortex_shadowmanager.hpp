@@ -14,6 +14,7 @@
 #include <functional>
 
 #include "vortex_shaders.hpp"
+#include "vortex_camera.hpp"
 #include "util/vortex_global_vars.hpp"
 
 class ShadowManager
@@ -24,9 +25,9 @@ public:
     unsigned int shadow_map_FBO;
     unsigned int shadow_map;
     glm::mat4 light_space_matrix;
-    bool is_active;
+    bool is_active = false;
 
     ShadowManager();
-    void draw_shadow_map(std::function<void()> draw_callback);
+    void draw_shadow_map(std::function<void()> draw_callback, VortexCamera *camera);
     ~ShadowManager();
 };

@@ -16,6 +16,17 @@ target_include_directories(glad PUBLIC vendor/glad/include)
 add_library(stb_image vendor/stbimage/stb_image.cpp)
 target_include_directories(stb_image PUBLIC vendor/stbimage)
 
+# IMGUI
+add_library(imgui
+    vendor/imgui/imgui.cpp
+    vendor/imgui/imgui_draw.cpp
+    vendor/imgui/imgui_tables.cpp
+    vendor/imgui/imgui_widgets.cpp
+    vendor/imgui/imgui_impl_glfw.cpp
+    vendor/imgui/imgui_impl_opengl3.cpp
+)
+target_include_directories(imgui PUBLIC vendor/imgui)
+
 # Shaders & Assets
 file(GLOB SHADER_FILES "Vortex/shaders/*")
 foreach(SHADER ${SHADER_FILES})
@@ -39,6 +50,7 @@ add_executable(engine
     Vortex/src/vortex_player.cpp
     Vortex/src/vortex_particlesystem.cpp
     Vortex/src/vortex_shadowmanager.cpp
+    Vortex/src/vortex_gui.cpp
 )
 
 # INCLUDE DIRECTORIES
@@ -47,10 +59,11 @@ target_include_directories(engine PUBLIC
     vendor/glm
     vendor/glad/include
     vendor/stbimage
+    vendor/imgui
 )
 
 # LINKING
-target_link_libraries(engine glfw glad stb_image)
+target_link_libraries(engine glfw glad stb_image imgui)
 
 find_package(Threads REQUIRED)
 target_link_libraries(engine Threads::Threads ${CMAKE_DL_LIBS})
