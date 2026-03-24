@@ -20,6 +20,7 @@
 #include "vortex_shaders.hpp"
 #include "vortex_shadowmanager.hpp"
 #include "vortex_gui.hpp"
+#include "vortex_postprocessor.hpp"
 
 #include "util/vortex_global_vars.hpp"
 
@@ -45,6 +46,8 @@ class VortexWindow
     unsigned int world_axisVBO;
     bool view_world_axis = false;
 
+    PostProcessor *post_processor = nullptr;
+
     GLFWmonitor* get_current_monitor(GLFWwindow* window);
     static void framebuffer_size_callback(GLFWwindow* window, int width, int height);
     static void key_callback(GLFWwindow* window, int key, int scancode, int action, int mods);
@@ -66,5 +69,6 @@ public:
 
     void run(std::function<void()> draw_callback);
     GLFWwindow* get_window_ptr();
-};
 
+    void set_post_processor(PostProcessor *post_processor);
+};

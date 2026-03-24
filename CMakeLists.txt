@@ -61,6 +61,7 @@ add_executable(engine
     Vortex/src/vortex_particlesystem.cpp
     Vortex/src/vortex_shadowmanager.cpp
     Vortex/src/vortex_gui.cpp
+    Vortex/src/vortex_postprocessor.cpp
 )
 
 # ----------------------------

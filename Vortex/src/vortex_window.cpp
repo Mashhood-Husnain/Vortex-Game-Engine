@@ -172,11 +172,10 @@ VortexWindow::VortexWindow(std::string window_name, VortexCamera* camera, int wi
     this->stored_window_y_pos = 100;
     this->window_name = window_name + " - " + GLOBAL::VORTEX_VERSION;
     this->camera = camera;
-    camera->aspect_ratio =static_cast<float>(default_window_width) / static_cast<float>(default_window_height);
 
     glfwWindowHint(GLFW_VISIBLE, GLFW_FALSE);
 
-    window = glfwCreateWindow(width, height, this->window_name.c_str(), nullptr, nullptr);
+    window = glfwCreateWindow(default_window_width, default_window_height, this->window_name.c_str(), nullptr, nullptr);
     if (window == nullptr)
     {
         std::cerr << "Failed to create GLFW window" << std::endl;
@@ -226,12 +225,22 @@ VortexWindow::~VortexWindow()
     delete worldaxis_shader;
     delete shadow_manager;
 
+    if (window)
+    {
+        glfwDestroyWindow(window);
+    }
+
+    if (post_processor)
+    {
+        delete post_processor;
+    }
+
     worldaxis_shader = nullptr;
     shadow_manager = nullptr;
     window = nullptr;
     camera = nullptr;
+    post_processor = nullptr;
 
-    glfwDestroyWindow(window);
     glfwTerminate();
 }
 
@@ -270,7 +279,13 @@ void VortexWindow::change_window_size()
         default_window_height = stored_window_height;
     }
 
+    if (post_processor)
+    {
+        post_processor->resize(default_window_width, default_window_height);
+    }
+
     glfwFocusWindow(window);
+    glfwSwapInterval(1);
     first_mouse = true;
 }
 
@@ -322,6 +337,9 @@ void VortexWindow::run(std::function<void()> draw_callback)
         // draw shadow map
         // shadow_manager->draw_shadow_map(draw_callback, camera);
         
+        if (post_processor) post_processor->begin();
+        else glBindFramebuffer(GL_FRAMEBUFFER, 0);
+        
         // rendering
         glViewport(0, 0, default_window_width, default_window_height);
         glClearColor(bg_color.r, bg_color.g, bg_color.b, bg_color.a);
@@ -329,11 +347,22 @@ void VortexWindow::run(std::function<void()> draw_callback)
 
         gui.update();
         gui.show_engine_stats();
+        gui.show_camera_info(camera);
+        gui.show_post_process_options(this);
         gui.begin_scene_inspector();
 
         draw_callback();
-        
+
         gui.end_scene_inspector();
+
+        if (post_processor) {
+            post_processor->end();
+
+            glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
+            glClear(GL_COLOR_BUFFER_BIT);
+            
+            post_processor->draw(glfwGetTime());
+        }
         
         if (view_world_axis)
         {
@@ -350,4 +379,19 @@ void VortexWindow::run(std::function<void()> draw_callback)
 GLFWwindow* VortexWindow::get_window_ptr()
 {
     return window;
+}
+
+void VortexWindow::set_post_processor(PostProcessor *post_processor)
+{
+    if (this->post_processor)
+    {
+        delete this->post_processor;
+    }
+
+    this->post_processor = post_processor;
+
+    if (this->post_processor)
+    {
+        this->post_processor->resize(default_window_width, default_window_height);
+    }
 }

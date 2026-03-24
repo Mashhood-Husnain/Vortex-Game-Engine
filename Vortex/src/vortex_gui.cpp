@@ -1,5 +1,7 @@
 #include "vortex_gui.hpp"
 #include "vortex_model.hpp"
+#include "vortex_camera.hpp"
+#include "vortex_window.hpp"
 
 VortexGUI::VortexGUI()
 {
@@ -52,7 +54,7 @@ void VortexGUI::render()
 EngineStatsThreaded g_engine_stats;
 void VortexGUI::show_engine_stats()
 {
-    ImGui::SetNextWindowPos(ImVec2(10, 10), ImGuiCond_FirstUseEver);
+    ImGui::SetNextWindowPos(ImVec2(10, 15), ImGuiCond_FirstUseEver);
 
     ImGui::Begin(
         "Performance", nullptr,
@@ -98,9 +100,30 @@ void VortexGUI::show_engine_stats()
     ImGui::End();
 }
 
+void VortexGUI::show_camera_info(VortexCamera *camera)
+{
+    if (!camera) return;
+
+    ImGui::SetNextWindowPos(ImVec2(180, 10), ImGuiCond_FirstUseEver);
+
+    ImGui::Begin(
+        "Camera", nullptr,
+        ImGuiWindowFlags_AlwaysAutoResize |
+        ImGuiWindowFlags_NoScrollbar |
+        ImGuiWindowFlags_NoCollapse
+    );
+
+    ImGui::Text("Position: %.1f, %.1f, %.1f", camera->position.x, camera->position.y, camera->position.z);
+    ImGui::Text("Is Anchored: %s", camera->anchored ? "True" : "False");
+    
+    ImGui::InputFloat("Speed", &camera->movement_speed, 0.5f, 1.0f, "%.2f");
+
+    ImGui::End();
+}
+
 void VortexGUI::begin_scene_inspector()
 {
-    ImGui::SetNextWindowPos(ImVec2(10, 200), ImGuiCond_FirstUseEver);
+    ImGui::SetNextWindowPos(ImVec2(10, 190), ImGuiCond_FirstUseEver);
     ImGui::SetNextWindowSizeConstraints(ImVec2(350, 50), ImVec2(FLT_MAX, 500));
     
     ImGui::Begin("Scene Inspector", nullptr, ImGuiWindowFlags_AlwaysAutoResize);
@@ -191,6 +214,70 @@ void VortexGUI::show_model_info(VortexModel* model)
 
 void VortexGUI::end_scene_inspector()
 {
+    ImGui::End();
+}
+
+void VortexGUI::refresh_shader_list()
+{
+    m_shader_files.clear();
+    m_display_names.clear();
+
+    m_shader_files.push_back(""); 
+    m_display_names.push_back("None (Standard)");
+
+    namespace fs = std::filesystem;
+    std::string path = "shaders/";
+
+    if (fs::exists(path) && fs::is_directory(path))
+    {
+        for (const auto& entry : fs::directory_iterator(path))
+        {
+            std::string filename = entry.path().filename().string();
+            
+            if (filename.rfind("post_process_", 0) == 0 && entry.path().extension() == ".frag")
+            {
+                m_shader_files.push_back(filename);
+                
+                std::string display = filename.substr(13);
+                size_t lastdot = display.find_last_of(".");
+                if (lastdot != std::string::npos) display = display.substr(0, lastdot);
+                
+                m_display_names.push_back(display);
+            }
+        }
+    }
+    m_shaders_loaded = true;
+}
+
+void VortexGUI::show_post_process_options(VortexWindow *window)
+{
+    if (!m_shaders_loaded) refresh_shader_list();
+
+    ImGui::SetNextWindowPos(ImVec2(180, 105), ImGuiCond_FirstUseEver);
+    ImGui::Begin("Post-Processing", nullptr, ImGuiWindowFlags_AlwaysAutoResize);
+
+    auto getter = [](void* data, int idx) -> const char*
+    {
+        auto* items = static_cast<std::vector<std::string>*>(data);
+        if (idx < 0 || idx >= static_cast<int>(items->size())) return nullptr;
+        return (*items)[idx].c_str();
+    };
+
+    if (ImGui::Combo("Effect", &m_selected_shader_idx, getter, static_cast<void*>(&m_display_names), static_cast<int>(m_display_names.size())))
+    {
+        if (m_selected_shader_idx == 0)
+        {
+            window->set_post_processor(nullptr);
+        }
+        else
+        {
+            std::string fragPath = "shaders/" + m_shader_files[m_selected_shader_idx];
+            window->set_post_processor(new PostProcessor("shaders/post_process.vert", fragPath));
+        }
+    }
+
+    if (ImGui::Button("Refresh Shaders")) m_shaders_loaded = false;
+
     ImGui::End();
 }
 

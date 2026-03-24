@@ -79,7 +79,7 @@ void VortexCamera::check_camera_movement(GLFWwindow* window, float deltaTime)
 
 glm::mat4 VortexCamera::getProjectionMatrix()
 {
-    return glm::perspective(fov, aspect_ratio, near_plane, far_plane);;
+    return glm::perspective(glm::radians(fov), aspect_ratio, near_plane, far_plane);;
 }
 
 void VortexCamera::look_at(glm::vec3 target)
