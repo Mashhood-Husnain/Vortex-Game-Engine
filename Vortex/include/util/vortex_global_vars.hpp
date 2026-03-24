@@ -9,11 +9,13 @@
 #pragma once
 
 #include <glm/glm.hpp>
+#include <string>
 
 namespace GLOBAL
 {
     inline constexpr float GRAVITY = 9.80f;
     inline glm::vec3 LIGHTPOS = glm::vec3(0.0f, 10.0f, 5.0f);
+    inline const std::string VORTEX_VERSION = "\"0.1.0\"";
 
     namespace COLORS
     {

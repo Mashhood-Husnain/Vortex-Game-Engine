@@ -14,7 +14,22 @@ void VortexGUI::init(GLFWwindow* window)
 
     io.IniFilename = nullptr;
 
-    ImGui::StyleColorsDark();
+    ImGuiStyle &style = ImGui::GetStyle();
+
+    style.WindowRounding = 8.0f;
+    style.FrameRounding = 6.0f;
+    style.GrabRounding = 6.0f;
+    style.ScrollbarRounding = 6.0f;
+
+    ImVec4 *colors = style.Colors;
+
+    colors[ImGuiCol_WindowBg] = ImVec4(0.1f, 0.105f, 0.11f, 1.0f);
+    colors[ImGuiCol_Header] = ImVec4(0.2f, 0.205f, 0.21f, 1.0f);
+    colors[ImGuiCol_HeaderHovered] = ImVec4(0.3f, 0.305f, 0.31f, 1.0f);
+    colors[ImGuiCol_Button] = ImVec4(0.2f, 0.205f, 0.21f, 1.0f);
+    colors[ImGuiCol_ButtonHovered] = ImVec4(0.3f, 0.305f, 0.31f, 1.0f);
+    colors[ImGuiCol_FrameBg] = ImVec4(0.2f, 0.205f, 0.21f, 1.0f);
+
     ImGui_ImplGlfw_InitForOpenGL(window, true);
     ImGui_ImplOpenGL3_Init("#version 330");
 }
@@ -52,43 +67,86 @@ void VortexGUI::begin_scene_inspector()
     ImGui::Begin("Scene Inspector", nullptr, ImGuiWindowFlags_AlwaysAutoResize);
 }
 
-void VortexGUI::show_model_info(VortexModel *model)
+void VortexGUI::show_model_info(VortexModel* model)
 {
     if (!model) return;
 
-    if (m_processed_models.find(model) != m_processed_models.end())
-    {
-        return; 
-    }
+    if (m_processed_models.find(model) != m_processed_models.end()) return;
 
     m_processed_models.insert(model);
 
     std::string header_id = model->model_name + "##" + std::to_string((uintptr_t)model);
 
-    if (ImGui::CollapsingHeader(header_id.c_str()))
+    if (ImGui::CollapsingHeader(header_id.c_str(), ImGuiTreeNodeFlags_DefaultOpen))
     {
         ImGui::PushID(model);
-        ImGui::Indent();
-        
+
+        ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2(8, 4));
+        ImGui::PushStyleVar(ImGuiStyleVar_FrameRounding, 6.0f);
+
+        ImGui::Spacing();
+        ImGui::SeparatorText("Model Info");
+
         ImGui::Text("Objects: %zu", model->objects.size());
-        ImGui::DragFloat3("Pos", &model->position.x, 0.1f);
-        ImGui::DragFloat3("Scale", &model->scale.x, 0.01f, 0.001f, 10.0f);
 
-        float currentScale = model->scale.x;
-        if (ImGui::DragFloat("Uniform Scale", &currentScale, 0.01f, 0.001f, 10.0f))
+        ImGui::Spacing();
+        ImGui::SeparatorText("Transform");
+
+        ImGui::PushStyleVar(ImGuiStyleVar_ItemSpacing, ImVec2(10, 8));
+
+        if (ImGui::BeginTable("TransformTable", 2, ImGuiTableFlags_SizingStretchProp))
         {
-            model->scale = glm::vec3(currentScale);
+            ImGui::TableSetupColumn("Label", ImGuiTableColumnFlags_WidthFixed, 80.0f);
+            ImGui::TableSetupColumn("Value", ImGuiTableColumnFlags_WidthStretch);
+
+            ImGui::TableNextColumn();
+            ImGui::Text("Position");
+            ImGui::TableNextColumn();
+            ImGui::SetNextItemWidth(-FLT_MIN);            
+            ImGui::DragFloat3("##pos", &model->position.x, 0.1f);
+
+            ImGui::TableNextColumn();
+            ImGui::Text("Scale");
+            ImGui::TableNextColumn();
+            ImGui::SetNextItemWidth(-FLT_MIN);
+            ImGui::DragFloat3("##scale", &model->scale.x, 0.01f, 0.001f, 10.0f);
+
+            ImGui::TableNextColumn();
+            ImGui::Text("Rotation");
+            ImGui::TableNextColumn();
+            ImGui::SetNextItemWidth(-FLT_MIN);
+            ImGui::DragFloat3("##rot", &model->rotation.x, 0.1f);
+
+            ImGui::EndTable();
         }
 
-        if (ImGui::Button("Reset")) {
-            model->position = glm::vec3(0.0f);
-            model->scale = glm::vec3(1.0f);
+        ImGui::Spacing();
+        ImGui::SeparatorText("Scaling");
+
+        float uniform_scale = model->scale.x;
+        if (ImGui::SliderFloat("Uniform Scale", &uniform_scale, 0.001f, 10.0f))
+        {
+            model->scale = glm::vec3(uniform_scale);
         }
-        
-        ImGui::Unindent();
+
         ImGui::Spacing();
 
+        ImGui::PushStyleColor(ImGuiCol_Button, ImVec4(0.8f, 0.2f, 0.2f, 1.0f));
+        ImGui::PushStyleColor(ImGuiCol_ButtonHovered, ImVec4(1.0f, 0.3f, 0.3f, 1.0f));
+
+        if (ImGui::Button("Reset Transform", ImVec2(-1, 0)))
+        {
+            model->position = glm::vec3(0.0f);
+            model->scale    = glm::vec3(1.0f);
+            model->rotation = glm::vec3(0.0f);
+        }
+
+        ImGui::PopStyleColor(2);
+
+        ImGui::PopStyleVar(3);
         ImGui::PopID();
+
+        ImGui::Spacing();
     }
 }
 

@@ -166,13 +166,13 @@ VortexWindow::VortexWindow(std::string window_name, VortexCamera* camera, int wi
     // Create Window
     default_window_width = width;
     default_window_height = height;
-    this->window_name = window_name;
+    this->window_name = window_name + " - " + GLOBAL::VORTEX_VERSION;
     this->camera = camera;
     camera->aspect_ratio =static_cast<float>(default_window_width) / static_cast<float>(default_window_height);
 
     glfwWindowHint(GLFW_VISIBLE, GLFW_FALSE);
 
-    window = glfwCreateWindow(width, height, window_name.c_str(), nullptr, nullptr);
+    window = glfwCreateWindow(width, height, this->window_name.c_str(), nullptr, nullptr);
     if (window == nullptr)
     {
         std::cerr << "Failed to create GLFW window" << std::endl;
