@@ -4,7 +4,9 @@ project(VortexEngine)
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
+# ----------------------------
 # Vendors
+# ----------------------------
 set(GLFW_BUILD_DOCS OFF CACHE BOOL "" FORCE)
 add_subdirectory(vendor/glfw)
 
@@ -27,7 +29,13 @@ add_library(imgui
 )
 target_include_directories(imgui PUBLIC vendor/imgui)
 
+# NVML
+target_include_directories(imgui PUBLIC vendor/nvml)
+include_directories(vendor/nvml)
+
+# ----------------------------
 # Shaders & Assets
+# ----------------------------
 file(GLOB SHADER_FILES "Vortex/shaders/*")
 foreach(SHADER ${SHADER_FILES})
     get_filename_component(SHADER_NAME ${SHADER} NAME)
@@ -40,7 +48,9 @@ foreach(MODEL ${MODEL_FILES})
     configure_file(${MODEL} "${CMAKE_BINARY_DIR}/assets/${REL_PATH}" COPYONLY)
 endforeach()
 
+# ----------------------------
 # EXECUTABLE
+# ----------------------------
 add_executable(engine 
     Vortex/world/world.cpp
     Vortex/src/vortex_window.cpp
@@ -53,17 +63,31 @@ add_executable(engine
     Vortex/src/vortex_gui.cpp
 )
 
+# ----------------------------
 # INCLUDE DIRECTORIES
+# ----------------------------
 target_include_directories(engine PUBLIC 
     Vortex/include
     vendor/glm
     vendor/glad/include
     vendor/stbimage
     vendor/imgui
+    vendor/nvml
 )
 
+# ----------------------------
 # LINKING
-target_link_libraries(engine glfw glad stb_image imgui)
+# ----------------------------
+target_link_libraries(engine 
+    glfw
+    glad
+    stb_image
+    imgui
+    Threads::Threads
+    ${CMAKE_DL_LIBS}
+    nvidia-ml   # NVML library
+)
 
+# Link threads
 find_package(Threads REQUIRED)
-target_link_libraries(engine Threads::Threads ${CMAKE_DL_LIBS})
+target_link_libraries(engine dl)

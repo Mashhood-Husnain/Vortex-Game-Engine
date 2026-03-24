@@ -7,6 +7,8 @@
 #include <GLFW/glfw3.h>
 #include <set>
 
+#include "util/vortex_engine_stats.hpp"
+
 class VortexModel;
 
 class VortexGUI

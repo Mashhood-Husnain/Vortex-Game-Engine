@@ -4,7 +4,7 @@ Vortex Engine is a personal project currently in its early development stages. I
 
 ## Prerequisites
 Ensure you have a C++17 compatible compiler and CMake (3.10+) installed.
-* **Linux (Ubuntu/Debian):** `sudo apt-get install build-essential cmake libx11-dev libglu1-mesa-dev freeglut3-dev libmesa-dev`
+* **Linux (Ubuntu/Debian):** `sudo apt-get install build-essential cmake libx11-dev libglu1-mesa-dev freeglut3-dev libmesa-dev libnvidia-ml-dev`
 
 ## Build Instructions
 

@@ -303,9 +303,6 @@ void VortexWindow::run(std::function<void()> draw_callback)
             camera->check_camera_movement(window, deltaTime);
         }
 
-        gui.update();
-        gui.show_engine_stats();
-
         // draw shadow map
         // shadow_manager->draw_shadow_map(draw_callback, camera);
         
@@ -314,8 +311,12 @@ void VortexWindow::run(std::function<void()> draw_callback)
         glClearColor(bg_color.r, bg_color.g, bg_color.b, bg_color.a);
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
+        gui.update();
+        gui.show_engine_stats();
         gui.begin_scene_inspector();
+
         draw_callback();
+        
         gui.end_scene_inspector();
         
         if (view_world_axis)

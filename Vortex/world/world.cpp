@@ -26,14 +26,14 @@ int main() {
     VortexModel ground("assets/models/obj/flat_plane.obj", &window);
     VortexModel cube("assets/models/obj/cube.obj", &window);
 
-    window.run([&](){
 
+    window.run([&](){
         cube.draw(default_shader, camera, window.show_wireframe);
         ground.draw(default_shader, camera, window.show_wireframe);
-
+        
         if (!window.shadow_manager->is_active)
         {
-            // code here for logic that does not shadows
+            
         }
     });
 
