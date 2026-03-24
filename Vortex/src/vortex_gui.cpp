@@ -60,7 +60,8 @@ void VortexGUI::show_engine_stats()
         "Performance", nullptr,
         ImGuiWindowFlags_AlwaysAutoResize |
         ImGuiWindowFlags_NoScrollbar |
-        ImGuiWindowFlags_NoCollapse
+        ImGuiWindowFlags_NoCollapse |
+        ImGuiWindowFlags_NoMove
     );
 
     float fps = ImGui::GetIO().Framerate;
@@ -110,7 +111,8 @@ void VortexGUI::show_camera_info(VortexCamera *camera)
         "Camera", nullptr,
         ImGuiWindowFlags_AlwaysAutoResize |
         ImGuiWindowFlags_NoScrollbar |
-        ImGuiWindowFlags_NoCollapse
+        ImGuiWindowFlags_NoCollapse |
+        ImGuiWindowFlags_NoMove
     );
 
     ImGui::Text("Position: %.1f, %.1f, %.1f", camera->position.x, camera->position.y, camera->position.z);
@@ -126,7 +128,7 @@ void VortexGUI::begin_scene_inspector()
     ImGui::SetNextWindowPos(ImVec2(10, 190), ImGuiCond_FirstUseEver);
     ImGui::SetNextWindowSizeConstraints(ImVec2(350, 50), ImVec2(FLT_MAX, 500));
     
-    ImGui::Begin("Scene Inspector", nullptr, ImGuiWindowFlags_AlwaysAutoResize);
+    ImGui::Begin("Scene Inspector", nullptr, ImGuiWindowFlags_AlwaysAutoResize | ImGuiWindowFlags_NoMove);
 }
 
 void VortexGUI::show_model_info(VortexModel* model)
@@ -254,7 +256,7 @@ void VortexGUI::show_post_process_options(VortexWindow *window)
     if (!m_shaders_loaded) refresh_shader_list();
 
     ImGui::SetNextWindowPos(ImVec2(180, 105), ImGuiCond_FirstUseEver);
-    ImGui::Begin("Post-Processing", nullptr, ImGuiWindowFlags_AlwaysAutoResize);
+    ImGui::Begin("Post-Processing", nullptr, ImGuiWindowFlags_AlwaysAutoResize | ImGuiWindowFlags_NoMove);
 
     auto getter = [](void* data, int idx) -> const char*
     {

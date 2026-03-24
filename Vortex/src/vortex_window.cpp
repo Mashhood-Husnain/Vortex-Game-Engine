@@ -197,6 +197,12 @@ VortexWindow::VortexWindow(std::string window_name, VortexCamera* camera, int wi
         exit(EXIT_FAILURE);
     }
 
+    std::cout << "-------------------------------------------------------" << std::endl;
+    std::cout << "VORTEX ENGINE RUNNING ON:" << std::endl;
+    std::cout << "VENDOR:   " << glGetString(GL_VENDOR) << std::endl;
+    std::cout << "RENDERER: " << glGetString(GL_RENDERER) << std::endl;
+    std::cout << "-------------------------------------------------------" << std::endl;
+
     worldaxis_shader = new VortexShader("shaders/world_axis.vert", "shaders/world_axis.frag");
     setup_world_axis_buffers();
 
@@ -210,7 +216,7 @@ VortexWindow::VortexWindow(std::string window_name, VortexCamera* camera, int wi
     glDepthFunc(GL_LESS);
 
     // enable culling of back faces
-    glEnable(GL_CULL_FACE);
+    glDisable(GL_CULL_FACE);
     glCullFace(GL_BACK);
     glFrontFace(GL_CCW);
 
@@ -337,11 +343,18 @@ void VortexWindow::run(std::function<void()> draw_callback)
         // draw shadow map
         // shadow_manager->draw_shadow_map(draw_callback, camera);
         
-        if (post_processor) post_processor->begin();
-        else glBindFramebuffer(GL_FRAMEBUFFER, 0);
+        if (post_processor)
+        {
+            post_processor->begin();
+            glViewport(0, 0, default_window_width, default_window_height);
+        }
+        else
+        {
+            glBindFramebuffer(GL_FRAMEBUFFER, 0);
+            glViewport(0, 0, default_window_width, default_window_height);
+        }
         
         // rendering
-        glViewport(0, 0, default_window_width, default_window_height);
         glClearColor(bg_color.r, bg_color.g, bg_color.b, bg_color.a);
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
@@ -358,10 +371,11 @@ void VortexWindow::run(std::function<void()> draw_callback)
         if (post_processor) {
             post_processor->end();
 
+            glViewport(0, 0, default_window_width, default_window_height);
             glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
-            glClear(GL_COLOR_BUFFER_BIT);
-            
-            post_processor->draw(glfwGetTime());
+            glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
+            post_processor->draw(currentFrame);
         }
         
         if (view_world_axis)

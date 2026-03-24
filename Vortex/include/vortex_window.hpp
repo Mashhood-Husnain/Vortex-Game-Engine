@@ -23,6 +23,7 @@
 #include "vortex_postprocessor.hpp"
 
 #include "util/vortex_global_vars.hpp"
+#include "util/vortex_gpu_pre_init.hpp"
 
 class VortexWindow
 {
