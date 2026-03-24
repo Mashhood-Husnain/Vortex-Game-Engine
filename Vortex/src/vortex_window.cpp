@@ -70,16 +70,16 @@ void VortexWindow::key_callback(GLFWwindow* window, int key, int scancode, int a
                 break;
             case GLFW_KEY_F:
                 app->is_fullscreen = !app->is_fullscreen;
-                app->set_fullscreen();
+                app->change_window_size();
                 break;
             case GLFW_KEY_T:
                 app->show_wireframe = !app->show_wireframe;
                 break;
             // temporary solution
             // disabled for now, until i clean up the player code and come up with a better solution
-            case GLFW_KEY_R:
-                app->camera->anchored = !app->camera->anchored;
-                break;
+            // case GLFW_KEY_R:
+            //     app->camera->anchored = !app->camera->anchored;
+            //     break;
             case GLFW_KEY_V:
                 app->view_world_axis = !app->view_world_axis;
                 break;
@@ -166,6 +166,10 @@ VortexWindow::VortexWindow(std::string window_name, VortexCamera* camera, int wi
     // Create Window
     default_window_width = width;
     default_window_height = height;
+    this->stored_window_width = width;
+    this->stored_window_height = height;
+    this->stored_window_x_pos = 100;
+    this->stored_window_y_pos = 100;
     this->window_name = window_name + " - " + GLOBAL::VORTEX_VERSION;
     this->camera = camera;
     camera->aspect_ratio =static_cast<float>(default_window_width) / static_cast<float>(default_window_height);
@@ -211,10 +215,7 @@ VortexWindow::VortexWindow(std::string window_name, VortexCamera* camera, int wi
     glCullFace(GL_BACK);
     glFrontFace(GL_CCW);
 
-    stored_window_width = width;
-    stored_window_height = height;
-    glfwGetWindowPos(window, &stored_window_x_pos, &stored_window_y_pos);
-
+    change_window_size();
     gui.init(window);
 
     srand(static_cast<unsigned int>(time(0)));
@@ -234,26 +235,41 @@ VortexWindow::~VortexWindow()
     glfwTerminate();
 }
 
-void VortexWindow::set_fullscreen()
+void VortexWindow::change_window_size()
 {
+    GLFWmonitor* monitor = get_current_monitor(window);
+    if (!monitor) monitor = glfwGetPrimaryMonitor();
+    const GLFWvidmode* mode = glfwGetVideoMode(monitor);
+
     if (is_fullscreen)
     {
         if (glfwGetWindowMonitor(window) == nullptr) 
         {
             glfwGetWindowPos(window, &stored_window_x_pos, &stored_window_y_pos);
-            glfwGetWindowSize(window, &stored_window_width, &stored_window_height);
+            int left, top, right, bottom;
+            glfwGetWindowFrameSize(window, &left, &top, &right, &bottom);
+
+            stored_window_y_pos -= top; 
+            stored_window_x_pos -= left;
         }
-
-        GLFWmonitor* monitor = get_current_monitor(window);
-        const GLFWvidmode* mode = glfwGetVideoMode(monitor);
-
         glfwSetWindowMonitor(window, monitor, 0, 0, mode->width, mode->height, mode->refreshRate);
     }
     else
     {
         glfwSetWindowMonitor(window, nullptr, stored_window_x_pos, stored_window_y_pos, stored_window_width, stored_window_height, 0);
     }
-    
+
+    if (is_fullscreen)
+    {
+        default_window_width  = mode->width;
+        default_window_height = mode->height;
+    }
+    else
+    {
+        default_window_width  = stored_window_width;
+        default_window_height = stored_window_height;
+    }
+
     glfwFocusWindow(window);
     first_mouse = true;
 }

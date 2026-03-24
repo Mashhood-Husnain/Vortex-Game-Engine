@@ -49,7 +49,7 @@ class VortexWindow
     static void framebuffer_size_callback(GLFWwindow* window, int width, int height);
     static void key_callback(GLFWwindow* window, int key, int scancode, int action, int mods);
     static void mouse_callback(GLFWwindow* window, double xposIn, double yposIn);
-    void set_fullscreen();
+    void change_window_size();
     void setup_world_axis_buffers();
     void draw_world_axis();
     void draw_world_axis_gizmo();

@@ -2,14 +2,6 @@
 PENDING ISSUES:
 =====================================================================================================================================================
 
-[BUG] [LOW] Window Fullscreen Issue:
-----------------------------------------------------------------
-[DESC]:
-when window return back from fullscreen, the window reduces in
-height and y position moves down with each 'F' press
-[STATUS] [PENDING]
-
-
 [BUG] [LOW] Window Tearing Issue:
 ----------------------------------------------------------------
 [DESC]:
@@ -82,4 +74,17 @@ turns out it was just a simple problem where projection matrix
 was hardcoded instead of using camera.getProjectionMatrix()
 [SOL]:
 replaced the hardcoded code with the function call
+[STATUS] [SOLVED]
+
+
+[FIXED] Window Fullscreen Issue:
+----------------------------------------------------------------
+[DESC]:
+when window return back from fullscreen, the window reduces in
+height and y position moves down with each 'F' press
+[SOL]:
+I added code for compensating for the window decorations
+(title bars/border) which was being subtracted from the height
+every time it changed size. It had to do something with the os
+talking to the glfw type shit
 [STATUS] [SOLVED]
