@@ -9,7 +9,7 @@ Window tears when in fullscreen mode
 [STATUS] [PENDING]
 
 
-[BUG] [MEDIUM] Player-Camera Anchor:
+[BUG] [LOW] Player-Camera Anchor:
 ----------------------------------------------------------------
 [DESC]:
 when camera is not specified for a player, the camera must not
@@ -31,11 +31,22 @@ shadow should slowly decrease instead of disappearing
 it's a fucking mess
 [STATUS] [PENDING]
 
+
 [REFACTOR] [LOW] ShadowManager:
+----------------------------------------------------------------
 [DESC]:
 refactor the ShadowManager class code
 [STATUS] [PENDING]
 
+
+[BUG] [MEDIUM] VRAM filling up:
+----------------------------------------------------------------
+[DESC]:
+VRAM fills up whenever chaning to a different post-processor.
+e.g. when i select blueprint and then switch to 8-bit and then back
+to blueprint, VRAM fills up, eventually filling up the entire VRAM,
+thus also increasing GPU usage
+[STATUS] [PENDING]
 
 =====================================================================================================================================================
 SOLVED ISSUES:

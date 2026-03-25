@@ -79,7 +79,7 @@ void VortexModel::draw(const VortexShader& shader, VortexCamera& camera, bool wi
         glUniform1i(glGetUniformLocation(active_shader->shader_program, "shadowMap"), 3);
         glUniformMatrix4fv(glGetUniformLocation(active_shader->shader_program, "lightSpaceMatrix"), 1, GL_FALSE, glm::value_ptr(window->shadow_manager->light_space_matrix));
 
-        window->gui.show_model_info(this);
+        window->gui.show_inspector_info(this, nullptr);
     }
 
     // rendering wireframe

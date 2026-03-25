@@ -8,14 +8,19 @@
 
 #include "vortex_particlesystem.hpp"
 
-ParticleSystem::ParticleSystem(int max_particles)
+ParticleSystem::ParticleSystem(int max_particles, VortexWindow *window, std::string name)
 {
+    this->window = window;
+    this->name = name;
     this->max_particles = max_particles;
     particles.resize(this->max_particles);
     setup_buffers();
 }
 
-void ParticleSystem::emit(glm::vec3 position, float size, glm::vec3 velocity, float life, float gravity_scale, float drag, glm::vec4 particle_color, ParticleBehaviour behaviour)
+void ParticleSystem::emit(
+    glm::vec3 position, float size, glm::vec3 velocity, float life, float gravity_scale, float drag,
+    glm::vec4 particle_color, float elasticity, float friction, ParticleBehaviour behaviour
+)
 {
     if (active_count >= particles.size()) return;
 
@@ -32,6 +37,8 @@ void ParticleSystem::emit(glm::vec3 position, float size, glm::vec3 velocity, fl
     particle.particle_instance.color = particle_color;
     particle.initial_alpha = particle.particle_instance.color.a;
     particle.behaviour = behaviour;
+    particle.elasticity = elasticity;
+    particle.friction = friction;
 
     active_count++;
 }
@@ -103,6 +110,8 @@ void ParticleSystem::update(float deltaTime)
 
         i++;
     }
+
+    window->gui.show_inspector_info(nullptr, this);
 }
 
 void ParticleSystem::draw(VortexShader &shader, VortexCamera &camera)
@@ -189,6 +198,16 @@ void ParticleSystem::setup_buffers()
     glVertexAttribDivisor(3, 1);
 
     glBindVertexArray(0);
+}
+
+EmitterSettings& ParticleSystem::get_emitter(std::string name)
+{
+    if (emitter_registry.find(name) == emitter_registry.end())
+    {
+        emitter_registry[name] = EmitterSettings();
+    }
+
+    return emitter_registry[name];
 }
 
 ParticleSystem::~ParticleSystem()

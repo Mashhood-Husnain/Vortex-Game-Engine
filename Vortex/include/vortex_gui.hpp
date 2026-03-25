@@ -14,10 +14,14 @@
 class VortexModel;
 class VortexCamera;
 class VortexWindow;
+class ParticleSystem;
 
 class VortexGUI
 {
     std::set<VortexModel*> m_processed_models;
+
+    std::set<ParticleSystem*> m_processed_ps;
+
     std::vector<std::string> m_shader_files;
     std::vector<std::string> m_display_names;
     int m_selected_shader_idx = 0;
@@ -31,10 +35,14 @@ public:
     void init(GLFWwindow* window);
     void update();
     void render();
+
     void begin_scene_inspector();
+    void show_inspector_info(VortexModel *model, ParticleSystem *ps);
     void end_scene_inspector();
-    void show_engine_stats();
-    void show_model_info(VortexModel *model);
+
     void show_camera_info(VortexCamera *camera);
+
     void show_post_process_options(VortexWindow *window);
+
+    void show_engine_stats();
 };

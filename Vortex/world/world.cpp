@@ -22,9 +22,13 @@ int main() {
     VortexWindow window("Vortex Engine", &camera);
 
     VortexShader default_shader("shaders/default.vert", "shaders/default.frag");
+    VortexShader particle_shader("shaders/particles.vert", "shaders/particles.frag");
 
     VortexModel cube("assets/models/obj/cube.obj", &window);
     VortexModel ground("assets/models/obj/flat_plane.obj", &window);
+
+    ParticleSystem ps(1000, &window, "Default");
+
 
     window.run([&](){
         cube.draw(default_shader, camera, window.show_wireframe);
@@ -32,7 +36,7 @@ int main() {
         
         if (!window.shadow_manager->is_active)
         {
-            
+            ps_smoke(glm::vec3(0, 0, 0), ps, particle_shader, camera);
         }
     });
 

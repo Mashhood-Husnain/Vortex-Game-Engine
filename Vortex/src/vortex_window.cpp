@@ -216,7 +216,7 @@ VortexWindow::VortexWindow(std::string window_name, VortexCamera* camera, int wi
     glDepthFunc(GL_LESS);
 
     // enable culling of back faces
-    glDisable(GL_CULL_FACE);
+    glEnable(GL_CULL_FACE);
     glCullFace(GL_BACK);
     glFrontFace(GL_CCW);
 

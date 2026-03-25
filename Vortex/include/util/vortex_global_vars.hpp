@@ -17,13 +17,6 @@ namespace GLOBAL
     inline glm::vec3 LIGHTPOS = glm::vec3(0.0f, 10.0f, 5.0f);
     inline const std::string VORTEX_VERSION = "\"0.1.0\"";
 
-    namespace COLORS
-    {
-        inline constexpr glm::vec4 SMOKE  = glm::vec4(0.7f, 0.7f, 0.7f, 0.4f);
-        inline constexpr glm::vec4 BROWN  = glm::vec4(0.3f, 0.2f, 0.1f, 1.0f);
-        inline constexpr glm::vec4 ORANGE = glm::vec4(1.0f, 0.5f, 0.0f, 1.0f);
-    }
-
     namespace DEFAULT_VERTICES
     {
         inline constexpr float PARTICLE_VERTICES[] = {

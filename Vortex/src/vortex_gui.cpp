@@ -2,6 +2,7 @@
 #include "vortex_model.hpp"
 #include "vortex_camera.hpp"
 #include "vortex_window.hpp"
+#include "vortex_particlesystem.hpp"
 
 VortexGUI::VortexGUI()
 {
@@ -43,6 +44,7 @@ void VortexGUI::update()
     ImGui::NewFrame();
 
     m_processed_models.clear();
+    m_processed_ps.clear();
 }
 
 void VortexGUI::render()
@@ -126,91 +128,147 @@ void VortexGUI::show_camera_info(VortexCamera *camera)
 void VortexGUI::begin_scene_inspector()
 {
     ImGui::SetNextWindowPos(ImVec2(10, 190), ImGuiCond_FirstUseEver);
-    ImGui::SetNextWindowSizeConstraints(ImVec2(350, 50), ImVec2(FLT_MAX, 500));
+    ImGui::SetNextWindowSizeConstraints(ImVec2(350, 50), ImVec2(FLT_MAX, 800));
     
     ImGui::Begin("Scene Inspector", nullptr, ImGuiWindowFlags_AlwaysAutoResize | ImGuiWindowFlags_NoMove);
 }
 
-void VortexGUI::show_model_info(VortexModel* model)
+void VortexGUI::show_inspector_info(VortexModel* model, ParticleSystem *ps)
 {
-    if (!model) return;
+    if (!model && !ps) return;
 
-    if (m_processed_models.find(model) != m_processed_models.end()) return;
-
-    m_processed_models.insert(model);
-
-    std::string header_id = model->model_name + "##" + std::to_string((uintptr_t)model);
-
-    if (ImGui::CollapsingHeader(header_id.c_str(), ImGuiTreeNodeFlags_DefaultOpen))
+    if (model)
     {
-        ImGui::PushID(model);
+        if (m_processed_models.find(model) != m_processed_models.end()) return;
 
-        ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2(8, 4));
-        ImGui::PushStyleVar(ImGuiStyleVar_FrameRounding, 6.0f);
+        m_processed_models.insert(model);
 
-        ImGui::Spacing();
-        ImGui::SeparatorText("Model Info");
+        std::string header_id = model->model_name + "##" + std::to_string((uintptr_t)model);
 
-        ImGui::Text("Objects: %zu", model->objects.size());
-
-        ImGui::Spacing();
-        ImGui::SeparatorText("Transform");
-
-        ImGui::PushStyleVar(ImGuiStyleVar_ItemSpacing, ImVec2(10, 8));
-
-        if (ImGui::BeginTable("TransformTable", 2, ImGuiTableFlags_SizingStretchProp))
+        if (ImGui::CollapsingHeader(header_id.c_str()))
         {
-            ImGui::TableSetupColumn("Label", ImGuiTableColumnFlags_WidthFixed, 80.0f);
-            ImGui::TableSetupColumn("Value", ImGuiTableColumnFlags_WidthStretch);
+            ImGui::PushID(model);
 
-            ImGui::TableNextColumn();
-            ImGui::Text("Position");
-            ImGui::TableNextColumn();
-            ImGui::SetNextItemWidth(-FLT_MIN);            
-            ImGui::DragFloat3("##pos", &model->position.x, 0.1f);
+            ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2(8, 4));
+            ImGui::PushStyleVar(ImGuiStyleVar_FrameRounding, 6.0f);
 
-            ImGui::TableNextColumn();
-            ImGui::Text("Scale");
-            ImGui::TableNextColumn();
-            ImGui::SetNextItemWidth(-FLT_MIN);
-            ImGui::DragFloat3("##scale", &model->scale.x, 0.01f, 0.001f, 10.0f);
+            ImGui::Spacing();
+            ImGui::SeparatorText("Model Info");
 
-            ImGui::TableNextColumn();
-            ImGui::Text("Rotation");
-            ImGui::TableNextColumn();
-            ImGui::SetNextItemWidth(-FLT_MIN);
-            ImGui::DragFloat3("##rot", &model->rotation.x, 0.1f);
+            ImGui::Text("Objects: %zu", model->objects.size());
 
-            ImGui::EndTable();
+            ImGui::Spacing();
+            ImGui::SeparatorText("Transform");
+
+            ImGui::PushStyleVar(ImGuiStyleVar_ItemSpacing, ImVec2(10, 8));
+
+            if (ImGui::BeginTable("TransformTable", 2, ImGuiTableFlags_SizingStretchProp))
+            {
+                ImGui::TableSetupColumn("Label", ImGuiTableColumnFlags_WidthFixed, 80.0f);
+                ImGui::TableSetupColumn("Value", ImGuiTableColumnFlags_WidthStretch);
+
+                ImGui::TableNextColumn();
+                ImGui::Text("Position");
+                ImGui::TableNextColumn();
+                ImGui::SetNextItemWidth(-FLT_MIN);            
+                ImGui::DragFloat3("##pos", &model->position.x, 0.1f);
+
+                ImGui::TableNextColumn();
+                ImGui::Text("Scale");
+                ImGui::TableNextColumn();
+                ImGui::SetNextItemWidth(-FLT_MIN);
+                ImGui::DragFloat3("##scale", &model->scale.x, 0.01f, 0.001f, 10.0f);
+
+                ImGui::TableNextColumn();
+                ImGui::Text("Rotation");
+                ImGui::TableNextColumn();
+                ImGui::SetNextItemWidth(-FLT_MIN);
+                ImGui::DragFloat3("##rot", &model->rotation.x, 0.1f);
+
+                ImGui::EndTable();
+            }
+
+            ImGui::Spacing();
+            ImGui::SeparatorText("Scaling");
+
+            float uniform_scale = model->scale.x;
+            if (ImGui::SliderFloat("Uniform Scale", &uniform_scale, 0.001f, 10.0f))
+            {
+                model->scale = glm::vec3(uniform_scale);
+            }
+
+            ImGui::Spacing();
+
+            ImGui::PushStyleColor(ImGuiCol_Button, ImVec4(0.8f, 0.2f, 0.2f, 1.0f));
+            ImGui::PushStyleColor(ImGuiCol_ButtonHovered, ImVec4(1.0f, 0.3f, 0.3f, 1.0f));
+
+            if (ImGui::Button("Reset Transform", ImVec2(-1, 0)))
+            {
+                model->position = glm::vec3(0.0f);
+                model->scale    = glm::vec3(1.0f);
+                model->rotation = glm::vec3(0.0f);
+            }
+
+            ImGui::PopStyleColor(2);
+
+            ImGui::PopStyleVar(3);
+            ImGui::PopID();
+
+            ImGui::Spacing();
         }
+    }
 
-        ImGui::Spacing();
-        ImGui::SeparatorText("Scaling");
+    if (ps)
+    {
+        if (m_processed_ps.find(ps) != m_processed_ps.end()) return;
+        m_processed_ps.insert(ps);
 
-        float uniform_scale = model->scale.x;
-        if (ImGui::SliderFloat("Uniform Scale", &uniform_scale, 0.001f, 10.0f))
+        std::string ps_header_id = "Particle System (" + ps->name +  ")##" + std::to_string((uintptr_t)ps);
+
+        if (ImGui::CollapsingHeader(ps_header_id.c_str()))
         {
-            model->scale = glm::vec3(uniform_scale);
+            ImGui::PushID(ps);
+            
+            ImGui::SeparatorText("Emitters");
+            for (auto& [name, settings] : ps->emitter_registry)
+            {
+                ImGui::PushID(name.c_str());
+                ImGui::Checkbox(name.c_str(), &settings.enabled);
+
+                if (settings.enabled)
+                {
+                    ImGui::Indent(); // Indent to make it look clean
+                    ImGui::SliderInt("Spawn Rate", &settings.spawn_rate, 1, 50);
+                    ImGui::SliderFloat("Size", &settings.size, 0.05f, 5.0f);
+                    ImGui::SliderFloat("Life", &settings.life, 0.1f, 10.0f);
+                    ImGui::SliderFloat("Gravity", &settings.gravity, -2.0f, 2.0f);
+                    ImGui::SliderFloat("Drag", &settings.drag, 0.0f, 5.0f);
+                    ImGui::SliderFloat("Elasticity", &settings.elasticity, 0.0f, 1.0f);
+                    ImGui::SliderFloat("Friction", &settings.friction, 0.0f, 1.0f);
+                    ImGui::ColorEdit4("Color", glm::value_ptr(settings.color));
+                    ImGui::Unindent();
+                }
+
+                ImGui::PopID();
+                ImGui::Spacing();
+            }
+
+            ImGui::SeparatorText("Stats");
+            ImGui::Text("Live Particles: %d", (int)ps->particles.size());
+
+            ImGui::PushStyleColor(ImGuiCol_Button, ImVec4(0.8f, 0.2f, 0.2f, 1.0f));
+            ImGui::PushStyleColor(ImGuiCol_ButtonHovered, ImVec4(1.0f, 0.3f, 0.3f, 1.0f));
+
+            if (ImGui::Button("Purge System", ImVec2(-1, 0)))
+            {
+                ps->particles.clear(); 
+            }
+
+            ImGui::PopStyleColor(2);
+
+            ImGui::PopID();
+            ImGui::Spacing();
         }
-
-        ImGui::Spacing();
-
-        ImGui::PushStyleColor(ImGuiCol_Button, ImVec4(0.8f, 0.2f, 0.2f, 1.0f));
-        ImGui::PushStyleColor(ImGuiCol_ButtonHovered, ImVec4(1.0f, 0.3f, 0.3f, 1.0f));
-
-        if (ImGui::Button("Reset Transform", ImVec2(-1, 0)))
-        {
-            model->position = glm::vec3(0.0f);
-            model->scale    = glm::vec3(1.0f);
-            model->rotation = glm::vec3(0.0f);
-        }
-
-        ImGui::PopStyleColor(2);
-
-        ImGui::PopStyleVar(3);
-        ImGui::PopID();
-
-        ImGui::Spacing();
     }
 }
 
@@ -256,7 +314,7 @@ void VortexGUI::show_post_process_options(VortexWindow *window)
     if (!m_shaders_loaded) refresh_shader_list();
 
     ImGui::SetNextWindowPos(ImVec2(180, 105), ImGuiCond_FirstUseEver);
-    ImGui::Begin("Post-Processing", nullptr, ImGuiWindowFlags_AlwaysAutoResize | ImGuiWindowFlags_NoMove);
+    ImGui::Begin("Post-Processing", nullptr, ImGuiWindowFlags_AlwaysAutoResize | ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoCollapse);
 
     auto getter = [](void* data, int idx) -> const char*
     {
