@@ -91,6 +91,39 @@ void PostProcessor::resize(int width, int height)
 
 PostProcessor::~PostProcessor()
 {
-    delete screenShader;
-    screenShader = nullptr;
+    if (fbo != 0)
+    {
+        glDeleteFramebuffers(1, &fbo);
+        fbo = 0;
+    }
+
+    if (texture != 0)
+    {
+        glDeleteTextures(1, &texture);
+        texture = 0;
+    }
+
+    if (rbo != 0)
+    {
+        glDeleteRenderbuffers(1, &rbo);
+        rbo = 0;
+    }
+
+    if (quadVAO != 0)
+    {
+        glDeleteVertexArrays(1, &quadVAO);
+        quadVAO = 0;
+    }
+
+    if (quadVBO != 0)
+    {
+        glDeleteBuffers(1, &quadVBO);
+        quadVBO = 0;
+    }
+
+    if (screenShader != nullptr)
+    {
+        delete screenShader; 
+        screenShader = nullptr;
+    }
 }

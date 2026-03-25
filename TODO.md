@@ -39,15 +39,6 @@ refactor the ShadowManager class code
 [STATUS] [PENDING]
 
 
-[BUG] [MEDIUM] VRAM filling up:
-----------------------------------------------------------------
-[DESC]:
-VRAM fills up whenever chaning to a different post-processor.
-e.g. when i select blueprint and then switch to 8-bit and then back
-to blueprint, VRAM fills up, eventually filling up the entire VRAM,
-thus also increasing GPU usage
-[STATUS] [PENDING]
-
 =====================================================================================================================================================
 SOLVED ISSUES:
 =====================================================================================================================================================
@@ -98,4 +89,18 @@ I added code for compensating for the window decorations
 (title bars/border) which was being subtracted from the height
 every time it changed size. It had to do something with the os
 talking to the glfw type shit
+[STATUS] [SOLVED]
+
+
+[FIXED] VRAM filling up:
+----------------------------------------------------------------
+[DESC]:
+VRAM fills up whenever chaning to a different post-processor.
+e.g. when i select blueprint and then switch to 8-bit and then back
+to blueprint, VRAM fills up, eventually filling up the entire VRAM,
+thus also increasing GPU usage
+[SOL]:
+i just needed to delete the fbos in the destructor to reset the buffers,
+because everytime different post-processor was selected it was not
+deleting the previous buffer.
 [STATUS] [SOLVED]
