@@ -7,7 +7,8 @@ Vortex Engine is a personal project currently in its early development stages. I
 Ensure you have a **C++17** compatible compiler and **CMake (3.10+)** installed.
 
 * **Windows:** Install VScode
-* **Linux (Ubuntu/Debian):** ```bash
+* **Linux (Ubuntu/Debian):**
+```bash
   sudo apt-get update
   sudo apt-get install build-essential cmake libx11-dev libglu1-mesa-dev freeglut3-dev libmesa-dev libnvidia-ml-dev
   ```
@@ -36,6 +37,6 @@ Once the compilation is complete, you can launch the engine using the command sp
 * **Linux (Terminal):**
   ```bash
   cd build
-  
+
   ./engine
   ```
