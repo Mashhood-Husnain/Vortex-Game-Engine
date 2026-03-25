@@ -1,14 +1,13 @@
 /*
  * File: vortex_engine_stats.hpp
  * Project: VortexEngine
- * Description: Monitor harware usage
+ * Description: Monitor hardware usage (Cross-Platform)
  * Author: Mashhood Husnain
  * License: MIT
  */
 
 #pragma once
 
-#include <unistd.h>
 #include <fstream>
 #include <string>
 #include <thread>
@@ -17,7 +16,17 @@
 #include <chrono>
 #include <vector>
 #include <numeric>
-#include <nvml.h>
+
+// Include our new Dynamic NVML loader instead of the static library
+#include "util/vortex_nvml.hpp"
+
+// OS-Specific includes for CPU and RAM polling
+#if defined(__linux__)
+    #include <unistd.h>
+#elif defined(_WIN32) || defined(_WIN64)
+    #include <windows.h>
+    #include <psapi.h>
+#endif
 
 struct EngineStats
 {
@@ -51,6 +60,10 @@ private:
 
     float get_cpu_raw()
     {
+#if defined(__linux__)
+        // ==========================================
+        // LINUX: /proc/stat Implementation
+        // ==========================================
         static long last_total_time = 0;
         static long last_proc_time  = 0;
 
@@ -75,12 +88,58 @@ private:
 
         if (total_diff == 0) return 0.0f;
         return 100.0f * static_cast<float>(proc_diff) / static_cast<float>(total_diff);
+
+#elif defined(_WIN32) || defined(_WIN64)
+        // ==========================================
+        // WINDOWS: Win32 API Implementation
+        // ==========================================
+        static FILETIME prev_sys_kernel, prev_sys_user;
+        static FILETIME prev_proc_kernel, prev_proc_user;
+        static bool first_run = true;
+
+        FILETIME sys_idle, sys_kernel, sys_user;
+        FILETIME proc_creation, proc_exit, proc_kernel, proc_user;
+
+        GetSystemTimes(&sys_idle, &sys_kernel, &sys_user);
+        GetProcessTimes(GetCurrentProcess(), &proc_creation, &proc_exit, &proc_kernel, &proc_user);
+
+        if (first_run) {
+            prev_sys_kernel = sys_kernel;
+            prev_sys_user = sys_user;
+            prev_proc_kernel = proc_kernel;
+            prev_proc_user = proc_user;
+            first_run = false;
+            return 0.0f;
+        }
+
+        auto ft_to_ull = [](const FILETIME& ft) {
+            ULARGE_INTEGER uli;
+            uli.LowPart = ft.dwLowDateTime;
+            uli.HighPart = ft.dwHighDateTime;
+            return uli.QuadPart;
+        };
+
+        ULONGLONG sys_diff = (ft_to_ull(sys_kernel) + ft_to_ull(sys_user)) -
+                             (ft_to_ull(prev_sys_kernel) + ft_to_ull(prev_sys_user));
+
+        ULONGLONG proc_diff = (ft_to_ull(proc_kernel) + ft_to_ull(proc_user)) -
+                              (ft_to_ull(prev_proc_kernel) + ft_to_ull(prev_proc_user));
+
+        prev_sys_kernel = sys_kernel;
+        prev_sys_user = sys_user;
+        prev_proc_kernel = proc_kernel;
+        prev_proc_user = proc_user;
+
+        if (sys_diff == 0) return 0.0f;
+        return 100.0f * static_cast<float>(proc_diff) / static_cast<float>(sys_diff);
+#endif
     }
 };
 
 // RAM usage in MB
 inline float get_ram_usage_mb()
 {
+#if defined(__linux__)
     std::ifstream file("/proc/self/status");
     std::string line;
     while(std::getline(file, line))
@@ -92,9 +151,17 @@ inline float get_ram_usage_mb()
         }
     }
     return 0.0f;
+
+#elif defined(_WIN32) || defined(_WIN64)
+    PROCESS_MEMORY_COUNTERS pmc;
+    if (GetProcessMemoryInfo(GetCurrentProcess(), &pmc, sizeof(pmc))) {
+        return static_cast<float>(pmc.WorkingSetSize) / (1024.0f * 1024.0f); // Bytes -> MB
+    }
+    return 0.0f;
+#endif
 }
 
-// Threaded engine stats using NVML
+// Threaded engine stats using Dynamic NVML
 class EngineStatsThreaded
 {
 public:
@@ -102,9 +169,8 @@ public:
     {
         running = true;
 
-        // Initialize NVML
-        if (nvmlInit() != NVML_SUCCESS)
-            nvml_available = false;
+        // Initialize Dynamic NVML Wrapper
+        VortexNVML::init();
 
         stats_thread = std::thread([this]() { this->poll_gpu_loop(); });
     }
@@ -115,8 +181,8 @@ public:
         if (stats_thread.joinable())
             stats_thread.join();
 
-        if (nvml_available)
-            nvmlShutdown();
+        // Shutdown Dynamic NVML
+        VortexNVML::shutdown();
     }
 
     EngineStats get_stats()
@@ -142,35 +208,25 @@ private:
     EngineStats cached_stats;
     std::mutex stats_mutex;
     CPUUsageSmoothed cpu_smoother;
-    bool nvml_available = true;
 
     void poll_gpu_loop()
     {
         while (running)
         {
             EngineStats temp;
-            if (nvml_available)
+            
+            // Call our new Dynamic NVML Loader
+            GPUStats gpu = VortexNVML::get_stats();
+
+            if (gpu.available)
             {
-                nvmlDevice_t device;
-                unsigned int device_count = 0;
-
-                if (nvmlDeviceGetCount(&device_count) == NVML_SUCCESS && device_count > 0)
-                {
-                    nvmlDeviceGetHandleByIndex(0, &device);
-
-                    // GPU utilization
-                    nvmlUtilization_t util;
-                    if (nvmlDeviceGetUtilizationRates(device, &util) == NVML_SUCCESS)
-                        temp.gpu_usage = static_cast<float>(util.gpu);
-
-                    // GPU memory
-                    nvmlMemory_t mem;
-                    if (nvmlDeviceGetMemoryInfo(device, &mem) == NVML_SUCCESS)
-                    {
-                        temp.gpu_mem_usage = static_cast<float>(mem.used / (1024 * 1024));
-                        temp.gpu_mem_total = static_cast<float>(mem.total / (1024 * 1024));
-                    }
-                }
+                temp.gpu_usage = static_cast<float>(gpu.utilization);
+                temp.gpu_mem_usage = static_cast<float>(gpu.mem_used_mb);
+                temp.gpu_mem_total = static_cast<float>(gpu.mem_total_mb);
+            }
+            else
+            {
+                temp.gpu_usage = -1.0f; // Fallback for Intel/AMD/Mac
             }
 
             // Update shared stats

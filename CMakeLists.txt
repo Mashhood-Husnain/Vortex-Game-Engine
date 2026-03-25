@@ -5,6 +5,13 @@ set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
 # ----------------------------
+# OS-Specific Definitions
+# ----------------------------
+if(MSVC)
+    add_compile_definitions(_USE_MATH_DEFINES)
+endif()
+
+# ----------------------------
 # Vendors
 # ----------------------------
 set(GLFW_BUILD_DOCS OFF CACHE BOOL "" FORCE)
@@ -62,6 +69,7 @@ add_executable(engine
     Vortex/src/vortex_shadowmanager.cpp
     Vortex/src/vortex_gui.cpp
     Vortex/src/vortex_postprocessor.cpp
+    Vortex/src/util/vortex_nvml.cpp
 )
 
 # ----------------------------
@@ -79,16 +87,22 @@ target_include_directories(engine PUBLIC
 # ----------------------------
 # LINKING
 # ----------------------------
+find_package(Threads REQUIRED)
+
 target_link_libraries(engine 
     glfw
     glad
     stb_image
     imgui
     Threads::Threads
-    ${CMAKE_DL_LIBS}
-    nvidia-ml   # NVML library
 )
 
-# Link threads
-find_package(Threads REQUIRED)
-target_link_libraries(engine dl)
+# OS-Specific Libraries
+if(UNIX AND NOT APPLE)
+    target_link_libraries(engine 
+        ${CMAKE_DL_LIBS}
+        dl
+    )
+elseif(WIN32)
+    target_link_libraries(engine)
+endif()

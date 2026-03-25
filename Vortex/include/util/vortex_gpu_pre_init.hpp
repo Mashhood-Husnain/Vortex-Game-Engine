@@ -1,7 +1,7 @@
 /*
  * File: vortex_gpu_pre_init.hpp
  * Project: VortexEngine
- * Description: Detect GPU / intel graphics / CPU
+ * Description: Cross-platform GPU detection and offloading
  * Author: Mashhood Husnain
  * License: MIT
  */
@@ -9,7 +9,17 @@
 #ifndef VORTEX_GPU_PREINIT_H
 #define VORTEX_GPU_PREINIT_H
 
-#ifdef __linux__
+// WINDOWS: Request High-Performance GPU
+#if defined(_WIN32) || defined(_WIN64)
+#include <windows.h>
+
+extern "C" {
+    __declspec(dllexport) DWORD NvOptimusEnablement = 0x00000001;
+    __declspec(dllexport) int AmdPowerXpressRequestHighPerformance = 1;
+}
+
+// LINUX: Request High-Performance GPU
+#elif defined(__linux__)
 #include <cstdlib>
 #include <unistd.h>
 #include <string>
@@ -40,4 +50,4 @@ static void initialize_vortex_hardware()
 }
 #endif
 
-#endif
+#endif // VORTEX_GPU_PREINIT_H
