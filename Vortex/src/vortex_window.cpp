@@ -368,8 +368,8 @@ void VortexWindow::run(std::function<void()> draw_callback)
         gui.show_post_process_options(this);
         gui.begin_scene_inspector();
 
-        draw_callback();
         skybox->draw(camera);
+        draw_callback();
 
         gui.end_scene_inspector();
 
