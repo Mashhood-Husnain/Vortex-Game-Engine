@@ -9,6 +9,10 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 # ----------------------------
 if(MSVC)
     add_compile_definitions(_USE_MATH_DEFINES)
+    
+    add_compile_definitions(NOMINMAX)
+    
+    add_compile_definitions(WIN32_LEAN_AND_MEAN)
 endif()
 
 # ----------------------------

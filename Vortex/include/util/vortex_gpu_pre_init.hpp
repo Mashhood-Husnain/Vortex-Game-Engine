@@ -14,8 +14,8 @@
 #include <windows.h>
 
 extern "C" {
-    __declspec(dllexport) DWORD NvOptimusEnablement = 0x00000001;
-    __declspec(dllexport) int AmdPowerXpressRequestHighPerformance = 1;
+    __declspec(dllexport) __declspec(selectany) DWORD NvOptimusEnablement = 0x00000001;
+    __declspec(dllexport) __declspec(selectany) int AmdPowerXpressRequestHighPerformance = 1;
 }
 
 // LINUX: Request High-Performance GPU
