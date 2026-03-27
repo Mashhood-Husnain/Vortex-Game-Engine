@@ -208,6 +208,8 @@ VortexWindow::VortexWindow(std::string window_name, VortexCamera* camera, int wi
 
     shadow_manager = new ShadowManager();
 
+    skybox = new VortexSkybox(GLOBAL::SKYBOX_FACES_PATH);
+
     // V-sync
     glfwSwapInterval(1);
 
@@ -230,6 +232,7 @@ VortexWindow::~VortexWindow()
 {
     delete worldaxis_shader;
     delete shadow_manager;
+    delete skybox;
 
     if (window)
     {
@@ -246,6 +249,7 @@ VortexWindow::~VortexWindow()
     window = nullptr;
     camera = nullptr;
     post_processor = nullptr;
+    skybox = nullptr;
 
     glfwTerminate();
 }
@@ -365,6 +369,7 @@ void VortexWindow::run(std::function<void()> draw_callback)
         gui.begin_scene_inspector();
 
         draw_callback();
+        skybox->draw(camera);
 
         gui.end_scene_inspector();
 

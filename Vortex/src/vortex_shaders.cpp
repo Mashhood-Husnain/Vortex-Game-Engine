@@ -70,14 +70,31 @@ VortexShader::VortexShader(const std::string vertex_path, const std::string frag
     init_shader();
 }
 
-void VortexShader::use()
+void VortexShader::use() const
 {
     glUseProgram(shader_program);
 }
 
-void VortexShader::setMat4(const std::string &name, const glm::mat4 &mat)
+void VortexShader::setMat4(const std::string &name, const glm::mat4 &mat4) const
 {
     GLint location = glGetUniformLocation(shader_program, name.c_str());
-    glUniformMatrix4fv(location, 1, GL_FALSE, glm::value_ptr(mat));
+    glUniformMatrix4fv(location, 1, GL_FALSE, glm::value_ptr(mat4));
 }
 
+void VortexShader::setVec3(const std::string &name, const glm::vec3 &vec3) const
+{
+    GLint location = glGetUniformLocation(shader_program, name.c_str());
+    glUniform3fv(location, 1, glm::value_ptr(vec3));
+}
+
+void VortexShader::setInt(const std::string &name, const int value) const
+{
+    GLint location = glGetUniformLocation(shader_program, name.c_str());
+    glUniform1i(location, value);
+}
+
+void VortexShader::setFloat(const std::string &name, const float value) const
+{
+    GLint location = glGetUniformLocation(shader_program, name.c_str());
+    glUniform1f(location, value);
+}

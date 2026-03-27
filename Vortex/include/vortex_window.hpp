@@ -21,6 +21,7 @@
 #include "vortex_shadowmanager.hpp"
 #include "vortex_gui.hpp"
 #include "vortex_postprocessor.hpp"
+#include "vortex_skybox.hpp"
 
 #include "util/vortex_global_vars.hpp"
 #include "util/vortex_gpu_pre_init.hpp"
@@ -48,6 +49,8 @@ class VortexWindow
     bool view_world_axis = false;
 
     PostProcessor *post_processor = nullptr;
+
+    VortexSkybox *skybox;
 
     GLFWmonitor* get_current_monitor(GLFWwindow* window);
     static void framebuffer_size_callback(GLFWwindow* window, int width, int height);

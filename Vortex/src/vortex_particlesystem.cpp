@@ -129,10 +129,10 @@ void ParticleSystem::draw(VortexShader &shader, VortexCamera &camera)
 
     if (instance_data.empty()) return;
 
-    glUseProgram(shader.shader_program);
+    shader.use();
 
-    glUniformMatrix4fv(glGetUniformLocation(shader.shader_program, "view"), 1, GL_FALSE, glm::value_ptr(camera.getViewMatrix()));
-    glUniformMatrix4fv(glGetUniformLocation(shader.shader_program, "projection"), 1, GL_FALSE, glm::value_ptr(camera.getProjectionMatrix()));
+    shader.setMat4("view", camera.getViewMatrix());
+    shader.setMat4("projection", camera.getProjectionMatrix());
 
     glBindBuffer(GL_ARRAY_BUFFER, instanceVBO);
     glBufferSubData(GL_ARRAY_BUFFER, 0, instance_data.size() * sizeof(ParticleInstance), instance_data.data());

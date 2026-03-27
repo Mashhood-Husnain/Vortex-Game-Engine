@@ -28,6 +28,9 @@ public:
     unsigned int shader_program;
 
     VortexShader(const std::string vertex_path, const std::string fragment_path);
-    void use();
-    void setMat4(const std::string &name, const glm::mat4 &mat4);
+    void use() const;
+    void setMat4(const std::string &name, const glm::mat4 &mat4) const;
+    void setVec3(const std::string &name, const glm::vec3 &vec3) const;
+    void setInt(const std::string &name, const int value) const;
+    void setFloat(const std::string &name, const float value) const;
 };

@@ -74,6 +74,7 @@ add_executable(engine
     Vortex/src/vortex_gui.cpp
     Vortex/src/vortex_postprocessor.cpp
     Vortex/src/util/vortex_nvml.cpp
+    Vortex/src/vortex_skybox.cpp
 )
 
 # ----------------------------

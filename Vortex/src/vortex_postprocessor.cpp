@@ -65,13 +65,12 @@ void PostProcessor::end()
 void PostProcessor::draw(float time)
 {
     glDisable(GL_DEPTH_TEST);
-    glUseProgram(screenShader->shader_program);
+    screenShader->use();
     
     glActiveTexture(GL_TEXTURE0);
     glBindTexture(GL_TEXTURE_2D, texture);
-    glUniform1i(glGetUniformLocation(screenShader->shader_program, "screenTexture"), 0);
-    
-    glUniform1f(glGetUniformLocation(screenShader->shader_program, "uTime"), time);
+    screenShader->setInt("screenTexture", 0);
+    screenShader->setFloat("uTime", time);    
     
     glBindVertexArray(quadVAO);
     glDrawArrays(GL_TRIANGLES, 0, 6);
