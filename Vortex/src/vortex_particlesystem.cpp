@@ -119,12 +119,14 @@ void ParticleSystem::draw(VortexShader &shader, VortexCamera &camera)
     if (active_count == 0) return;
 
     static std::vector<ParticleInstance> instance_data;
-    instance_data.clear();
-    instance_data.reserve(particles.size());
+    if (instance_data.size() < particles.size())
+    {
+        instance_data.resize(particles.size()); 
+    }
 
     for (int i = 0; i < active_count; i++)
     {
-        instance_data.push_back(particles[i].particle_instance);
+        instance_data[i] = particles[i].particle_instance;
     }
 
     if (instance_data.empty()) return;

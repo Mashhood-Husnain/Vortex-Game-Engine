@@ -113,10 +113,10 @@ void VortexWindow::setup_world_axis_buffers()
 
 void VortexWindow::draw_world_axis()
 {
-    glUseProgram(worldaxis_shader->shader_program);
+    worldaxis_shader->use();
 
-    glUniformMatrix4fv(glGetUniformLocation(worldaxis_shader->shader_program, "view"), 1, GL_FALSE, glm::value_ptr(camera->getViewMatrix()));
-    glUniformMatrix4fv(glGetUniformLocation(worldaxis_shader->shader_program, "projection"), 1, GL_FALSE, glm::value_ptr(camera->getProjectionMatrix()));
+    worldaxis_shader->setMat4("view", camera->getViewMatrix());
+    worldaxis_shader->setMat4("projection", camera->getProjectionMatrix());
 
     glLineWidth(2.0f);
     glBindVertexArray(world_axisVAO);
@@ -128,7 +128,7 @@ void VortexWindow::draw_world_axis_gizmo()
 {
     glDisable(GL_DEPTH_TEST);
 
-    glUseProgram(worldaxis_shader->shader_program);
+    worldaxis_shader->use();
 
     glm::mat4 viewRotation = glm::mat4(glm::mat3(camera->getViewMatrix()));
     glm::mat4 orthoProj = glm::ortho(-10.0f, 10.0f, -10.0f, 10.0f, -1.0f, 10.0f);
@@ -137,8 +137,8 @@ void VortexWindow::draw_world_axis_gizmo()
     glGetIntegerv(GL_VIEWPORT, viewport);
     glViewport(10, 10, 100, 100);
 
-    glUniformMatrix4fv(glGetUniformLocation(worldaxis_shader->shader_program, "view"), 1, GL_FALSE, glm::value_ptr(viewRotation));
-    glUniformMatrix4fv(glGetUniformLocation(worldaxis_shader->shader_program, "projection"), 1, GL_FALSE, glm::value_ptr(orthoProj));
+    worldaxis_shader->setMat4("view", camera->getViewMatrix());
+    worldaxis_shader->setMat4("projection", camera->getProjectionMatrix());
 
     glLineWidth(3.0f);
     glBindVertexArray(world_axisVAO);
@@ -359,7 +359,6 @@ void VortexWindow::run(std::function<void()> draw_callback)
         }
         
         // rendering
-        glClearColor(bg_color.r, bg_color.g, bg_color.b, bg_color.a);
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
         gui.update();
@@ -369,6 +368,7 @@ void VortexWindow::run(std::function<void()> draw_callback)
         gui.begin_scene_inspector();
 
         skybox->draw(camera);
+
         draw_callback();
 
         gui.end_scene_inspector();
@@ -377,7 +377,6 @@ void VortexWindow::run(std::function<void()> draw_callback)
             post_processor->end();
 
             glViewport(0, 0, default_window_width, default_window_height);
-            glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
             glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
             post_processor->draw(currentFrame);

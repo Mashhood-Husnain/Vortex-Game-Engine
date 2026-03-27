@@ -187,19 +187,9 @@ public:
 
     EngineStats get_stats()
     {
-        EngineStats s;
-        s.cpu_usage = cpu_smoother.get();
-        s.ram_usage = get_ram_usage_mb();
-
-        // Copy GPU stats safely
-        {
-            std::lock_guard<std::mutex> lock(stats_mutex);
-            s.gpu_usage      = cached_stats.gpu_usage;
-            s.gpu_mem_usage  = cached_stats.gpu_mem_usage;
-            s.gpu_mem_total  = cached_stats.gpu_mem_total;
-        }
-
-        return s;
+        // Instantly return the cached stats without doing ANY OS polling!
+        std::lock_guard<std::mutex> lock(stats_mutex);
+        return cached_stats;
     }
 
 private:
@@ -214,8 +204,12 @@ private:
         while (running)
         {
             EngineStats temp;
+
+            // 1. Poll CPU and RAM in the background thread!
+            temp.cpu_usage = cpu_smoother.get();
+            temp.ram_usage = get_ram_usage_mb();
             
-            // Call our new Dynamic NVML Loader
+            // 2. Poll GPU
             GPUStats gpu = VortexNVML::get_stats();
 
             if (gpu.available)
@@ -229,7 +223,7 @@ private:
                 temp.gpu_usage = -1.0f; // Fallback for Intel/AMD/Mac
             }
 
-            // Update shared stats
+            // 3. Safely update the shared cache
             {
                 std::lock_guard<std::mutex> lock(stats_mutex);
                 cached_stats = temp;

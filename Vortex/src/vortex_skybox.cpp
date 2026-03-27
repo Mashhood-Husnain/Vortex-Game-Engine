@@ -55,12 +55,16 @@ unsigned int VortexSkybox::load_cubemap(std::vector<std::string> faces)
     glBindTexture(GL_TEXTURE_CUBE_MAP, textureID);
 
     int width, height, nrChannels;
+    std::cout << "-------------------------------------------------------" << std::endl;
 
     for (unsigned int i = 0; i < faces.size(); i++)
     {
+        std::cout << "[SKYBOX] Loading: " << faces[i];
+
         unsigned char *data = stbi_load(faces[i].c_str(), &width, &height, &nrChannels, 0);
         if (data)
         {
+            std::cout << " [SUCCESS]" << std::endl; 
             GLenum format;
             if (nrChannels == 1)
                 format = GL_RED;
@@ -79,6 +83,7 @@ unsigned int VortexSkybox::load_cubemap(std::vector<std::string> faces)
         }
         else
         {
+            std::cout << " [FAILED]" << std::endl;
             std::cout << "[SKYBOX ERROR] Cubemap texture failed to load at path: " << faces[i] << std::endl;
             stbi_image_free(data);
 
@@ -91,6 +96,8 @@ unsigned int VortexSkybox::load_cubemap(std::vector<std::string> faces)
     glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
     glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
     glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_R, GL_CLAMP_TO_EDGE);
+
+    std::cout << "-------------------------------------------------------" << std::endl;
 
     return textureID;
 }

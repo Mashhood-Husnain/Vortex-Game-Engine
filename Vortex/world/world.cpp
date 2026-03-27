@@ -24,14 +24,16 @@ int main() {
     VortexShader default_shader("shaders/default.vert", "shaders/default.frag");
     VortexShader particle_shader("shaders/particles.vert", "shaders/particles.frag");
 
-    VortexModel cube("assets/models/obj/cube.obj", &window);
+    // VortexModel cube("assets/models/obj/cube.obj", &window);
     VortexModel ground("assets/models/obj/flat_plane.obj", &window);
+    VortexModel house("assets/models/obj/abandoned_house.obj", &window);
 
     ParticleSystem ps(1000, &window, "Default");
 
 
     window.run([&](){
-        cube.draw(default_shader, camera, window.show_wireframe);
+        // cube.draw(default_shader, camera, window.show_wireframe);
+        house.draw(default_shader, camera, window.show_wireframe);
         ground.draw(default_shader, camera, window.show_wireframe);
         
         if (!window.shadow_manager->is_active)
