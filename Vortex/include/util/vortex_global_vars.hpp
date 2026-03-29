@@ -19,12 +19,12 @@ namespace GLOBAL
 
     inline std::vector<std::string> SKYBOX_FACES_PATH = {
         // Order: right, left top, bottom, front, back
-        "assets/images/skybox/space_right.png",
-        "assets/images/skybox/space_left.png",
-        "assets/images/skybox/space_top.png",
-        "assets/images/skybox/space_bottom.png",
-        "assets/images/skybox/space_front.png",
-        "assets/images/skybox/space_back.png"
+        "assets/images/skybox/space1_right.png",
+        "assets/images/skybox/space2_left.png",
+        "assets/images/skybox/space1_top.png",
+        "assets/images/skybox/space2_bottom.png",
+        "assets/images/skybox/space1_front.png",
+        "assets/images/skybox/space2_back.png"
     };
 
     namespace DEFAULT_VERTICES

@@ -120,7 +120,11 @@ void VortexGUI::show_camera_info(VortexCamera *camera)
     ImGui::Text("Position: %.1f, %.1f, %.1f", camera->position.x, camera->position.y, camera->position.z);
     ImGui::Text("Is Anchored: %s", camera->anchored ? "True" : "False");
     
-    ImGui::InputFloat("Speed", &camera->movement_speed, 0.5f, 1.0f, "%.2f");
+    if (ImGui::InputFloat("Speed", &camera->movement_speed, 0.5f, 1.0f, "%.2f"))
+    {
+        if (camera->movement_speed < 0.0f) camera->movement_speed = 0.0f;
+        else if (camera->movement_speed > 100.0f) camera->movement_speed = 100.0f;
+    }
 
     ImGui::End();
 }
