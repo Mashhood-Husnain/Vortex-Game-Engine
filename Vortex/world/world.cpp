@@ -27,14 +27,18 @@ int main() {
     // VortexModel cube("assets/models/obj/cube.obj", &window);
     VortexModel ground("assets/models/obj/flat_plane.obj", &window);
     VortexModel house("assets/models/obj/abandoned_house.obj", &window);
+    VortexModel player_body("assets/models/obj/player.obj", &window);
 
     ParticleSystem ps(1000, &window, "Default");
 
+    Player player("Mashhood", &camera, &player_body, &default_shader);
 
     window.run([&](){
         // cube.draw(default_shader, camera, window.show_wireframe);
         house.draw(default_shader, camera, window.show_wireframe);
         ground.draw(default_shader, camera, window.show_wireframe);
+
+        player.update(&window);
         
         if (!window.shadow_manager->is_active)
         {

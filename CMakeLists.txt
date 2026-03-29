@@ -38,7 +38,7 @@ add_library(imgui
     vendor/imgui/imgui_impl_glfw.cpp
     vendor/imgui/imgui_impl_opengl3.cpp
 )
-target_include_directories(imgui PUBLIC vendor/imgui)
+target_include_directories(imgui PUBLIC vendor/imgui vendor/glfw/include)
 
 # NVML
 target_include_directories(imgui PUBLIC vendor/nvml)

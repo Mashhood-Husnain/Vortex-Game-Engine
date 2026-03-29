@@ -237,7 +237,8 @@ void VortexGUI::show_inspector_info(VortexModel* model, ParticleSystem *ps)
 
                 if (settings.enabled)
                 {
-                    ImGui::Indent(); // Indent to make it look clean
+                    ImGui::Indent();
+                    ImGui::DragFloat3("Position", &settings.position.x, 0.1f);
                     ImGui::SliderInt("Spawn Rate", &settings.spawn_rate, 1, 50);
                     ImGui::SliderFloat("Size", &settings.size, 0.05f, 5.0f);
                     ImGui::SliderFloat("Life", &settings.life, 0.1f, 10.0f);

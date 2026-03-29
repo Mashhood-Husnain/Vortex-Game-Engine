@@ -41,7 +41,7 @@ class VortexWindow
     float mouse_last_x = default_window_width / 2;
     float mouse_last_y = default_window_height / 2;
     bool first_mouse = true;
-    float last_frame = 0.0f; // related with deltaTime
+    float last_frame = 0.0f;
 
     VortexShader *worldaxis_shader = nullptr;
     unsigned int world_axisVAO;
@@ -61,7 +61,6 @@ class VortexWindow
     void draw_world_axis();
     void draw_world_axis_gizmo();
 public:
-    glm::vec4 bg_color = glm::vec4(0.4f, 0.45f, 0.5f, 1.0f);
     float deltaTime = 0.0f;
     bool show_wireframe = false;
     bool show_mouse_cursor = false;

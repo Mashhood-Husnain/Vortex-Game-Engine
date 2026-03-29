@@ -67,9 +67,38 @@ void Player::update(VortexWindow *window)
             check_player_movement(window->get_window_ptr(), window->deltaTime);
         }
 
+        float distance_moved = glm::length(player_position - last_position);
+        last_position = player_position;
+
+        float current_speed = 0.0f;
+        if (window->deltaTime > 0.0f) 
+        {
+            current_speed = distance_moved / window->deltaTime;
+        }
+
+        float max_bob_amount = 0.08f; // Max camera height shift at full speed
+        float base_bob_speed = 15.0f; // Base frequency for the sine wave
+
+        float speed_ratio = glm::clamp(current_speed / movement_speed, 0.0f, 1.5f);
+        float target_bob_amount = max_bob_amount * speed_ratio;
+        current_bob_amount = glm::mix(current_bob_amount, target_bob_amount, window->deltaTime * 10.0f);
+
+        if (current_bob_amount > 0.001f) 
+        {
+            float dynamic_speed = base_bob_speed * glm::max(speed_ratio, 0.5f);
+            bob_timer += window->deltaTime * dynamic_speed;
+        }
+        else
+        {
+            bob_timer = 0.0f; 
+        }
+
+        float wobble_y = sin(bob_timer) * current_bob_amount;
+        float wobble_x = cos(bob_timer * 0.5f) * current_bob_amount;
+
         if (player_camera->anchored)
         {
-            player_camera->position = player_position + player_head_offset;
+            player_camera->position = player_position + player_head_offset + glm::vec3(wobble_x, wobble_y, 0.0f);
             player_body->rotation.y = 90.0f - player_camera->yaw;
             player_body->draw(*window->shadow_manager->shadow_shader, *player_camera, false);
         }

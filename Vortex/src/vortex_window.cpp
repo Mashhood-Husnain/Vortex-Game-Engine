@@ -197,12 +197,6 @@ VortexWindow::VortexWindow(std::string window_name, VortexCamera* camera, int wi
         exit(EXIT_FAILURE);
     }
 
-    std::cout << "-------------------------------------------------------" << std::endl;
-    std::cout << "VORTEX ENGINE RUNNING ON:" << std::endl;
-    std::cout << "VENDOR:   " << glGetString(GL_VENDOR) << std::endl;
-    std::cout << "RENDERER: " << glGetString(GL_RENDERER) << std::endl;
-    std::cout << "-------------------------------------------------------" << std::endl;
-
     worldaxis_shader = new VortexShader("shaders/world_axis.vert", "shaders/world_axis.frag");
     setup_world_axis_buffers();
 
@@ -329,6 +323,12 @@ void VortexWindow::mouse_callback(GLFWwindow* window, double xposIn, double ypos
 
 void VortexWindow::run(std::function<void()> draw_callback)
 {
+    std::cout << "-------------------------------------------------------" << std::endl;
+    std::cout << "VORTEX ENGINE RUNNING ON:" << std::endl;
+    std::cout << "VENDOR:   " << glGetString(GL_VENDOR) << std::endl;
+    std::cout << "RENDERER: " << glGetString(GL_RENDERER) << std::endl;
+    std::cout << "-------------------------------------------------------" << std::endl;
+
     glfwShowWindow(window);
 
     while(!glfwWindowShouldClose(window))

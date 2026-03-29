@@ -66,6 +66,7 @@ struct EmitterSettings
     float drag = 0.9f;
     float elasticity = 0.5f;
     float friction = 0.8f;
+    glm::vec3 position = glm::vec3(0.0f);
     glm::vec4 color = glm::vec4(0.5f, 0.5f, 0.5f, 0.5f);
 };
 

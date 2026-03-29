@@ -34,9 +34,8 @@ void ps_smoke(
             float upward_speed = 0.5f; //(rand() % 100 / 40.0f) + 0.8f;
             float particle_life = settings.life + ((rand() % 100) / 100.0f);
 
-            glm::vec3 spawn_pos = position;
-            spawn_pos.x += ((rand() % 100 / 100.0f) - 0.5f) * 0.5f;
-            spawn_pos.z += ((rand() % 100 / 100.0f) - 0.5f) * 0.5f;
+            settings.position.x += ((rand() % 100 / 100.0f) - 0.5f) * 0.5f;
+            settings.position.z += ((rand() % 100 / 100.0f) - 0.5f) * 0.5f;
 
             glm::vec3 velocity(
                 cos(angle) * spread,
@@ -45,7 +44,7 @@ void ps_smoke(
             );
 
             ps.emit(
-                spawn_pos,
+                settings.position,
                 settings.size,
                 velocity,
                 particle_life,

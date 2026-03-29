@@ -33,6 +33,10 @@ class Player
     glm::vec3 right;
     glm::vec3 world_up = glm::vec3(0.0f, 1.0f, 0.0f);
 
+    glm::vec3 last_position = glm::vec3(0.0f);
+    float bob_timer = 0.0f;
+    float current_bob_amount = 0.0f;
+
     void update_player_vectors();
     void check_player_movement(GLFWwindow* window, float deltaTime);
     void processKeyboard(const std::string& direction, float deltaTime);
