@@ -15,6 +15,8 @@
 #include "test/vortex_ps_test.hpp"
 #include "util/vortex_global_vars.hpp"
 
+#include "vortex_skybox.hpp"
+
 int main() {
     VortexCamera camera(glm::vec3(15.0f, 2.0f, 1.0f));
     camera.look_at(glm::vec3(0.0f, 2.0f, 0.0f));

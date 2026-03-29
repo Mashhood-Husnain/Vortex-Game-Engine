@@ -27,7 +27,13 @@ class VortexGUI
     int m_selected_shader_idx = 0;
     bool m_shaders_loaded = false;
 
+    std::vector<std::vector<std::string>> m_skybox_files;
+    std::vector<std::string> m_skybox_display_names;
+    int m_selected_skybox_idx = 0;
+    bool m_skybox_loaded = false;
+
     void refresh_shader_list();
+    void refresh_skybox_list();
 public:
     VortexGUI();
     ~VortexGUI();
@@ -43,6 +49,7 @@ public:
     void show_camera_info(VortexCamera *camera);
 
     void show_post_process_options(VortexWindow *window);
+    void show_skybox_options(VortexWindow *window);
 
     void show_engine_stats();
 };

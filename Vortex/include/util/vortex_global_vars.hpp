@@ -17,16 +17,6 @@ namespace GLOBAL
     inline glm::vec3 LIGHTPOS = glm::vec3(0.0f, 10.0f, 5.0f);
     inline const std::string VORTEX_VERSION = "\"0.1.0\"";
 
-    inline std::vector<std::string> SKYBOX_FACES_PATH = {
-        // Order: right, left top, bottom, front, back
-        "assets/images/skybox/space1_right.png",
-        "assets/images/skybox/space2_left.png",
-        "assets/images/skybox/space1_top.png",
-        "assets/images/skybox/space2_bottom.png",
-        "assets/images/skybox/space1_front.png",
-        "assets/images/skybox/space2_back.png"
-    };
-
     namespace DEFAULT_VERTICES
     {
         inline constexpr float PARTICLE_VERTICES[] = {

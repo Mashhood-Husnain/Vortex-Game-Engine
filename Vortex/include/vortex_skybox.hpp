@@ -11,6 +11,7 @@
 #include <glad/glad.h>
 #include <vector>
 #include <string>
+#include <filesystem>
 
 #include "vortex_shaders.hpp"
 #include "vortex_camera.hpp"
@@ -36,3 +37,5 @@ public:
 
     void draw(VortexCamera *camera);
 };
+
+std::vector<std::string> get_skyboxes(std::string path);

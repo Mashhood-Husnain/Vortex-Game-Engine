@@ -77,9 +77,9 @@ void VortexWindow::key_callback(GLFWwindow* window, int key, int scancode, int a
                 break;
             // temporary solution
             // disabled for now, until i clean up the player code and come up with a better solution
-            // case GLFW_KEY_R:
-            //     app->camera->anchored = !app->camera->anchored;
-            //     break;
+            case GLFW_KEY_R:
+                app->camera->anchored = !app->camera->anchored;
+                break;
             case GLFW_KEY_V:
                 app->view_world_axis = !app->view_world_axis;
                 break;
@@ -201,8 +201,6 @@ VortexWindow::VortexWindow(std::string window_name, VortexCamera* camera, int wi
     setup_world_axis_buffers();
 
     shadow_manager = new ShadowManager();
-
-    skybox = new VortexSkybox(GLOBAL::SKYBOX_FACES_PATH);
 
     // V-sync
     glfwSwapInterval(1);
@@ -359,15 +357,23 @@ void VortexWindow::run(std::function<void()> draw_callback)
         }
         
         // rendering
+        if (!skybox)
+        {
+            glClearColor(0.1f, 0.1f, 0.15f, 1.0f);
+        }
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
         gui.update();
         gui.show_engine_stats();
         gui.show_camera_info(camera);
         gui.show_post_process_options(this);
+        gui.show_skybox_options(this);
         gui.begin_scene_inspector();
 
-        skybox->draw(camera);
+        if (skybox)
+        {
+            skybox->draw(camera);
+        }
 
         draw_callback();
 
@@ -412,4 +418,10 @@ void VortexWindow::set_post_processor(PostProcessor *post_processor)
     {
         this->post_processor->resize(default_window_width, default_window_height);
     }
+}
+
+void VortexWindow::set_skybox(VortexSkybox *skybox)
+{
+    delete this->skybox;
+    this->skybox = skybox;
 }

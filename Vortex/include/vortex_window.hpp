@@ -49,8 +49,7 @@ class VortexWindow
     bool view_world_axis = false;
 
     PostProcessor *post_processor = nullptr;
-
-    VortexSkybox *skybox;
+    VortexSkybox *skybox = nullptr;
 
     GLFWmonitor* get_current_monitor(GLFWwindow* window);
     static void framebuffer_size_callback(GLFWwindow* window, int width, int height);
@@ -74,4 +73,5 @@ public:
     GLFWwindow* get_window_ptr();
 
     void set_post_processor(PostProcessor *post_processor);
+    void set_skybox(VortexSkybox *skybox);
 };

@@ -131,8 +131,13 @@ void VortexGUI::show_camera_info(VortexCamera *camera)
 
 void VortexGUI::begin_scene_inspector()
 {
-    ImGui::SetNextWindowPos(ImVec2(10, 190), ImGuiCond_FirstUseEver);
-    ImGui::SetNextWindowSizeConstraints(ImVec2(350, 50), ImVec2(FLT_MAX, 800));
+    ImGui::SetNextWindowPos(ImVec2(10, 275), ImGuiCond_FirstUseEver);
+
+    float app_window_height = ImGui::GetIO().DisplaySize.y;
+    float max_height = app_window_height - 275.0f - 10.0f;
+
+    if (max_height < 50.0f) max_height = 50.0f;
+    ImGui::SetNextWindowSizeConstraints(ImVec2(350, 50), ImVec2(FLT_MAX, max_height));
     
     ImGui::Begin("Scene Inspector", nullptr, ImGuiWindowFlags_AlwaysAutoResize | ImGuiWindowFlags_NoMove);
 }
@@ -342,6 +347,83 @@ void VortexGUI::show_post_process_options(VortexWindow *window)
     }
 
     if (ImGui::Button("Refresh Shaders")) m_shaders_loaded = false;
+
+    ImGui::End();
+}
+
+void VortexGUI::refresh_skybox_list()
+{
+    m_skybox_display_names.clear();
+    for (auto &skybox_path : m_skybox_files)
+    {
+        skybox_path.clear();
+    }
+    m_skybox_files.clear();
+
+    m_skybox_display_names.push_back("None (Standard)");
+    m_skybox_files.push_back({});
+
+    std::vector<std::string> found_skyboxes = get_skyboxes("assets/images/skybox");
+    for (std::string name : found_skyboxes)
+    {
+        m_skybox_display_names.push_back(name);
+
+        std::vector<std::string> skybox_path = {
+            // Order: right, left bottom, top, front, back
+            "assets/images/skybox/" + name + "_right.png",
+            "assets/images/skybox/" + name + "_left.png",
+            "assets/images/skybox/" + name + "_bottom.png",
+            "assets/images/skybox/" + name + "_top.png",
+            "assets/images/skybox/" + name + "_front.png",
+            "assets/images/skybox/" + name + "_back.png",
+        };
+
+        m_skybox_files.push_back(skybox_path);
+    }
+
+    m_skybox_loaded = true;
+}
+
+void VortexGUI::show_skybox_options(VortexWindow *window)
+{
+    if (!m_skybox_loaded) refresh_skybox_list();
+
+    ImGui::SetNextWindowPos(ImVec2(10, 190), ImGuiCond_FirstUseEver);
+    ImGui::Begin(
+        "SkyBox",
+        nullptr,
+        ImGuiWindowFlags_AlwaysAutoResize | ImGuiWindowFlags_NoMove |
+        ImGuiWindowFlags_NoCollapse
+    );
+
+    if (m_skybox_display_names.size() <= 1)
+    {
+        ImGui::TextColored(ImVec4(1.0f, 0.4f, 0.4f, 1.0f), "No skyboxes found in assets/");
+    }
+
+    else
+    {
+        auto getter = [](void* data, int idx) -> const char*
+        {
+            auto* items = static_cast<std::vector<std::string>*>(data);
+            if (idx < 0 || idx >= static_cast<int>(items->size())) return nullptr;
+            return (*items)[idx].c_str();
+        };
+
+        if (ImGui::Combo("Environment", &m_selected_skybox_idx, getter, static_cast<void*>(&m_skybox_display_names), static_cast<int>(m_skybox_display_names.size())))
+        {
+            if (m_selected_skybox_idx == 0)
+            {
+                window->set_skybox(nullptr);
+            }
+            else
+            {
+                window->set_skybox(new VortexSkybox(m_skybox_files[m_selected_skybox_idx]));
+            }
+        }
+    }
+
+    if (ImGui::Button("Refresh Skyboxes")) m_skybox_loaded = false;
 
     ImGui::End();
 }

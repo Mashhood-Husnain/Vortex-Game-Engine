@@ -114,3 +114,32 @@ void VortexSkybox::setup_mesh()
     glEnableVertexAttribArray(0);
     glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), (void*)0);
 }
+
+std::vector<std::string> get_skyboxes(std::string path)
+{
+    std::vector<std::string> names;
+
+    if (!std::filesystem::exists(path) || !std::filesystem::is_directory(path))
+    {
+        std::cout << "[SKYBOX ERROR] Path specified does not exist: " << path << std::endl;
+        exit(EXIT_FAILURE);
+    }
+
+    for (const auto &entry : std::filesystem::directory_iterator(path))
+    {
+        if (entry.is_regular_file())
+        {
+            std::string filename = entry.path().filename().string();
+
+            size_t pos = filename.find("_right");
+
+            if (pos != std::string::npos)
+            {
+                std::string name = filename.substr(0, pos);
+                names.push_back(name);
+            }
+        }
+    }
+    
+    return names;
+}
