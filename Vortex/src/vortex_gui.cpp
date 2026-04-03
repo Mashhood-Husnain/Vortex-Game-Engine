@@ -120,11 +120,7 @@ void VortexGUI::show_camera_info(VortexCamera *camera)
     ImGui::Text("Position: %.1f, %.1f, %.1f", camera->position.x, camera->position.y, camera->position.z);
     ImGui::Text("Is Anchored: %s", camera->anchored ? "True" : "False");
     
-    if (ImGui::InputFloat("Speed", &camera->movement_speed, 0.5f, 1.0f, "%.2f"))
-    {
-        if (camera->movement_speed < 0.0f) camera->movement_speed = 0.0f;
-        else if (camera->movement_speed > 100.0f) camera->movement_speed = 100.0f;
-    }
+    VortexGuiLambda::ClampedInputFloat("Speed", &camera->movement_speed, 0.5f, 1.0f, 0.0f, 100.0f);
 
     ImGui::End();
 }
@@ -248,14 +244,25 @@ void VortexGUI::show_inspector_info(VortexModel* model, ParticleSystem *ps)
                 {
                     ImGui::Indent();
                     ImGui::DragFloat3("Position", &settings.position.x, 0.1f);
-                    ImGui::SliderInt("Spawn Rate", &settings.spawn_rate, 1, 50);
-                    ImGui::SliderFloat("Size", &settings.size, 0.05f, 5.0f);
-                    ImGui::SliderFloat("Life", &settings.life, 0.1f, 10.0f);
-                    ImGui::SliderFloat("Gravity", &settings.gravity, -2.0f, 2.0f);
+
+                    VortexGuiLambda::ClampedInputInt("Spawn Rate", &settings.spawn_rate, 100, 500, 0, ps->max_particles);
+                    VortexGuiLambda::ClampedInputFloat("Size", &settings.size, 0.1f, 1.0f, 0.05f, 5.0f);
+                    VortexGuiLambda::ClampedInputFloat("Life", &settings.life, 0.5f, 1.0f, 0.1f, 10.0f);
+                    VortexGuiLambda::ClampedInputFloat("Gravity", &settings.gravity, 0.2f, 0.5f, -2.0f, 2.0f);
+
                     ImGui::SliderFloat("Drag", &settings.drag, 0.0f, 5.0f);
                     ImGui::SliderFloat("Elasticity", &settings.elasticity, 0.0f, 1.0f);
                     ImGui::SliderFloat("Friction", &settings.friction, 0.0f, 1.0f);
                     ImGui::ColorEdit4("Color", glm::value_ptr(settings.color));
+                    ImGui::SeparatorText("Point Gravity");
+                    ImGui::Checkbox("Use Point Gravity", &settings.use_point_gravity);
+
+                    if (settings.use_point_gravity)
+                    {
+                        ImGui::DragFloat3("Target Pos", glm::value_ptr(settings.gravity_point), 0.1f);
+                        VortexGuiLambda::ClampedInputFloat("Pull Strength", &settings.point_gravity_strength, 0.1f, 0.0f, 0.1f, 1.0f);
+                    }
+
                     ImGui::Unindent();
                 }
 
@@ -264,7 +271,8 @@ void VortexGUI::show_inspector_info(VortexModel* model, ParticleSystem *ps)
             }
 
             ImGui::SeparatorText("Stats");
-            ImGui::Text("Live Particles: %d", (int)ps->particles.size());
+            ImGui::Text("Total Particles: %d", (int)ps->particles.size());
+            ImGui::Text("Active Particles: %d", ps->active_count);
 
             ImGui::PushStyleColor(ImGuiCol_Button, ImVec4(0.8f, 0.2f, 0.2f, 1.0f));
             ImGui::PushStyleColor(ImGuiCol_ButtonHovered, ImVec4(1.0f, 0.3f, 0.3f, 1.0f));
@@ -326,14 +334,7 @@ void VortexGUI::show_post_process_options(VortexWindow *window)
     ImGui::SetNextWindowPos(ImVec2(180, 105), ImGuiCond_FirstUseEver);
     ImGui::Begin("Post-Processing", nullptr, ImGuiWindowFlags_AlwaysAutoResize | ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoCollapse);
 
-    auto getter = [](void* data, int idx) -> const char*
-    {
-        auto* items = static_cast<std::vector<std::string>*>(data);
-        if (idx < 0 || idx >= static_cast<int>(items->size())) return nullptr;
-        return (*items)[idx].c_str();
-    };
-
-    if (ImGui::Combo("Effect", &m_selected_shader_idx, getter, static_cast<void*>(&m_display_names), static_cast<int>(m_display_names.size())))
+    if (ImGui::Combo("Effect", &m_selected_shader_idx, VortexGuiLambda::DataGetter, static_cast<void*>(&m_display_names), static_cast<int>(m_display_names.size())))
     {
         if (m_selected_shader_idx == 0)
         {
@@ -372,8 +373,8 @@ void VortexGUI::refresh_skybox_list()
             // Order: right, left bottom, top, front, back
             "assets/images/skybox/" + name + "_right.png",
             "assets/images/skybox/" + name + "_left.png",
-            "assets/images/skybox/" + name + "_bottom.png",
             "assets/images/skybox/" + name + "_top.png",
+            "assets/images/skybox/" + name + "_bottom.png",
             "assets/images/skybox/" + name + "_front.png",
             "assets/images/skybox/" + name + "_back.png",
         };
@@ -403,14 +404,7 @@ void VortexGUI::show_skybox_options(VortexWindow *window)
 
     else
     {
-        auto getter = [](void* data, int idx) -> const char*
-        {
-            auto* items = static_cast<std::vector<std::string>*>(data);
-            if (idx < 0 || idx >= static_cast<int>(items->size())) return nullptr;
-            return (*items)[idx].c_str();
-        };
-
-        if (ImGui::Combo("Environment", &m_selected_skybox_idx, getter, static_cast<void*>(&m_skybox_display_names), static_cast<int>(m_skybox_display_names.size())))
+        if (ImGui::Combo("Environment", &m_selected_skybox_idx, VortexGuiLambda::DataGetter, static_cast<void*>(&m_skybox_display_names), static_cast<int>(m_skybox_display_names.size())))
         {
             if (m_selected_skybox_idx == 0)
             {

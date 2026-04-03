@@ -66,7 +66,7 @@ public:
     ShadowManager *shadow_manager = nullptr;
     VortexGUI gui;
 
-    VortexWindow(std::string window_name, VortexCamera* camera, int width=1050, int height=800);
+    VortexWindow(std::string window_name, VortexCamera* camera, int width, int height);
     ~VortexWindow();
 
     void run(std::function<void()> draw_callback);

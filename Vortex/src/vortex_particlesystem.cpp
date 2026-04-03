@@ -18,8 +18,19 @@ ParticleSystem::ParticleSystem(int max_particles, VortexWindow *window, std::str
 }
 
 void ParticleSystem::emit(
-    glm::vec3 position, float size, glm::vec3 velocity, float life, float gravity_scale, float drag,
-    glm::vec4 particle_color, float elasticity, float friction, ParticleBehaviour behaviour
+    glm::vec3 position,
+    float size,
+    glm::vec3 velocity,
+    float life,
+    float gravity_scale,
+    float drag,
+    glm::vec4 particle_color,
+    float elasticity,
+    float friction,
+    ParticleBehaviour behaviour,
+    bool use_point_gravity,
+    glm::vec3 gravity_point,
+    float point_gravity_strength
 )
 {
     if (active_count >= particles.size()) return;
@@ -39,6 +50,9 @@ void ParticleSystem::emit(
     particle.behaviour = behaviour;
     particle.elasticity = elasticity;
     particle.friction = friction;
+    particle.use_point_gravity = use_point_gravity;
+    particle.gravity_point = gravity_point;
+    particle.point_gravity_strength = point_gravity_strength;
 
     active_count++;
 }
@@ -78,7 +92,23 @@ void ParticleSystem::update(float deltaTime)
             break;
         }
 
-        particle.velocity.y -= g_dt * particle.gravity_scale;
+        if (particle.use_point_gravity)
+        {
+            glm::vec3 direction = particle.gravity_point - particle.particle_instance.position;
+
+            float distance = glm::length(direction);
+
+            if (distance > 0.1f)
+            {
+                direction = glm::normalize(direction);
+                particle.velocity += direction * particle.point_gravity_strength;
+            }
+        }
+        else
+        {
+            particle.velocity.y -= g_dt * particle.gravity_scale;
+        }
+
         particle.velocity *= 1.0f - (particle.drag * deltaTime);
         particle.particle_instance.position += particle.velocity * deltaTime;
         particle.particle_instance.size = particle_size_behaviour;
@@ -137,14 +167,14 @@ void ParticleSystem::draw(VortexShader &shader, VortexCamera &camera)
     shader.setMat4("projection", camera.getProjectionMatrix());
 
     glBindBuffer(GL_ARRAY_BUFFER, instanceVBO);
-    glBufferSubData(GL_ARRAY_BUFFER, 0, instance_data.size() * sizeof(ParticleInstance), instance_data.data());
+    glBufferSubData(GL_ARRAY_BUFFER, 0, active_count * sizeof(ParticleInstance), instance_data.data());
 
     glEnable(GL_BLEND);
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
     glDepthMask(GL_FALSE);
 
     glBindVertexArray(VAO);
-    glDrawArraysInstanced(GL_TRIANGLES, 0, 6, (GLsizei)instance_data.size());
+    glDrawArraysInstanced(GL_TRIANGLES, 0, 6, active_count);
 
     glBindVertexArray(0);
     glDepthMask(GL_TRUE);
