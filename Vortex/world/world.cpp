@@ -30,7 +30,7 @@ int main() {
     VortexModel ground("assets/models/obj/flat_plane.obj", &window);
     // VortexModel house("assets/models/obj/abandoned_house.obj", &window);
 
-    ParticleSystem ps(100000, &window, "Default");
+    ParticleSystem ps(1000000, &window, "Default");
 
     window.run([&](){
         // cube.draw(default_shader, camera, window.show_wireframe);

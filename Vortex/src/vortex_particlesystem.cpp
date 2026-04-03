@@ -13,7 +13,10 @@ ParticleSystem::ParticleSystem(int max_particles, VortexWindow *window, std::str
     this->window = window;
     this->name = name;
     this->max_particles = max_particles;
-    particles.resize(this->max_particles);
+
+    instances.resize(this->max_particles);
+    physics.resize(this->max_particles);
+
     setup_buffers();
 }
 
@@ -33,26 +36,28 @@ void ParticleSystem::emit(
     float point_gravity_strength
 )
 {
-    if (active_count >= particles.size()) return;
+    if (active_count >= max_particles) return;
 
-    Particle &particle = particles[active_count];
+    ParticleInstance &inst = instances[active_count];
+    ParticlePhysics &phys = physics[active_count];
 
-    particle.particle_instance.position = position;
-    particle.particle_instance.size = size;
-    particle.initial_size = size;
-    particle.velocity = velocity;
-    particle.life = life;
-    particle.max_life = life;
-    particle.gravity_scale = gravity_scale;
-    particle.drag = drag;
-    particle.particle_instance.color = particle_color;
-    particle.initial_alpha = particle.particle_instance.color.a;
-    particle.behaviour = behaviour;
-    particle.elasticity = elasticity;
-    particle.friction = friction;
-    particle.use_point_gravity = use_point_gravity;
-    particle.gravity_point = gravity_point;
-    particle.point_gravity_strength = point_gravity_strength;
+    inst.position = position;
+    inst.size = size;
+    inst.color = particle_color;
+
+    phys.initial_size = size;
+    phys.velocity = velocity;
+    phys.life = life;
+    phys.max_life = life;
+    phys.gravity_scale = gravity_scale;
+    phys.drag = drag;
+    phys.initial_alpha = particle_color.a;
+    phys.behaviour = behaviour;
+    phys.elasticity = elasticity;
+    phys.friction = friction;
+    phys.use_point_gravity = use_point_gravity;
+    phys.gravity_point = gravity_point;
+    phys.point_gravity_strength = point_gravity_strength;
 
     active_count++;
 }
@@ -63,78 +68,82 @@ void ParticleSystem::update(float deltaTime)
 
     for (int i = 0; i < active_count; )
     {
-        Particle &particle = particles[i];
-        particle.life -= deltaTime;
+        ParticleInstance &inst = instances[i];
+        ParticlePhysics &phys = physics[i];
 
-        float life_ratio = particle.life / particle.max_life;
+        phys.life -= deltaTime;
+
+        float life_ratio = phys.life / phys.max_life;
         float particle_size_behaviour;
 
-        if (particle.life <= 0.0f)
+        if (phys.life <= 0.0f)
         {
-            particles[i] = particles[active_count - 1];
+            instances[i] = instances[active_count - 1];
+            physics[i] = physics[active_count - 1];
+
             active_count--;
 
             continue;
         }
 
-        switch (particle.behaviour)
+        switch (phys.behaviour)
         {
             case ParticleBehaviour::GROW:
-                particle_size_behaviour = particle.initial_size + (particle.initial_size * (1.0f - life_ratio));
+                particle_size_behaviour = phys.initial_size + (phys.initial_size * (1.0f - life_ratio));
             break;
 
             case ParticleBehaviour::SHRINK:
-                particle_size_behaviour = particle.initial_size * (life_ratio * life_ratio);
+                particle_size_behaviour = phys.initial_size * (life_ratio * life_ratio);
             break;
         
             default:
-                particle_size_behaviour = particle.initial_size;
+                particle_size_behaviour = phys.initial_size;
             break;
         }
 
-        if (particle.use_point_gravity)
+        if (phys.use_point_gravity)
         {
-            glm::vec3 direction = particle.gravity_point - particle.particle_instance.position;
+            glm::vec3 direction = phys.gravity_point - inst.position;
 
             float distance = glm::length(direction);
 
             if (distance > 0.1f)
             {
                 direction = glm::normalize(direction);
-                particle.velocity += direction * particle.point_gravity_strength;
+                phys.velocity += direction * phys.point_gravity_strength;
             }
         }
         else
         {
-            particle.velocity.y -= g_dt * particle.gravity_scale;
+            phys.velocity.y -= g_dt * phys.gravity_scale;
         }
 
-        particle.velocity *= 1.0f - (particle.drag * deltaTime);
-        particle.particle_instance.position += particle.velocity * deltaTime;
-        particle.particle_instance.size = particle_size_behaviour;
+        phys.velocity *= 1.0f - (phys.drag * deltaTime);
+        inst.position += phys.velocity * deltaTime;
+        inst.size = particle_size_behaviour;
 
-        if (particle.gravity_scale < 0.0f)
+        if (phys.gravity_scale < 0.0f)
         {
             float jitterX = ((rand() % 100) / 100.0f - 0.5f) * 0.005f;
             float jitterZ = ((rand() % 100) / 100.0f - 0.5f) * 0.005f;
             
-            particle.particle_instance.position.x += jitterX;
-            particle.particle_instance.position.z += jitterZ;
+            inst.position.x += jitterX;
+            inst.position.z += jitterZ;
 
-            particle.particle_instance.color.a = particle.initial_alpha * life_ratio;
+            inst.color.a = phys.initial_alpha * life_ratio;
         }
 
-        if (particle.gravity_scale > 0.0f && particle.particle_instance.position.y < 0.0f)
+        if (phys.gravity_scale > 0.0f && inst.position.y < 0.0f)
         {
-            particle.particle_instance.position.y = 0.0f;
-            particle.velocity.y = -particle.velocity.y * particle.elasticity;
+            inst.position.y = 0.0f;
+            phys.velocity.y = -phys.velocity.y * phys.elasticity;
 
-            particle.velocity.x *= particle.friction;
-            particle.velocity.z *= particle.friction;
+            phys.velocity.x *= phys.friction;
+            phys.velocity.z *= phys.friction;
 
-            if (glm::length(particle.velocity) < 0.1f)
+            if (glm::length(phys.velocity) < 0.1f)
             {
-                particle.velocity = glm::vec3(0.0f);
+                phys.velocity = glm::vec3(0.0f);
             }
         }
 
@@ -148,26 +157,13 @@ void ParticleSystem::draw(VortexShader &shader, VortexCamera &camera)
 {
     if (active_count == 0) return;
 
-    static std::vector<ParticleInstance> instance_data;
-    if (instance_data.size() < particles.size())
-    {
-        instance_data.resize(particles.size()); 
-    }
-
-    for (int i = 0; i < active_count; i++)
-    {
-        instance_data[i] = particles[i].particle_instance;
-    }
-
-    if (instance_data.empty()) return;
-
     shader.use();
-
     shader.setMat4("view", camera.getViewMatrix());
     shader.setMat4("projection", camera.getProjectionMatrix());
 
     glBindBuffer(GL_ARRAY_BUFFER, instanceVBO);
-    glBufferSubData(GL_ARRAY_BUFFER, 0, active_count * sizeof(ParticleInstance), instance_data.data());
+    glBufferData(GL_ARRAY_BUFFER, max_particles * sizeof(ParticleInstance), NULL, GL_STREAM_DRAW);
+    glBufferSubData(GL_ARRAY_BUFFER, 0, active_count * sizeof(ParticleInstance), instances.data());
 
     glEnable(GL_BLEND);
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
@@ -190,8 +186,11 @@ void ParticleSystem::resize_particles(int no_of_particles)
     max_particles = no_of_particles;
     active_count = 0;
 
-    particles.clear();
-    particles.resize(max_particles);
+    instances.clear();
+    instances.resize(max_particles);
+
+    physics.clear();
+    physics.resize(max_particles);
 
     setup_buffers();
 }
@@ -212,7 +211,7 @@ void ParticleSystem::setup_buffers()
 
     // instance location
     glBindBuffer(GL_ARRAY_BUFFER, instanceVBO);
-    glBufferData(GL_ARRAY_BUFFER, max_particles * sizeof(ParticleInstance), NULL, GL_DYNAMIC_DRAW);
+    glBufferData(GL_ARRAY_BUFFER, max_particles * sizeof(ParticleInstance), NULL, GL_STREAM_DRAW);
 
     // position
     glEnableVertexAttribArray(1);
@@ -248,5 +247,6 @@ ParticleSystem::~ParticleSystem()
     if (VBO != 0) glDeleteBuffers(1, &VBO);
     if (instanceVBO != 0) glDeleteBuffers(1, &instanceVBO);
     active_count = 0;
-    particles.clear();
+    instances.clear();
+    physics.clear();
 }

@@ -271,16 +271,11 @@ void VortexGUI::show_inspector_info(VortexModel* model, ParticleSystem *ps)
             }
 
             ImGui::SeparatorText("Stats");
-            ImGui::Text("Total Particles: %d", (int)ps->particles.size());
+            ImGui::Text("Total Particles: %d", (int)ps->max_particles);
             ImGui::Text("Active Particles: %d", ps->active_count);
 
             ImGui::PushStyleColor(ImGuiCol_Button, ImVec4(0.8f, 0.2f, 0.2f, 1.0f));
             ImGui::PushStyleColor(ImGuiCol_ButtonHovered, ImVec4(1.0f, 0.3f, 0.3f, 1.0f));
-
-            if (ImGui::Button("Purge System", ImVec2(-1, 0)))
-            {
-                ps->particles.clear(); 
-            }
 
             ImGui::PopStyleColor(2);
 

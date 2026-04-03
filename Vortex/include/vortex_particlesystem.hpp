@@ -34,10 +34,10 @@ struct ParticleInstance
     glm::vec4 color;
 };
 
-struct Particle
+struct ParticlePhysics
 {
     glm::vec3 velocity;
-    ParticleInstance particle_instance;
+    // ParticleInstance particle_instance;
     float life;
     float max_life;
     float initial_size;
@@ -54,10 +54,6 @@ struct Particle
     bool use_point_gravity;
     glm::vec3 gravity_point;
     float point_gravity_strength;
-
-    bool is_active() const {
-        return life > 0.0f && particle_instance.size > 0.01;
-    }
 };
 
 struct EmitterSettings
@@ -87,7 +83,8 @@ class ParticleSystem
 
     void setup_buffers();
 public:
-    std::vector<Particle> particles;
+    std::vector<ParticleInstance> instances;
+    std::vector<ParticlePhysics> physics;
     std::map<std::string, EmitterSettings> emitter_registry;
 
     VortexWindow *window = nullptr;
