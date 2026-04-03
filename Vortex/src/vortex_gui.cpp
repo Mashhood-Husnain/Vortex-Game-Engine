@@ -253,6 +253,15 @@ void VortexGUI::show_inspector_info(VortexModel* model, ParticleSystem *ps)
                     ImGui::SliderFloat("Drag", &settings.drag, 0.0f, 5.0f);
                     ImGui::SliderFloat("Elasticity", &settings.elasticity, 0.0f, 1.0f);
                     ImGui::SliderFloat("Friction", &settings.friction, 0.0f, 1.0f);
+
+                    const char *behaviour_options[] = {"Grow", "Shrink", "None"};
+                    int current_behaviour = static_cast<int>(settings.behaviour);
+
+                    if (ImGui::Combo("Behaviour", &current_behaviour, behaviour_options, IM_ARRAYSIZE(behaviour_options)))
+                    {
+                        settings.behaviour = static_cast<ParticleBehaviour>(current_behaviour);
+                    }
+
                     ImGui::ColorEdit4("Color", glm::value_ptr(settings.color));
                     ImGui::SeparatorText("Point Gravity");
                     ImGui::Checkbox("Use Point Gravity", &settings.use_point_gravity);

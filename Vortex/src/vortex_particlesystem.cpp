@@ -157,20 +157,38 @@ void ParticleSystem::draw(VortexShader &shader, VortexCamera &camera)
 {
     if (active_count == 0) return;
 
+    int draw_count = active_count;
+
+    for (auto &[name, settings] : emitter_registry)
+    {
+        if (settings.enabled && settings.use_point_gravity && draw_count < max_particles)
+        {
+            ParticleInstance gizmo;
+            gizmo.position = settings.gravity_point;
+            gizmo.size = 1.1f;
+            gizmo.color = glm::vec4(0.0f, 1.0f, 0.0f, 0.9f);
+
+            instances[draw_count] = gizmo;
+            draw_count++;
+        }
+    }
+
+    if (draw_count == 0) return;
+
     shader.use();
     shader.setMat4("view", camera.getViewMatrix());
     shader.setMat4("projection", camera.getProjectionMatrix());
 
     glBindBuffer(GL_ARRAY_BUFFER, instanceVBO);
     glBufferData(GL_ARRAY_BUFFER, max_particles * sizeof(ParticleInstance), NULL, GL_STREAM_DRAW);
-    glBufferSubData(GL_ARRAY_BUFFER, 0, active_count * sizeof(ParticleInstance), instances.data());
+    glBufferSubData(GL_ARRAY_BUFFER, 0, draw_count * sizeof(ParticleInstance), instances.data());
 
     glEnable(GL_BLEND);
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
     glDepthMask(GL_FALSE);
 
     glBindVertexArray(VAO);
-    glDrawArraysInstanced(GL_TRIANGLES, 0, 6, active_count);
+    glDrawArraysInstanced(GL_TRIANGLES, 0, 6, draw_count);
 
     glBindVertexArray(0);
     glDepthMask(GL_TRUE);

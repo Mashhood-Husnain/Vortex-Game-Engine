@@ -37,7 +37,6 @@ struct ParticleInstance
 struct ParticlePhysics
 {
     glm::vec3 velocity;
-    // ParticleInstance particle_instance;
     float life;
     float max_life;
     float initial_size;
@@ -73,6 +72,8 @@ struct EmitterSettings
     bool use_point_gravity = false;
     glm::vec3 gravity_point = glm::vec3(0.0f, 10.0f, 0.0f);
     float point_gravity_strength = 0.5f;
+
+    ParticleBehaviour behaviour = ParticleBehaviour::NONE;
 };
 
 class ParticleSystem

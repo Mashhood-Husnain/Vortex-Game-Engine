@@ -111,7 +111,7 @@ void ps_orbit(
                 settings.color,
                 settings.elasticity,
                 settings.friction,
-                ParticleBehaviour::NONE, 
+                settings.behaviour, 
                 settings.use_point_gravity,
                 settings.gravity_point,
                 settings.point_gravity_strength
