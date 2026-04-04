@@ -57,6 +57,7 @@ unsigned int VortexSkybox::load_cubemap(std::vector<std::string> faces)
     int width, height, nrChannels;
     std::cout << "-------------------------------------------------------" << std::endl;
 
+    stbi_set_flip_vertically_on_load(false);
     for (unsigned int i = 0; i < faces.size(); i++)
     {
         std::cout << "[SKYBOX] Loading: " << faces[i];

@@ -1,5 +1,5 @@
 /*
- * File: vortex_obj_reader.cpp
+ * File: vortex_model.cpp
  * Project: VortexEngine
  * Description: Read object files to load 3D models in the scene
  * Author: Mashhood Husnain
@@ -214,6 +214,8 @@ unsigned int VortexModel::load_texture(const std::string& path)
         stbi_image_free(data);
         exit(EXIT_FAILURE);
     }
+
+    m_gpu_allocated_textures.push_back(textureID);
 
     return textureID;
 }
@@ -462,6 +464,18 @@ VortexModel::~VortexModel()
 {
     if (VAO != 0) glDeleteVertexArrays(1, &VAO);
     if (VBO != 0) glDeleteBuffers(1, &VBO);
+
+    if (texture_id != 0) glDeleteTextures(1, &texture_id);
+    if (roughness_id != 0) glDeleteTextures(1, &roughness_id);
+    if (metallic_id != 0) glDeleteTextures(1, &metallic_id);
+    if (normal_id != 0) glDeleteTextures(1, &normal_id);
+
+    for (unsigned int tex_id : m_gpu_allocated_textures)
+    {
+        glDeleteTextures(1, &tex_id);
+    }
+
+    window = nullptr;
 }
 
 void align_on_top(VortexModel& top_obj, const VortexModel& bottom_obj)

@@ -64,6 +64,18 @@ class VortexGUI
     int m_selected_skybox_idx = 0;
     bool m_skybox_loaded = false;
 
+    ImVec2 m_scene_pos = ImVec2(0, 0);
+    ImVec2 m_scene_size = ImVec2(0, 0);
+
+    bool m_scene_was_collapsed = true;
+    bool m_creator_was_collapsed = true;
+    bool m_force_scene_collapse = true;
+    bool m_force_creator_collapse = true;
+
+    std::vector<std::string> m_available_model_names;
+    std::vector<std::string> m_available_model_paths;
+    bool m_models_scanned = false;
+
     void refresh_shader_list();
     void refresh_skybox_list();
 public:
@@ -77,6 +89,8 @@ public:
     void begin_scene_inspector();
     void show_inspector_info(VortexModel *model, ParticleSystem *ps);
     void end_scene_inspector();
+
+    void show_creator_window(VortexWindow *window, std::vector<ParticleSystem*> &active_systems, std::vector<VortexModel*> &active_models);
 
     void show_camera_info(VortexCamera *camera);
 

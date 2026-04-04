@@ -15,6 +15,7 @@
 #include <iostream>
 #include <string>
 #include <functional>
+#include <algorithm>
 
 #include "vortex_camera.hpp"
 #include "vortex_shaders.hpp"
@@ -22,6 +23,9 @@
 #include "vortex_gui.hpp"
 #include "vortex_postprocessor.hpp"
 #include "vortex_skybox.hpp"
+#include "vortex_particlesystem.hpp"
+#include "vortex_model.hpp"
+#include "vortex_grid.hpp"
 
 #include "util/vortex_global_vars.hpp"
 #include "util/vortex_gpu_pre_init.hpp"
@@ -50,6 +54,14 @@ class VortexWindow
 
     PostProcessor *post_processor = nullptr;
     VortexSkybox *skybox = nullptr;
+
+    std::vector<ParticleSystem*> dynamic_particlesystems;
+    VortexShader *particle_shader = nullptr;
+
+    std::vector<VortexModel*> dynamic_models;
+    VortexShader *model_shader = nullptr;
+
+    VortexGrid *environment_grid = nullptr;
 
     GLFWmonitor* get_current_monitor(GLFWwindow* window);
     static void framebuffer_size_callback(GLFWwindow* window, int width, int height);

@@ -94,6 +94,8 @@ public:
     int max_particles;
     int active_count = 0;
 
+    bool should_destroy = false;
+
     ParticleSystem(int max_particles, VortexWindow *window, std::string name);
     void emit(
         glm::vec3 position, float size, glm::vec3 velocity, float life, float gravity_scale, float drag,

@@ -64,6 +64,29 @@ void ParticleSystem::emit(
 
 void ParticleSystem::update(float deltaTime)
 {
+    for (auto &[name, settings] : emitter_registry)
+    {
+        if (settings.enabled && settings.spawn_rate > 0)
+        {
+            float spawn_interval = 1.0f / static_cast<float>(settings.spawn_rate);
+            settings.spawn_timer += deltaTime;
+
+            while(settings.spawn_timer >= spawn_interval)
+            {
+                float angle = (rand() % 360) * (M_PI / 180.0f);
+                glm::vec3 velocity(cos(angle), 1.0f, sin(angle));
+
+                emit(
+                    settings.position, settings.size, velocity, settings.life, settings.gravity, settings.drag,
+                    settings.color, settings.elasticity, settings.friction, settings.behaviour, settings.use_point_gravity,
+                    settings.gravity_point, settings.point_gravity_strength
+                );
+
+                settings.spawn_timer -= spawn_interval;
+            }
+        }
+    }
+
     float g_dt = GLOBAL::GRAVITY * deltaTime;
 
     for (int i = 0; i < active_count; )

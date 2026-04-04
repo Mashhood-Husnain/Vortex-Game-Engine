@@ -202,6 +202,11 @@ VortexWindow::VortexWindow(std::string window_name, VortexCamera* camera, int wi
 
     shadow_manager = new ShadowManager();
 
+    particle_shader = new VortexShader("shaders/particles.vert", "shaders/particles.frag");
+    model_shader = new VortexShader("shaders/default.vert", "shaders/default.frag");
+
+    environment_grid = new VortexGrid();
+
     // V-sync
     glfwSwapInterval(1);
 
@@ -218,6 +223,16 @@ VortexWindow::VortexWindow(std::string window_name, VortexCamera* camera, int wi
     gui.init(window);
 
     srand(static_cast<unsigned int>(time(0)));
+
+    int start_width, start_height;
+    glfwGetFramebufferSize(window, &start_width, &start_height);
+
+    glViewport(0, 0, start_width, start_height);
+
+    if (this->camera)
+    {
+        this->camera->aspect_ratio = static_cast<float>(start_width) / static_cast<float>(start_height);
+    }
 }
 
 VortexWindow::~VortexWindow()
@@ -225,6 +240,21 @@ VortexWindow::~VortexWindow()
     delete worldaxis_shader;
     delete shadow_manager;
     delete skybox;
+    delete particle_shader;
+    delete model_shader;
+    delete environment_grid;
+
+    for (VortexModel* model : dynamic_models)
+    {
+        delete model;
+    }
+    dynamic_models.clear();
+
+    for (ParticleSystem* ps : dynamic_particlesystems)
+    {
+        delete ps;
+    }
+    dynamic_particlesystems.clear();
 
     if (window)
     {
@@ -242,6 +272,15 @@ VortexWindow::~VortexWindow()
     camera = nullptr;
     post_processor = nullptr;
     skybox = nullptr;
+    particle_shader = nullptr;
+    model_shader = nullptr;
+    environment_grid = nullptr;
+
+    if (window)
+    {
+        glfwDestroyWindow(window);
+        window = nullptr;
+    }
 
     glfwTerminate();
 }
@@ -368,6 +407,7 @@ void VortexWindow::run(std::function<void()> draw_callback)
         gui.show_camera_info(camera);
         gui.show_post_process_options(this);
         gui.show_skybox_options(this);
+        gui.show_creator_window(this, dynamic_particlesystems, dynamic_models);
         gui.begin_scene_inspector();
 
         if (skybox)
@@ -376,6 +416,49 @@ void VortexWindow::run(std::function<void()> draw_callback)
         }
 
         draw_callback();
+
+        for (VortexModel *model : dynamic_models)
+        {
+            model->draw(*model_shader, *camera, show_wireframe);
+        }
+
+        for (ParticleSystem *ps : dynamic_particlesystems)
+        {
+            ps->update(deltaTime);
+            ps->draw(*particle_shader, *camera);
+        }
+
+        environment_grid->draw(*camera);
+
+        dynamic_particlesystems.erase(
+            std::remove_if(
+                dynamic_particlesystems.begin(),
+                dynamic_particlesystems.end(),
+                [](ParticleSystem *ps){
+                    if (ps->should_destroy)
+                    {
+                        delete ps;
+                        return true;
+                    }
+                    return false;
+                }),
+            dynamic_particlesystems.end()
+        );
+
+        dynamic_models.erase(
+            std::remove_if(
+                dynamic_models.begin(),
+                dynamic_models.end(),
+                [](VortexModel *model){
+                    if (model->should_destroy)
+                    {
+                        delete model;
+                        return true;
+                    }
+                    return false;
+                }),
+            dynamic_models.end()
+        );
 
         gui.end_scene_inspector();
 

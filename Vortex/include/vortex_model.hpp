@@ -63,6 +63,8 @@ class VortexModel
     unsigned int load_texture(const std::string& texture_path);
     void setup_mesh();
     VortexWindow *window;
+
+    std::vector<unsigned int> m_gpu_allocated_textures;
 public:
     std::string model_name;
     std::vector<VortexModel_Vertex> vertices;
@@ -75,6 +77,8 @@ public:
     unsigned int metallic_id=0;
     unsigned int normal_id=0;
     float model_height=0.0f;
+
+    bool should_destroy = false;
 
     VortexModel(const std::string& model_path, VortexWindow *window);
     void draw(const VortexShader& shader, VortexCamera& camera, bool wireframe);

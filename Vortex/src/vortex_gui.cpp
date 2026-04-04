@@ -134,8 +134,24 @@ void VortexGUI::begin_scene_inspector()
 
     if (max_height < 50.0f) max_height = 50.0f;
     ImGui::SetNextWindowSizeConstraints(ImVec2(350, 50), ImVec2(FLT_MAX, max_height));
+
+    if (m_force_scene_collapse)
+    {
+        ImGui::SetNextWindowCollapsed(true, ImGuiCond_Always);
+        m_force_scene_collapse = false;
+    }
     
     ImGui::Begin("Scene Inspector", nullptr, ImGuiWindowFlags_AlwaysAutoResize | ImGuiWindowFlags_NoMove);
+
+    bool is_collapsed = ImGui::IsWindowCollapsed();
+    if (!is_collapsed && m_scene_was_collapsed)
+    {
+        m_force_creator_collapse = true;
+    }
+    m_scene_was_collapsed = is_collapsed;
+
+    m_scene_pos = ImGui::GetWindowPos();
+    m_scene_size = ImGui::GetWindowSize();
 }
 
 void VortexGUI::show_inspector_info(VortexModel* model, ParticleSystem *ps)
@@ -214,6 +230,11 @@ void VortexGUI::show_inspector_info(VortexModel* model, ParticleSystem *ps)
                 model->rotation = glm::vec3(0.0f);
             }
 
+            if (ImGui::Button("Delete Model", ImVec2(-1, 0)))
+            {
+                model->should_destroy = true;
+            }
+
             ImGui::PopStyleColor(2);
 
             ImGui::PopStyleVar(3);
@@ -286,6 +307,11 @@ void VortexGUI::show_inspector_info(VortexModel* model, ParticleSystem *ps)
             ImGui::PushStyleColor(ImGuiCol_Button, ImVec4(0.8f, 0.2f, 0.2f, 1.0f));
             ImGui::PushStyleColor(ImGuiCol_ButtonHovered, ImVec4(1.0f, 0.3f, 0.3f, 1.0f));
 
+            if (ImGui::Button("Delete Particle System", ImVec2(-1, 0)))
+            {
+                ps->should_destroy = true;
+            }
+
             ImGui::PopStyleColor(2);
 
             ImGui::PopID();
@@ -296,6 +322,139 @@ void VortexGUI::show_inspector_info(VortexModel* model, ParticleSystem *ps)
 
 void VortexGUI::end_scene_inspector()
 {
+    ImGui::End();
+}
+
+void VortexGUI::show_creator_window(
+    VortexWindow *window,
+    std::vector<ParticleSystem*> &active_systems,
+    std::vector<VortexModel*> &active_models
+)
+{
+    float padding = 10.0f;
+    ImVec2 next_pos = ImVec2(m_scene_pos.x, m_scene_pos.y + m_scene_size.y + padding);
+    ImGui::SetNextWindowPos(next_pos, ImGuiCond_Always);
+
+    float app_window_height = ImGui::GetIO().DisplaySize.y;
+    float max_height = app_window_height - next_pos.y - 10.0f;
+    if (max_height < 50.0f) max_height = 50.0f;
+    ImGui::SetNextWindowSizeConstraints(ImVec2(350, 50), ImVec2(FLT_MAX, max_height));
+
+    if (m_force_creator_collapse)
+    {
+        ImGui::SetNextWindowCollapsed(true, ImGuiCond_Always);
+        m_force_creator_collapse = false;
+    }
+
+    ImGui::Begin("Creator Tools", nullptr, ImGuiWindowFlags_AlwaysAutoResize | ImGuiWindowFlags_NoMove);
+
+    bool is_collapsed = ImGui::IsWindowCollapsed();
+    if (!is_collapsed && m_creator_was_collapsed)
+    {
+        m_force_scene_collapse = true;
+    }
+    m_creator_was_collapsed = is_collapsed;
+
+    if (!is_collapsed)
+    {
+        ImGui::SeparatorText("New Particle System");
+
+        static char new_ps_name[64] = "Magic_Dust";
+        static int new_ps_max = 100000;
+
+        ImGui::InputText("System Name", new_ps_name, IM_ARRAYSIZE(new_ps_name));
+        VortexGuiLambda::ClampedInputInt("Max Capacity", &new_ps_max, 10000, 50000, 100, 1000000);
+
+        ImGui::PushStyleColor(ImGuiCol_Button, ImVec4(0.2f, 0.6f, 0.2f, 1.0f));
+        ImGui::PushStyleColor(ImGuiCol_ButtonHovered, ImVec4(0.3f, 0.8f, 0.3f, 1.0f));
+
+        static bool show_error_message_ps = false;
+
+        if (ImGui::Button("Create Particle System", ImVec2(-1, 0)))
+        {
+            std::string target_name = std::string(new_ps_name);
+            bool name_exists = false;
+
+            for (ParticleSystem *ps : active_systems)
+            {
+                if (ps->name == target_name)
+                {
+                    name_exists = true;
+                    break;
+                }
+            }
+
+            if (name_exists)
+            {
+                show_error_message_ps = true;
+            }
+            else
+            {
+                show_error_message_ps = false;
+
+                ParticleSystem *new_ps = new ParticleSystem(new_ps_max, window, std::string(new_ps_name));
+                new_ps->get_emitter("Default Emitter");
+                active_systems.push_back(new_ps);
+            }
+        }
+
+        if (show_error_message_ps)
+        {
+            ImGui::Spacing();
+            ImGui::TextColored(ImVec4(1.0f, 0.2f, 0.2f, 1.0f), "Particles System with name(id) already exists!");
+        }
+
+        ImGui::PopStyleColor(2);
+
+        ImGui::SeparatorText("New Model");
+
+        if (ImGui::Button("Refresh Folder") || !m_models_scanned)
+        {
+            m_available_model_names.clear();
+            m_available_model_paths.clear();
+
+            std::string path = "assets/models/obj";
+
+            if (std::filesystem::exists(path) && std::filesystem::is_directory(path))
+            {
+                for (const auto &entry : std::filesystem::directory_iterator(path))
+                {
+                    if (entry.path().extension() == ".obj")
+                    {
+                        m_available_model_names.push_back(entry.path().stem().string());
+                        m_available_model_paths.push_back(entry.path().string());
+                    }
+                }
+            }
+            m_models_scanned = true;
+        }
+
+        ImGui::Spacing();
+        ImGui::BeginChild("ModelBrowser", ImVec2(0, 300), true, ImGuiWindowFlags_AlwaysVerticalScrollbar);
+
+        if (m_available_model_names.empty())
+        {
+            ImGui::TextDisabled("No .obj files found in:");
+            ImGui::TextDisabled("assets/models/obj");
+        }
+        else
+        {
+            ImGui::PushStyleColor(ImGuiCol_Button, ImVec4(0.2f, 0.4f, 0.8f, 1.0f));
+            ImGui::PushStyleColor(ImGuiCol_ButtonHovered, ImVec4(0.3f, 0.5f, 0.9f, 1.0f));
+
+            for (size_t i = 0; i < m_available_model_names.size(); i++)
+            {
+                if (ImGui::Button(m_available_model_names[i].c_str(), ImVec2(-1, 0)))
+                {
+                    VortexModel *new_model = new VortexModel(m_available_model_paths[i].c_str(), window);
+                    active_models.push_back(new_model);
+                }
+            }
+            ImGui::PopStyleColor(2);
+        }
+        ImGui::EndChild();
+    }
+
     ImGui::End();
 }
 
@@ -431,4 +590,20 @@ VortexGUI::~VortexGUI()
     ImGui_ImplOpenGL3_Shutdown();
     ImGui_ImplGlfw_Shutdown();
     ImGui::DestroyContext();
+
+    m_processed_models.clear();
+    m_processed_ps.clear();
+
+    m_shader_files.clear();
+    m_display_names.clear();
+
+    for (std::vector<std::string> file : m_skybox_files)
+    {
+        file.clear();
+    }
+    m_skybox_files.clear();
+    m_skybox_display_names.clear();
+
+    m_available_model_names.clear();
+    m_available_model_paths.clear();
 }
