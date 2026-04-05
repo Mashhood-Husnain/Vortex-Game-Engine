@@ -9,7 +9,7 @@
 
 #include "vortex_model.hpp"
 
-VortexModel::VortexModel(const std::string& path, VortexWindow *window)
+VortexModel::VortexModel(const std::string& path, VortexApplication *window)
 {
     if (!window)
     {

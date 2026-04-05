@@ -52,7 +52,7 @@ void Player::processKeyboard(const std::string& direction, float deltaTime)
     player_camera->position = player_position + player_head_offset;
 }
 
-void Player::update(VortexWindow *window)
+void Player::update(VortexApplication *window)
 {
     if (!player_body) return;
 

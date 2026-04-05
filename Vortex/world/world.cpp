@@ -6,16 +6,12 @@
  * License: MIT
  */
 
-#include "vortex_window.hpp"
-#include "vortex_camera.hpp"
+#include "vortex_application.hpp"
 
 int main() {
-    VortexCamera camera(glm::vec3(15.0f, 2.0f, 1.0f));
-    camera.look_at(glm::vec3(0.0f, 2.0f, 0.0f));
+    VortexApplication engine("Vortex Engine", 900, 600);
 
-    VortexWindow window("Vortex Engine", &camera, 900, 600);
-    
-    window.run([&](){});
+    engine.run([&](){});
 
     return 0;
 }

@@ -20,7 +20,7 @@
 
 #include "vortex_shaders.hpp"
 #include "vortex_camera.hpp"
-#include "vortex_window.hpp"
+#include "vortex_application.hpp"
 #include "util/vortex_global_vars.hpp"
 
 #include "stb_image.h"
@@ -62,7 +62,7 @@ class VortexModel
     void parse_mtl(const std::string& mtl_filename);
     unsigned int load_texture(const std::string& texture_path);
     void setup_mesh();
-    VortexWindow *window;
+    VortexApplication *window;
 
     std::vector<unsigned int> m_gpu_allocated_textures;
 public:
@@ -80,7 +80,7 @@ public:
 
     bool should_destroy = false;
 
-    VortexModel(const std::string& model_path, VortexWindow *window);
+    VortexModel(const std::string& model_path, VortexApplication *window);
     void draw(const VortexShader& shader, VortexCamera& camera, bool wireframe);
     std::vector<VortexModel_Object>& get_objects();
     ~VortexModel();

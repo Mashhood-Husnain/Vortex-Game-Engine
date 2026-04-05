@@ -11,7 +11,7 @@
 #include "vortex_particlesystem.hpp"
 #include "vortex_shaders.hpp"
 #include "vortex_camera.hpp"
-#include "vortex_window.hpp"
+#include "vortex_application.hpp"
 
 #include <cstdlib>
 

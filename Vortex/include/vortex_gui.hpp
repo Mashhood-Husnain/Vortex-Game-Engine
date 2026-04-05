@@ -14,7 +14,7 @@
 
 class VortexModel;
 class VortexCamera;
-class VortexWindow;
+class VortexApplication;
 class ParticleSystem;
 
 namespace VortexGuiLambda
@@ -90,12 +90,12 @@ public:
     void show_inspector_info(VortexModel *model, ParticleSystem *ps);
     void end_scene_inspector();
 
-    void show_creator_window(VortexWindow *window, std::vector<ParticleSystem*> &active_systems, std::vector<VortexModel*> &active_models);
+    void show_creator_window(VortexApplication *window, std::vector<ParticleSystem*> &active_systems, std::vector<VortexModel*> &active_models);
 
     void show_camera_info(VortexCamera *camera);
 
-    void show_post_process_options(VortexWindow *window);
-    void show_skybox_options(VortexWindow *window);
+    void show_post_process_options(VortexApplication *window);
+    void show_skybox_options(VortexApplication *window);
 
     void show_engine_stats();
 };

@@ -18,7 +18,7 @@
 #include "vortex_shaders.hpp"
 #include "vortex_camera.hpp"
 #include "util/vortex_global_vars.hpp"
-#include "vortex_window.hpp"
+#include "vortex_application.hpp"
 
 enum class ParticleBehaviour
 {
@@ -88,7 +88,7 @@ public:
     std::vector<ParticlePhysics> physics;
     std::map<std::string, EmitterSettings> emitter_registry;
 
-    VortexWindow *window = nullptr;
+    VortexApplication *window = nullptr;
     std::string name;
 
     int max_particles;
@@ -96,7 +96,7 @@ public:
 
     bool should_destroy = false;
 
-    ParticleSystem(int max_particles, VortexWindow *window, std::string name);
+    ParticleSystem(int max_particles, VortexApplication *window, std::string name);
     void emit(
         glm::vec3 position, float size, glm::vec3 velocity, float life, float gravity_scale, float drag,
         glm::vec4 particle_color, float elasticity, float friction, ParticleBehaviour behaviour=ParticleBehaviour::NONE,

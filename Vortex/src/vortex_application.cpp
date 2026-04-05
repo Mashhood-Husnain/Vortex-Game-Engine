@@ -1,14 +1,14 @@
 /*
- * File: vortex_window.cpp
+ * File: vortex_application.cpp
  * Project: VortexEngine
  * Description: Implementation of window
  * Author: Mashhood Husnain
  * License: MIT
  */
 
-#include "vortex_window.hpp"
+#include "vortex_application.hpp"
 
-GLFWmonitor* VortexWindow::get_current_monitor(GLFWwindow* window)
+GLFWmonitor* VortexApplication::get_current_monitor(GLFWwindow* window)
 {
     int nmonitors;
     int wx, wy, ww, wh;
@@ -42,9 +42,9 @@ GLFWmonitor* VortexWindow::get_current_monitor(GLFWwindow* window)
     return bestmonitor;
 }
 
-void VortexWindow::framebuffer_size_callback(GLFWwindow* window, int width, int height)
+void VortexApplication::framebuffer_size_callback(GLFWwindow* window, int width, int height)
 {
-    auto* app = static_cast<VortexWindow*>(glfwGetWindowUserPointer(window));
+    auto* app = static_cast<VortexApplication*>(glfwGetWindowUserPointer(window));
 
     if (app)
     {
@@ -55,9 +55,9 @@ void VortexWindow::framebuffer_size_callback(GLFWwindow* window, int width, int 
     }
 }
 
-void VortexWindow::key_callback(GLFWwindow* window, int key, int scancode, int action, int mods)
+void VortexApplication::key_callback(GLFWwindow* window, int key, int scancode, int action, int mods)
 {
-    auto* app = static_cast<VortexWindow*>(glfwGetWindowUserPointer(window));
+    auto* app = static_cast<VortexApplication*>(glfwGetWindowUserPointer(window));
 
     if (!app) return;
 
@@ -94,7 +94,7 @@ void VortexWindow::key_callback(GLFWwindow* window, int key, int scancode, int a
     }
 }
 
-void VortexWindow::setup_world_axis_buffers()
+void VortexApplication::setup_world_axis_buffers()
 {
     glGenVertexArrays(1, &world_axisVAO);
     glGenBuffers(1, &world_axisVBO);
@@ -111,7 +111,7 @@ void VortexWindow::setup_world_axis_buffers()
     glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(float), (void*)(3 * sizeof(float)));
 }
 
-void VortexWindow::draw_world_axis()
+void VortexApplication::draw_world_axis()
 {
     worldaxis_shader->use();
 
@@ -124,7 +124,7 @@ void VortexWindow::draw_world_axis()
     glBindVertexArray(0);
 }
 
-void VortexWindow::draw_world_axis_gizmo()
+void VortexApplication::draw_world_axis_gizmo()
 {
     glDisable(GL_DEPTH_TEST);
 
@@ -149,7 +149,7 @@ void VortexWindow::draw_world_axis_gizmo()
     glEnable(GL_DEPTH_TEST);
 }
 
-VortexWindow::VortexWindow(std::string window_name, VortexCamera* camera, int width, int height)
+VortexApplication::VortexApplication(std::string window_name, int width, int height)
 {
     // Initialize GLFW;
     if (!glfwInit())
@@ -166,12 +166,14 @@ VortexWindow::VortexWindow(std::string window_name, VortexCamera* camera, int wi
     // Create Window
     default_window_width = width;
     default_window_height = height;
-    this->stored_window_width = width;
-    this->stored_window_height = height;
-    this->stored_window_x_pos = 100;
-    this->stored_window_y_pos = 100;
+    stored_window_width = width;
+    stored_window_height = height;
+    stored_window_x_pos = 100;
+    stored_window_y_pos = 100;
     this->window_name = window_name + " - " + GLOBAL::VORTEX_VERSION;
-    this->camera = camera;
+
+    camera = new VortexCamera(glm::vec3(15.0f, 2.0f, 1.0f));
+    camera->look_at(glm::vec3(0.0f, 2.0f, 0.0f));
 
     glfwWindowHint(GLFW_VISIBLE, GLFW_FALSE);
 
@@ -235,7 +237,7 @@ VortexWindow::VortexWindow(std::string window_name, VortexCamera* camera, int wi
     }
 }
 
-VortexWindow::~VortexWindow()
+VortexApplication::~VortexApplication()
 {
     delete worldaxis_shader;
     delete shadow_manager;
@@ -285,7 +287,7 @@ VortexWindow::~VortexWindow()
     glfwTerminate();
 }
 
-void VortexWindow::change_window_size()
+void VortexApplication::change_window_size()
 {
     GLFWmonitor* monitor = get_current_monitor(window);
     if (!monitor) monitor = glfwGetPrimaryMonitor();
@@ -330,9 +332,9 @@ void VortexWindow::change_window_size()
     first_mouse = true;
 }
 
-void VortexWindow::mouse_callback(GLFWwindow* window, double xposIn, double yposIn)
+void VortexApplication::mouse_callback(GLFWwindow* window, double xposIn, double yposIn)
 {
-    auto* app = static_cast<VortexWindow*>(glfwGetWindowUserPointer(window));
+    auto* app = static_cast<VortexApplication*>(glfwGetWindowUserPointer(window));
 
     if (app)
     {
@@ -358,7 +360,7 @@ void VortexWindow::mouse_callback(GLFWwindow* window, double xposIn, double ypos
     }
 }
 
-void VortexWindow::run(std::function<void()> draw_callback)
+void VortexApplication::run(std::function<void()> draw_callback)
 {
     std::cout << "-------------------------------------------------------" << std::endl;
     std::cout << "VORTEX ENGINE RUNNING ON:" << std::endl;
@@ -483,12 +485,12 @@ void VortexWindow::run(std::function<void()> draw_callback)
     }
 }
 
-GLFWwindow* VortexWindow::get_window_ptr()
+GLFWwindow* VortexApplication::get_window_ptr()
 {
     return window;
 }
 
-void VortexWindow::set_post_processor(PostProcessor *post_processor)
+void VortexApplication::set_post_processor(PostProcessor *post_processor)
 {
     if (this->post_processor)
     {
@@ -503,7 +505,7 @@ void VortexWindow::set_post_processor(PostProcessor *post_processor)
     }
 }
 
-void VortexWindow::set_skybox(VortexSkybox *skybox)
+void VortexApplication::set_skybox(VortexSkybox *skybox)
 {
     delete this->skybox;
     this->skybox = skybox;

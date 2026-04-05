@@ -1,7 +1,7 @@
 #include "vortex_gui.hpp"
 #include "vortex_model.hpp"
 #include "vortex_camera.hpp"
-#include "vortex_window.hpp"
+#include "vortex_application.hpp"
 #include "vortex_particlesystem.hpp"
 
 VortexGUI::VortexGUI()
@@ -14,6 +14,9 @@ void VortexGUI::init(GLFWwindow* window)
     IMGUI_CHECKVERSION();
     ImGui::CreateContext();
     ImGuiIO& io = ImGui::GetIO(); (void)io;
+
+    // io.Fonts->AddFontFromFileTTF("assets/fonts/RobotoSlabBlack.ttf", 15.0f);
+    // ImGui::StyleColorsDark();
 
     io.IniFilename = nullptr;
 
@@ -326,7 +329,7 @@ void VortexGUI::end_scene_inspector()
 }
 
 void VortexGUI::show_creator_window(
-    VortexWindow *window,
+    VortexApplication *window,
     std::vector<ParticleSystem*> &active_systems,
     std::vector<VortexModel*> &active_models
 )
@@ -442,9 +445,10 @@ void VortexGUI::show_creator_window(
             ImGui::PushStyleColor(ImGuiCol_Button, ImVec4(0.2f, 0.4f, 0.8f, 1.0f));
             ImGui::PushStyleColor(ImGuiCol_ButtonHovered, ImVec4(0.3f, 0.5f, 0.9f, 1.0f));
 
+            float button_double_height = ImGui::GetTextLineHeightWithSpacing() * 2.0f;
             for (size_t i = 0; i < m_available_model_names.size(); i++)
             {
-                if (ImGui::Button(m_available_model_names[i].c_str(), ImVec2(-1, 0)))
+                if (ImGui::Button(m_available_model_names[i].c_str(), ImVec2(-1, button_double_height)))
                 {
                     VortexModel *new_model = new VortexModel(m_available_model_paths[i].c_str(), window);
                     active_models.push_back(new_model);
@@ -490,7 +494,7 @@ void VortexGUI::refresh_shader_list()
     m_shaders_loaded = true;
 }
 
-void VortexGUI::show_post_process_options(VortexWindow *window)
+void VortexGUI::show_post_process_options(VortexApplication *window)
 {
     if (!m_shaders_loaded) refresh_shader_list();
 
@@ -548,7 +552,7 @@ void VortexGUI::refresh_skybox_list()
     m_skybox_loaded = true;
 }
 
-void VortexGUI::show_skybox_options(VortexWindow *window)
+void VortexGUI::show_skybox_options(VortexApplication *window)
 {
     if (!m_skybox_loaded) refresh_skybox_list();
 

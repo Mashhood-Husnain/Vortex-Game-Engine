@@ -30,7 +30,7 @@
 #include "util/vortex_global_vars.hpp"
 #include "util/vortex_gpu_pre_init.hpp"
 
-class VortexWindow
+class VortexApplication
 {
     GLFWwindow *window = nullptr;
     int default_window_width;
@@ -78,8 +78,8 @@ public:
     ShadowManager *shadow_manager = nullptr;
     VortexGUI gui;
 
-    VortexWindow(std::string window_name, VortexCamera* camera, int width, int height);
-    ~VortexWindow();
+    VortexApplication(std::string window_name, int width, int height);
+    ~VortexApplication();
 
     void run(std::function<void()> draw_callback);
     GLFWwindow* get_window_ptr();

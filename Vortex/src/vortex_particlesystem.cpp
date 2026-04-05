@@ -8,7 +8,7 @@
 
 #include "vortex_particlesystem.hpp"
 
-ParticleSystem::ParticleSystem(int max_particles, VortexWindow *window, std::string name)
+ParticleSystem::ParticleSystem(int max_particles, VortexApplication *window, std::string name)
 {
     this->window = window;
     this->name = name;

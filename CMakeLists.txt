@@ -64,7 +64,7 @@ endforeach()
 # ----------------------------
 add_executable(engine 
     Vortex/world/world.cpp
-    Vortex/src/vortex_window.cpp
+    Vortex/src/vortex_application.cpp
     Vortex/src/vortex_shaders.cpp
     Vortex/src/vortex_camera.cpp
     Vortex/src/vortex_model.cpp
