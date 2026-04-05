@@ -3,6 +3,7 @@
 #include "vortex_camera.hpp"
 #include "vortex_application.hpp"
 #include "vortex_particlesystem.hpp"
+#include "util/vortex_save_load.hpp"
 
 VortexGUI::VortexGUI()
 {
@@ -350,6 +351,22 @@ void VortexGUI::show_creator_window(
     }
 
     ImGui::Begin("Creator Tools", nullptr, ImGuiWindowFlags_AlwaysAutoResize | ImGuiWindowFlags_NoMove);
+
+    ImGui::SeparatorText("File Management");
+    
+    static char project_name_buf[64] = "My_Project_Name";
+    ImGui::InputText("Project Name", project_name_buf, IM_ARRAYSIZE(project_name_buf));
+
+    if (ImGui::Button("Save Project", ImVec2(160, 30)))
+    {
+        VortexProject::save_project(std::string(project_name_buf), active_models, active_systems);
+    }
+    if (ImGui::Button("Load Project", ImVec2(160, 30)))
+    {
+        VortexProject::load_project(std::string(project_name_buf), active_models, active_systems, window);
+    }
+
+    ImGui::Spacing();
 
     bool is_collapsed = ImGui::IsWindowCollapsed();
     if (!is_collapsed && m_creator_was_collapsed)

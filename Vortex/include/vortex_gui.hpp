@@ -16,6 +16,7 @@ class VortexModel;
 class VortexCamera;
 class VortexApplication;
 class ParticleSystem;
+class VortexProject;
 
 namespace VortexGuiLambda
 {

@@ -2,6 +2,7 @@ cmake_minimum_required(VERSION 3.10)
 project(VortexEngine)
 
 set(CMAKE_CXX_STANDARD 17)
+set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
 # ----------------------------
@@ -76,6 +77,7 @@ add_executable(engine
     Vortex/src/util/vortex_nvml.cpp
     Vortex/src/vortex_skybox.cpp
     Vortex/src/vortex_grid.cpp
+    Vortex/src/util/vortex_save_load.cpp
 )
 
 # ----------------------------
@@ -88,6 +90,7 @@ target_include_directories(engine PUBLIC
     vendor/stbimage
     vendor/imgui
     vendor/nvml
+    vendor/nlohmann_json
 )
 
 # ----------------------------

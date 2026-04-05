@@ -18,6 +18,7 @@ VortexModel::VortexModel(const std::string& path, VortexApplication *window)
     }
 
     this->window = window;
+    file_path = path;
 
     load_obj(path);
     setup_mesh();
