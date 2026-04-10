@@ -86,9 +86,10 @@ void VortexApplication::key_callback(GLFWwindow* window, int key, int scancode, 
                 if (app->show_mouse_cursor) glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_NORMAL);
                 else glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
                 break;
-            case GLFW_KEY_G:
-                app->gui.show_gui = !app->gui.show_gui;
-                break;
+            // temporary commented
+            // case GLFW_KEY_G:
+            //     app->gui.show_gui = !app->gui.show_gui;
+            //     break;
         }
     }
 }

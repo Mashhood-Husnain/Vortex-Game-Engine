@@ -63,7 +63,7 @@ endforeach()
 # ----------------------------
 # Get user's custom scripts
 # ----------------------------
-file(GLOB_RECURSE USER_SCRIPTS "Vortex/Game/Scripts/*.cpp")
+file(GLOB_RECURSE USER_SCRIPTS CONFIGURE_DEPENDS "Vortex/Game/Scripts/*.cpp")
 
 # ----------------------------
 # EXECUTABLE

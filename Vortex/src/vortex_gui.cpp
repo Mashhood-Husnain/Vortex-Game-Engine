@@ -18,9 +18,6 @@ void VortexGUI::init(VortexApplication *app)
     ImGui::CreateContext();
     ImGuiIO& io = ImGui::GetIO(); (void)io;
 
-    // io.Fonts->AddFontFromFileTTF("assets/fonts/RobotoSlabBlack.ttf", 15.0f);
-    // ImGui::StyleColorsDark();
-
     io.IniFilename = nullptr;
 
     ImGuiStyle &style = ImGui::GetStyle();
@@ -484,6 +481,71 @@ void VortexGUI::creator_window(
 
     if (!is_collapsed)
     {
+        ImGui::SeparatorText("New Script");
+
+        static char new_script_name[64] = "MyNewBehaviour";
+        ImGui::InputText("Class Name", new_script_name, IM_ARRAYSIZE(new_script_name));
+
+        static bool show_script_error = false;
+        static bool show_script_success = false;
+
+        ImGui::PushStyleColor(ImGuiCol_Button, ImVec4(0.5f, 0.2f, 0.7f, 1.0f));
+        ImGui::PushStyleColor(ImGuiCol_ButtonHovered, ImVec4(0.6f, 0.3f, 0.8f, 1.0f));
+
+        if (ImGui::Button("Generate Script", ImVec2(-1, 0)))
+        {
+            std::string class_name = std::string(new_script_name);
+            std::string file_path = "../Vortex/Game/Scripts/" + class_name + ".cpp";
+
+            if (std::filesystem::exists(file_path))
+            {
+                show_script_error = true;
+                show_script_success = false;
+            }
+            else if (!class_name.empty())
+            {
+                show_script_error = false;
+                show_script_success = true;
+
+                std::ofstream script_file(file_path);
+
+                script_file << "#include \"vortex_behaviour.hpp\"\n";
+                script_file << "#include \"vortex_script_registry.hpp\"\n";
+                script_file << "#include \"util/vortex_keyboard.hpp\"\n\n";
+                
+                script_file << "class " << class_name << " : public VortexMonoBehaviour\n";
+                script_file << "{\n";
+                script_file << "private:\n";
+                script_file << "public:\n";
+                script_file << "    void on_start() override\n";
+                script_file << "    {\n";
+                script_file << "        // write code here to run once as initialization\n";
+                script_file << "    }\n\n";
+                script_file << "    void on_update(float deltaTime) override\n";
+                script_file << "    {\n";
+                script_file << "        // write code here to run every frame\n";
+                script_file << "    }\n";
+                script_file << "};\n\n";
+                
+                script_file << "VORTEX_REGISTER_SCRIPT(" << class_name << ");\n";
+                
+                script_file.close();
+                
+                std::cout << "[EDITOR] Auto-Generated Script: " << file_path << std::endl;
+            }
+        }
+        ImGui::PopStyleColor(2);
+
+        if (show_script_error)
+        {
+            ImGui::TextColored(ImVec4(1.0f, 0.2f, 0.2f, 1.0f), "Error: Script already exists!");
+        }
+        if (show_script_success)
+        {
+            ImGui::TextColored(ImVec4(0.2f, 1.0f, 0.2f, 1.0f), "Generated! Restart engine to compile.");
+        }
+        ImGui::Spacing();
+
         ImGui::SeparatorText("New Particle System");
 
         static char new_ps_name[64] = "Magic_Dust";

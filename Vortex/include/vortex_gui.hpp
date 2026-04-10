@@ -9,6 +9,7 @@
 #include <filesystem>
 #include <vector>
 #include <algorithm>
+#include <fstream>
 
 #include "util/vortex_engine_stats.hpp"
 
