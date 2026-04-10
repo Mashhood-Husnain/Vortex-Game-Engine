@@ -173,7 +173,7 @@ void ParticleSystem::update(float deltaTime)
         i++;
     }
 
-    window->gui.show_inspector_info(nullptr, this);
+    window->gui.inspector_info(nullptr, this);
 }
 
 void ParticleSystem::draw(VortexShader &shader, VortexCamera &camera)

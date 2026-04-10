@@ -13,6 +13,9 @@
 #include "../vortex_particlesystem.hpp"
 #include "../vortex_application.hpp"
 
+#include "vortex_behaviour.hpp"
+#include "vortex_script_registry.hpp"
+
 using json = nlohmann::json;
 
 class VortexProject

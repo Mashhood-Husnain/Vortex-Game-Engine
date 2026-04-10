@@ -21,6 +21,7 @@
 #include "vortex_shaders.hpp"
 #include "vortex_camera.hpp"
 #include "vortex_application.hpp"
+#include "util/vortex_behaviour.hpp"
 #include "util/vortex_global_vars.hpp"
 
 #include "stb_image.h"
@@ -81,6 +82,11 @@ public:
     bool should_destroy = false;
 
     std::string file_path;
+
+    std::vector<VortexMonoBehaviour*> behaviours;
+    std::vector<std::string> script_names;
+    void add_behaviour(const std::string &script_name, VortexMonoBehaviour *script);
+    void update(float deltaTime);
 
     VortexModel(const std::string& model_path, VortexApplication *window);
     void draw(const VortexShader& shader, VortexCamera& camera, bool wireframe);

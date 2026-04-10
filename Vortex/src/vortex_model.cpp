@@ -80,7 +80,7 @@ void VortexModel::draw(const VortexShader& shader, VortexCamera& camera, bool wi
         active_shader->setInt("shadowMap", 3);
         active_shader->setMat4("lightSpaceMatrix", window->shadow_manager->light_space_matrix);
 
-        window->gui.show_inspector_info(this, nullptr);
+        window->gui.inspector_info(this, nullptr);
     }
 
     // rendering wireframe
@@ -476,7 +476,29 @@ VortexModel::~VortexModel()
         glDeleteTextures(1, &tex_id);
     }
 
+    for (VortexMonoBehaviour *script : behaviours)
+    {
+        delete script;
+    }
+    behaviours.clear();
+
     window = nullptr;
+}
+
+void VortexModel::add_behaviour(const std::string &script_name, VortexMonoBehaviour *script)
+{
+    script->gameObject = this;
+    behaviours.push_back(script);
+    script_names.push_back(script_name);
+    script->on_start();
+}
+
+void VortexModel::update(float deltaTime)
+{
+    for (VortexMonoBehaviour *script : behaviours)
+    {
+        script->on_update(deltaTime);
+    }
 }
 
 void align_on_top(VortexModel& top_obj, const VortexModel& bottom_obj)

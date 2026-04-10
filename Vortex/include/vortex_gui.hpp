@@ -17,6 +17,8 @@ class VortexCamera;
 class VortexApplication;
 class ParticleSystem;
 class VortexProject;
+class ScriptRegistry;
+class VortexMonoBehaviour;
 
 namespace VortexGuiLambda
 {
@@ -80,6 +82,8 @@ class VortexGUI
     void refresh_shader_list();
     void refresh_skybox_list();
 public:
+    bool show_gui = true;
+
     VortexGUI();
     ~VortexGUI();
 
@@ -88,15 +92,15 @@ public:
     void render();
 
     void begin_scene_inspector();
-    void show_inspector_info(VortexModel *model, ParticleSystem *ps);
+    void inspector_info(VortexModel *model, ParticleSystem *ps);
     void end_scene_inspector();
 
-    void show_creator_window(VortexApplication *window, std::vector<ParticleSystem*> &active_systems, std::vector<VortexModel*> &active_models);
+    void creator_window(VortexApplication *window, std::vector<ParticleSystem*> &active_systems, std::vector<VortexModel*> &active_models);
 
-    void show_camera_info(VortexCamera *camera);
+    void camera_info(VortexCamera *camera);
 
-    void show_post_process_options(VortexApplication *window);
-    void show_skybox_options(VortexApplication *window);
+    void post_process_options(VortexApplication *window);
+    void skybox_options(VortexApplication *window);
 
-    void show_engine_stats();
+    void engine_stats();
 };

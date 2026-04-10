@@ -88,7 +88,9 @@ void VortexApplication::key_callback(GLFWwindow* window, int key, int scancode, 
 
                 if (app->show_mouse_cursor) glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_NORMAL);
                 else glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
-
+                break;
+            case GLFW_KEY_G:
+                app->gui.show_gui = !app->gui.show_gui;
                 break;
         }
     }
@@ -162,6 +164,7 @@ VortexApplication::VortexApplication(std::string window_name, int width, int hei
     glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
     glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
     glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
+    glfwWindowHint(GLFW_AUTO_ICONIFY, GLFW_FALSE);
 
     // Create Window
     default_window_width = width;
@@ -208,6 +211,8 @@ VortexApplication::VortexApplication(std::string window_name, int width, int hei
     model_shader = new VortexShader("shaders/default.vert", "shaders/default.frag");
 
     environment_grid = new VortexGrid();
+
+    VortexKeyboard::init(window);
 
     // V-sync
     glfwSwapInterval(1);
@@ -405,16 +410,21 @@ void VortexApplication::run(std::function<void()> draw_callback)
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
         gui.update();
-        gui.show_engine_stats();
-        gui.show_camera_info(camera);
-        gui.show_post_process_options(this);
-        gui.show_skybox_options(this);
-        gui.show_creator_window(this, dynamic_particlesystems, dynamic_models);
+        gui.engine_stats();
+        gui.camera_info(camera);
+        gui.post_process_options(this);
+        gui.skybox_options(this);
+        gui.creator_window(this, dynamic_particlesystems, dynamic_models);
         gui.begin_scene_inspector();
 
         if (skybox)
         {
             skybox->draw(camera);
+        }
+
+        for (VortexModel *model : dynamic_models)
+        {
+            model->update(deltaTime);
         }
 
         draw_callback();

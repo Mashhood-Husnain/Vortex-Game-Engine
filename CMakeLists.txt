@@ -61,6 +61,11 @@ foreach(MODEL ${MODEL_FILES})
 endforeach()
 
 # ----------------------------
+# Get user's custom scripts
+# ----------------------------
+file(GLOB_RECURSE USER_SCRIPTS "Vortex/Game/Scripts/*.cpp")
+
+# ----------------------------
 # EXECUTABLE
 # ----------------------------
 add_executable(engine 
@@ -78,6 +83,7 @@ add_executable(engine
     Vortex/src/vortex_skybox.cpp
     Vortex/src/vortex_grid.cpp
     Vortex/src/util/vortex_save_load.cpp
+    ${USER_SCRIPTS}
 )
 
 # ----------------------------
@@ -85,6 +91,7 @@ add_executable(engine
 # ----------------------------
 target_include_directories(engine PUBLIC 
     Vortex/include
+    Vortex/include/util
     vendor/glm
     vendor/glad/include
     vendor/stbimage

@@ -23,6 +23,12 @@ void VortexProject::save_project(
         j_model["rotation"] = {model->rotation.x, model->rotation.y, model->rotation.z};
         j_model["scale"] = {model->scale.x, model->scale.y, model->scale.z};
 
+        j_model["scripts"] = json::array();
+        for (const std::string &s_name : model->script_names)
+        {
+            j_model["scripts"].push_back(s_name);
+        }
+
         save_data["models"].push_back(j_model);
     }
 
@@ -85,6 +91,19 @@ void VortexProject::load_project(
         new_model->position = glm::vec3(j_model["position"][0], j_model["position"][1], j_model["position"][2]);
         new_model->rotation = glm::vec3(j_model["rotation"][0], j_model["rotation"][1], j_model["rotation"][2]);
         new_model->scale = glm::vec3(j_model["scale"][0], j_model["scale"][1], j_model["scale"][2]);
+
+        if (j_model.contains("scripts"))
+        {
+            for (const auto &j_script_name : j_model["scripts"])
+            {
+                std::string name = j_script_name;
+                VortexMonoBehaviour *new_script = ScriptRegistry::get().create(name);
+                if (new_script)
+                {
+                    new_model->add_behaviour(name, new_script);
+                }
+            }
+        }
 
         active_models.push_back(new_model);
     }

@@ -4,6 +4,7 @@
 #include "vortex_application.hpp"
 #include "vortex_particlesystem.hpp"
 #include "util/vortex_save_load.hpp"
+#include "util/vortex_script_registry.hpp"
 
 VortexGUI::VortexGUI()
 {
@@ -58,7 +59,7 @@ void VortexGUI::render()
 }
 
 EngineStatsThreaded g_engine_stats;
-void VortexGUI::show_engine_stats()
+void VortexGUI::engine_stats()
 {
     ImGui::SetNextWindowPos(ImVec2(10, 15), ImGuiCond_FirstUseEver);
 
@@ -107,7 +108,7 @@ void VortexGUI::show_engine_stats()
     ImGui::End();
 }
 
-void VortexGUI::show_camera_info(VortexCamera *camera)
+void VortexGUI::camera_info(VortexCamera *camera)
 {
     if (!camera) return;
 
@@ -131,6 +132,8 @@ void VortexGUI::show_camera_info(VortexCamera *camera)
 
 void VortexGUI::begin_scene_inspector()
 {
+    if (!show_gui) return;
+
     ImGui::SetNextWindowPos(ImVec2(10, 275), ImGuiCond_FirstUseEver);
 
     float app_window_height = ImGui::GetIO().DisplaySize.y;
@@ -158,9 +161,9 @@ void VortexGUI::begin_scene_inspector()
     m_scene_size = ImGui::GetWindowSize();
 }
 
-void VortexGUI::show_inspector_info(VortexModel* model, ParticleSystem *ps)
+void VortexGUI::inspector_info(VortexModel* model, ParticleSystem *ps)
 {
-    if (!model && !ps) return;
+    if (!show_gui || (!model && !ps)) return;
 
     if (model)
     {
@@ -181,6 +184,61 @@ void VortexGUI::show_inspector_info(VortexModel* model, ParticleSystem *ps)
             ImGui::SeparatorText("Model Info");
 
             ImGui::Text("Objects: %zu", model->objects.size());
+
+            ImGui::Spacing();
+            ImGui::SeparatorText("Attached Scripts");
+
+            if (model->script_names.empty())
+            {
+                ImGui::TextDisabled("No scripts attached");
+            }
+            else
+            {
+                int script_to_delete = -1;
+
+                for (size_t i = 0; i < model->script_names.size(); i++)
+                {
+                    ImGui::PushID(static_cast<int>(i));
+
+                    ImGui::Bullet();
+                    ImGui::SameLine();
+                    ImGui::Text("%s", model->script_names[i].c_str());
+
+                    ImGui::SameLine(ImGui::GetContentRegionAvail().x - 60);
+
+                    if (ImGui::SmallButton("Remove"))
+                    {
+                        script_to_delete = static_cast<int>(i);
+                    }
+
+                    ImGui::PopID();
+                }
+
+                if (script_to_delete != -1)
+                {
+                    delete model->behaviours[script_to_delete];
+                    model->behaviours.erase(model->behaviours.begin() + script_to_delete);
+                    model->script_names.erase(model->script_names.begin() + script_to_delete);
+                }
+            }
+
+            ImGui::Spacing();
+            std::vector<std::string> available_scripts = ScriptRegistry::get().get_avaialble_scripts();
+            if (ImGui::BeginCombo("Add Script", "Select a script..."))
+            {
+                for (const std::string &script_name : available_scripts)
+                {
+                    if (ImGui::Selectable(script_name.c_str()))
+                    {
+                        VortexMonoBehaviour *new_script = ScriptRegistry::get().create(script_name);
+                        if (new_script)
+                        {
+                            model->add_behaviour(script_name, new_script);
+                        }
+                    }
+                }
+                ImGui::EndCombo();
+            }
 
             ImGui::Spacing();
             ImGui::SeparatorText("Transform");
@@ -326,15 +384,19 @@ void VortexGUI::show_inspector_info(VortexModel* model, ParticleSystem *ps)
 
 void VortexGUI::end_scene_inspector()
 {
+    if (!show_gui) return;
+
     ImGui::End();
 }
 
-void VortexGUI::show_creator_window(
+void VortexGUI::creator_window(
     VortexApplication *window,
     std::vector<ParticleSystem*> &active_systems,
     std::vector<VortexModel*> &active_models
 )
 {
+    if (!show_gui) return;
+
     float padding = 10.0f;
     ImVec2 next_pos = ImVec2(m_scene_pos.x, m_scene_pos.y + m_scene_size.y + padding);
     ImGui::SetNextWindowPos(next_pos, ImGuiCond_Always);
@@ -511,8 +573,9 @@ void VortexGUI::refresh_shader_list()
     m_shaders_loaded = true;
 }
 
-void VortexGUI::show_post_process_options(VortexApplication *window)
+void VortexGUI::post_process_options(VortexApplication *window)
 {
+    if (!show_gui) return;
     if (!m_shaders_loaded) refresh_shader_list();
 
     ImGui::SetNextWindowPos(ImVec2(180, 105), ImGuiCond_FirstUseEver);
@@ -569,8 +632,9 @@ void VortexGUI::refresh_skybox_list()
     m_skybox_loaded = true;
 }
 
-void VortexGUI::show_skybox_options(VortexApplication *window)
-{
+void VortexGUI::skybox_options(VortexApplication *window)
+{   
+    if (!show_gui) return;
     if (!m_skybox_loaded) refresh_skybox_list();
 
     ImGui::SetNextWindowPos(ImVec2(10, 190), ImGuiCond_FirstUseEver);
