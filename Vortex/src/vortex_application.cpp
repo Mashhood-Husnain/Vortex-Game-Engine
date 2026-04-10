@@ -442,6 +442,20 @@ void VortexApplication::run(std::function<void()> draw_callback)
             {
                 model->update(deltaTime);
             }
+
+            if (!pending_models.empty())
+            {
+                for (VortexModel* new_model : pending_models)
+                {
+                    dynamic_models.push_back(new_model);
+                    
+                    for (VortexMonoBehaviour* script : new_model->behaviours)
+                    {
+                        script->on_start();
+                    }
+                }
+                pending_models.clear(); 
+            }
         }
 
         draw_callback();

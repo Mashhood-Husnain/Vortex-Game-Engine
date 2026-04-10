@@ -9,9 +9,9 @@
 #include "vortex_application.hpp"
 
 int main() {
-    VortexApplication engine("Vortex Engine", 900, 600);
+    VortexApplication VortexEngineWindow("Vortex Engine", 900, 600);
 
-    engine.run([&](){});
+    VortexEngineWindow.run([&](){});
 
     return 0;
 }

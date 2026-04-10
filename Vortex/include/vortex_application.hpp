@@ -80,6 +80,7 @@ public:
     EngineState current_state = EngineState::EDITOR;
 
     std::vector<VortexModel*> dynamic_models;
+    std::vector<VortexModel*> pending_models;
     std::vector<ParticleSystem*> dynamic_particlesystems;
 
     float deltaTime = 0.0f;

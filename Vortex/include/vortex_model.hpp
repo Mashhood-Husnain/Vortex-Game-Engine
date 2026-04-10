@@ -63,10 +63,10 @@ class VortexModel
     void parse_mtl(const std::string& mtl_filename);
     unsigned int load_texture(const std::string& texture_path);
     void setup_mesh();
-    VortexApplication *window;
 
     std::vector<unsigned int> m_gpu_allocated_textures;
 public:
+    VortexApplication *app;
     std::string model_name;
     std::vector<VortexModel_Vertex> vertices;
     std::vector<VortexModel_Object> objects;

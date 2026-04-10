@@ -17,7 +17,7 @@ VortexModel::VortexModel(const std::string& path, VortexApplication *window)
         exit(EXIT_FAILURE);
     }
 
-    this->window = window;
+    app = window;
     file_path = path;
 
     load_obj(path);
@@ -36,16 +36,16 @@ void VortexModel::draw(const VortexShader& shader, VortexCamera& camera, bool wi
 {
     const VortexShader *active_shader = &shader;
 
-    if (window->shadow_manager->is_active)
+    if (app->shadow_manager->is_active)
     {
-        active_shader = window->shadow_manager->shadow_shader;
+        active_shader = app->shadow_manager->shadow_shader;
     }
 
     active_shader->use();
 
-    if (window->shadow_manager->is_active)
+    if (app->shadow_manager->is_active)
     {
-        active_shader->setMat4("lightSpaceMatrix", window->shadow_manager->light_space_matrix);
+        active_shader->setMat4("lightSpaceMatrix", app->shadow_manager->light_space_matrix);
     }
     else
     {
@@ -76,11 +76,11 @@ void VortexModel::draw(const VortexShader& shader, VortexCamera& camera, bool wi
         active_shader->setInt("u_metallicMap", 2);
 
         glActiveTexture(GL_TEXTURE3);
-        glBindTexture(GL_TEXTURE_2D, window->shadow_manager->shadow_map);
+        glBindTexture(GL_TEXTURE_2D, app->shadow_manager->shadow_map);
         active_shader->setInt("shadowMap", 3);
-        active_shader->setMat4("lightSpaceMatrix", window->shadow_manager->light_space_matrix);
+        active_shader->setMat4("lightSpaceMatrix", app->shadow_manager->light_space_matrix);
 
-        window->gui.inspector_info(this, nullptr);
+        app->gui.inspector_info(this, nullptr);
     }
 
     // rendering wireframe
@@ -482,7 +482,7 @@ VortexModel::~VortexModel()
     }
     behaviours.clear();
 
-    window = nullptr;
+    app = nullptr;
 }
 
 void VortexModel::add_behaviour(const std::string &script_name, VortexMonoBehaviour *script)
