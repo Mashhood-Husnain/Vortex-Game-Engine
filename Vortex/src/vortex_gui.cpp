@@ -1,5 +1,6 @@
 #include "vortex_gui.hpp"
 #include "vortex_model.hpp"
+#include "vortex_application.hpp"
 #include "vortex_camera.hpp"
 #include "vortex_application.hpp"
 #include "vortex_particlesystem.hpp"
@@ -11,7 +12,7 @@ VortexGUI::VortexGUI()
 
 }
 
-void VortexGUI::init(GLFWwindow* window)
+void VortexGUI::init(VortexApplication *app)
 {
     IMGUI_CHECKVERSION();
     ImGui::CreateContext();
@@ -31,6 +32,8 @@ void VortexGUI::init(GLFWwindow* window)
 
     ImVec4 *colors = style.Colors;
 
+    this->app = app;
+
     colors[ImGuiCol_WindowBg] = ImVec4(0.1f, 0.105f, 0.11f, 1.0f);
     colors[ImGuiCol_Header] = ImVec4(0.2f, 0.205f, 0.21f, 1.0f);
     colors[ImGuiCol_HeaderHovered] = ImVec4(0.3f, 0.305f, 0.31f, 1.0f);
@@ -38,7 +41,7 @@ void VortexGUI::init(GLFWwindow* window)
     colors[ImGuiCol_ButtonHovered] = ImVec4(0.3f, 0.305f, 0.31f, 1.0f);
     colors[ImGuiCol_FrameBg] = ImVec4(0.2f, 0.205f, 0.21f, 1.0f);
 
-    ImGui_ImplGlfw_InitForOpenGL(window, true);
+    ImGui_ImplGlfw_InitForOpenGL(app->get_window_ptr(), true);
     ImGui_ImplOpenGL3_Init("#version 330");
 }
 
@@ -54,6 +57,48 @@ void VortexGUI::update()
 
 void VortexGUI::render()
 {
+    if (app->current_state == EngineState::EDITOR)
+    {
+        ImGuiIO& io = ImGui::GetIO();
+        ImGui::SetNextWindowPos(ImVec2(io.DisplaySize.x * 0.5f, 10.0f), ImGuiCond_Always, ImVec2(0.5f, 0.0f));
+        
+        ImGui::SetNextWindowBgAlpha(0.8f); 
+
+        ImGuiWindowFlags toolbar_flags = 
+            ImGuiWindowFlags_NoDecoration | 
+            ImGuiWindowFlags_AlwaysAutoResize | 
+            ImGuiWindowFlags_NoSavedSettings | 
+            ImGuiWindowFlags_NoFocusOnAppearing | 
+            ImGuiWindowFlags_NoNav | 
+            ImGuiWindowFlags_NoMove;
+
+        ImGui::Begin("Toolbar", nullptr, toolbar_flags);
+
+        ImGui::PushStyleColor(ImGuiCol_Button, ImVec4(0.2f, 0.7f, 0.2f, 1.0f));
+        ImGui::PushStyleColor(ImGuiCol_ButtonHovered, ImVec4(0.3f, 0.8f, 0.3f, 1.0f));
+        
+        if (ImGui::Button("RUN GAME", ImVec2(100, 30)))
+        {
+            std::cout << "[ENGINE] Entering Play Mode..." << std::endl;
+            VortexProject::save_project("temp_playmode_backup", app->dynamic_models, app->dynamic_particlesystems);
+
+            app->current_state = EngineState::PLAY;
+            show_gui = false;
+
+            for (VortexModel *model : app->dynamic_models)
+            {
+                for (VortexMonoBehaviour *script : model->behaviours)
+                {
+                    script->on_start();
+                }
+            }
+        }
+        
+        ImGui::PopStyleColor(2);
+        
+        ImGui::End();
+    }
+
     ImGui::Render();
     ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
 }

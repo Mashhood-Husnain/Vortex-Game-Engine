@@ -30,6 +30,13 @@
 #include "util/vortex_global_vars.hpp"
 #include "util/vortex_gpu_pre_init.hpp"
 #include "util/vortex_keyboard.hpp"
+#include "util/vortex_save_load.hpp"
+
+enum class EngineState
+{
+    EDITOR,
+    PLAY
+};
 
 class VortexApplication
 {
@@ -56,10 +63,7 @@ class VortexApplication
     PostProcessor *post_processor = nullptr;
     VortexSkybox *skybox = nullptr;
 
-    std::vector<ParticleSystem*> dynamic_particlesystems;
     VortexShader *particle_shader = nullptr;
-
-    std::vector<VortexModel*> dynamic_models;
     VortexShader *model_shader = nullptr;
 
     VortexGrid *environment_grid = nullptr;
@@ -73,6 +77,11 @@ class VortexApplication
     void draw_world_axis();
     void draw_world_axis_gizmo();
 public:
+    EngineState current_state = EngineState::EDITOR;
+
+    std::vector<VortexModel*> dynamic_models;
+    std::vector<ParticleSystem*> dynamic_particlesystems;
+
     float deltaTime = 0.0f;
     bool show_wireframe = false;
     bool show_mouse_cursor = false;

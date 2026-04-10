@@ -490,7 +490,6 @@ void VortexModel::add_behaviour(const std::string &script_name, VortexMonoBehavi
     script->gameObject = this;
     behaviours.push_back(script);
     script_names.push_back(script_name);
-    script->on_start();
 }
 
 void VortexModel::update(float deltaTime)

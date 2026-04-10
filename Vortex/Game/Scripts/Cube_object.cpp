@@ -20,7 +20,7 @@ public:
             gameObject->rotation.y -= 360.0f;
         }
 
-        if (VortexKeyboard::check_key_pressed("SPACE") && is_grounded)
+        if (VortexKeyboard::get_key_down("SPACE") && is_grounded)
         {
             velocity_y = jump_force;
             is_grounded = false;

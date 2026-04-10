@@ -65,9 +65,6 @@ void VortexApplication::key_callback(GLFWwindow* window, int key, int scancode, 
     {
         switch (key)
         {
-            case GLFW_KEY_ESCAPE:
-                glfwSetWindowShouldClose(window, true);
-                break;
             case GLFW_KEY_F:
                 app->is_fullscreen = !app->is_fullscreen;
                 app->change_window_size();
@@ -202,13 +199,12 @@ VortexApplication::VortexApplication(std::string window_name, int width, int hei
         exit(EXIT_FAILURE);
     }
 
-    worldaxis_shader = new VortexShader("shaders/world_axis.vert", "shaders/world_axis.frag");
+    particle_shader = new VortexShader("shaders/particles.vert", "shaders/particles.frag");
+    model_shader = new VortexShader("shaders/default.vert", "shaders/default.frag");
+    worldaxis_shader = new VortexShader("shaders/world_axis.vert", "shaders/world_axis.frag");    
     setup_world_axis_buffers();
 
     shadow_manager = new ShadowManager();
-
-    particle_shader = new VortexShader("shaders/particles.vert", "shaders/particles.frag");
-    model_shader = new VortexShader("shaders/default.vert", "shaders/default.frag");
 
     environment_grid = new VortexGrid();
 
@@ -227,7 +223,6 @@ VortexApplication::VortexApplication(std::string window_name, int width, int hei
     glFrontFace(GL_CCW);
 
     change_window_size();
-    gui.init(window);
 
     srand(static_cast<unsigned int>(time(0)));
 
@@ -240,6 +235,8 @@ VortexApplication::VortexApplication(std::string window_name, int width, int hei
     {
         this->camera->aspect_ratio = static_cast<float>(start_width) / static_cast<float>(start_height);
     }
+
+    gui.init(this);
 }
 
 VortexApplication::~VortexApplication()
@@ -383,6 +380,22 @@ void VortexApplication::run(std::function<void()> draw_callback)
         deltaTime = currentFrame - last_frame;
         last_frame = currentFrame;
 
+        if (VortexKeyboard::get_key_down("ESCAPE"))
+        {
+            if (current_state == EngineState::PLAY)
+            {
+                std::cout << "[ENGINE] Exiting Play Mode..." << std::endl;
+                current_state = EngineState::EDITOR;
+                gui.show_gui = true;
+
+                VortexProject::load_project("temp_playmode_backup", dynamic_models, dynamic_particlesystems, this);
+            }
+            else
+            {
+                glfwSetWindowShouldClose(window, true);
+            }
+        }
+
         if (!show_mouse_cursor)
         {
             camera->check_camera_movement(window, deltaTime);
@@ -422,9 +435,12 @@ void VortexApplication::run(std::function<void()> draw_callback)
             skybox->draw(camera);
         }
 
-        for (VortexModel *model : dynamic_models)
+        if (current_state == EngineState::PLAY)
         {
-            model->update(deltaTime);
+            for (VortexModel *model : dynamic_models)
+            {
+                model->update(deltaTime);
+            }
         }
 
         draw_callback();
@@ -489,7 +505,8 @@ void VortexApplication::run(std::function<void()> draw_callback)
             draw_world_axis_gizmo();
         }
 
-        gui.render();        
+        gui.render();
+        VortexKeyboard::update();
         // swap buffers and poll IO
         glfwSwapBuffers(window);
     }

@@ -12,6 +12,7 @@
 
 #include "util/vortex_engine_stats.hpp"
 
+class VortexApplication;
 class VortexModel;
 class VortexCamera;
 class VortexApplication;
@@ -53,6 +54,8 @@ namespace VortexGuiLambda
 
 class VortexGUI
 {
+    VortexApplication *app;
+
     std::set<VortexModel*> m_processed_models;
 
     std::set<ParticleSystem*> m_processed_ps;
@@ -87,7 +90,7 @@ public:
     VortexGUI();
     ~VortexGUI();
 
-    void init(GLFWwindow* window);
+    void init(VortexApplication* app);
     void update();
     void render();
 
