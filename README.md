@@ -14,8 +14,8 @@ Vortex Engine is currently built for Linux (Ubuntu/Debian). You will need git an
 1. Clone the repository
 
 ```bash
-  git clone git@github.com:Mashhood-Husnain/Vortex-Game-Engine.git
-  cd Vortex-Game-Engine
+git clone git@github.com:Mashhood-Husnain/Vortex-Game-Engine.git
+cd Vortex-Game-Engine
 ```
 
 2. Install dependencies
@@ -23,8 +23,8 @@ Vortex Engine is currently built for Linux (Ubuntu/Debian). You will need git an
 The easiest way to get started is by running the included setup script, which will automatically fetch the required Linux headers and graphics libraries:
 
 ```bash
-  ./setup_linux.sh
-  ```
+./setup_linux.sh
+```
 
 Troubleshooting: If the script fails, you can manually check for missing packages by running cmake -B build. CMake will output a list of any missing dependencies you need to install via your package manager.
 
@@ -33,15 +33,15 @@ Troubleshooting: If the script fails, you can manually check for missing package
 Once your dependencies are installed, generate the build files and compile:
 
 ```bash
-  cmake -B build
-  cd build
-  make -j8
+cmake -B build
+cd build
+make -j8
 ```
 
 4. Run the engine
 
 ```bash
-  ./engine
+./engine
 ```
 
 ## Using the engine
