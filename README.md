@@ -23,6 +23,7 @@ cd Vortex-Game-Engine
 The easiest way to get started is by running the included setup script, which will automatically fetch the required Linux headers and graphics libraries:
 
 ```bash
+chmod +x setup_linux.sh
 ./setup_linux.sh
 ```
 
