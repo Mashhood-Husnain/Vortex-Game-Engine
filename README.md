@@ -55,10 +55,11 @@ Future Roadmap: Currently, you must close and recompile the engine after writing
 ### Editor Controls
 When you launch the engine, you will start in Editor Mode attached to the default camera. When you enter Play Mode, these default controls are disassociated from the camera so you can use them in your own game scripts.
 
-Key	                                               Action (Editor Mode)
-W, A, S, D	                               Move camera horizontally
-Q, E	                                     Move camera up / down
-M	                                         Release/Capture Mouse (Use this to interact with the Creator Tool or Inspector)
-T	                                         Toggle Wireframe view for all models
-F	                                         Toggle Fullscreen / Windowed mode
-Escape	                                   Exit Play Mode (if playing) OR Exit Engine (if in editor)
+| Key | Action (Editor Mode) |
+| --- | --- |
+| **W, A, S, D** | Move camera horizontally |
+| **Q, E** | Move camera up / down |
+| **M** | Release/Capture Mouse (Use this to interact with the Creator Tool or Inspector) |
+| **T** | Toggle Wireframe view for all models |
+| **F** | Toggle Fullscreen / Windowed mode |
+| **Escape** | Exit Play Mode (if playing) OR Exit Engine (if in editor) |
