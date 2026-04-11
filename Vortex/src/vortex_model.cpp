@@ -20,6 +20,7 @@ VortexModel::VortexModel(const std::string& path, VortexApplication *window)
     app = window;
     file_path = path;
 
+    model_name = std::filesystem::path(path).stem().string();
     shared_data = VortexAssetManager::get_mesh(path);
 }
 

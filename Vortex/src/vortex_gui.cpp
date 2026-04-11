@@ -212,7 +212,7 @@ void VortexGUI::inspector_info(VortexModel* model, ParticleSystem *ps)
         if (m_processed_models.find(model) != m_processed_models.end()) return;
 
         m_processed_models.insert(model);
-
+        
         std::string header_id = model->model_name + "##" + std::to_string((uintptr_t)model);
 
         if (ImGui::CollapsingHeader(header_id.c_str()))
