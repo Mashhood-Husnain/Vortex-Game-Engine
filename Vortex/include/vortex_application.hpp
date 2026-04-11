@@ -26,6 +26,7 @@
 #include "vortex_particlesystem.hpp"
 #include "vortex_model.hpp"
 #include "vortex_grid.hpp"
+#include "vortex_assetmanager.hpp"
 
 #include "util/vortex_global_vars.hpp"
 #include "util/vortex_gpu_pre_init.hpp"

@@ -249,6 +249,8 @@ VortexApplication::~VortexApplication()
     }
     dynamic_models.clear();
 
+    VortexAssetManager::clean_up();
+
     for (ParticleSystem* ps : dynamic_particlesystems)
     {
         delete ps;
@@ -445,12 +447,18 @@ void VortexApplication::run(std::function<void()> draw_callback)
         {
             for (VortexModel *model : dynamic_models)
             {
-                model->update(deltaTime);
+                if (model->is_active)
+                {
+                    model->update(deltaTime);
+                }
             }
 
             for (VortexModel *model : dynamic_models)
             {
-                model->late_update(deltaTime);
+                if (model->is_active)
+                {
+                    model->late_update(deltaTime);
+                }
             }
 
             if (!pending_models.empty())
@@ -472,7 +480,10 @@ void VortexApplication::run(std::function<void()> draw_callback)
 
         for (VortexModel *model : dynamic_models)
         {
-            model->draw(*model_shader, *camera, show_wireframe);
+            if (model->is_active)
+            {
+                model->draw(*model_shader, *camera, show_wireframe);
+            }
         }
 
         for (ParticleSystem *ps : dynamic_particlesystems)

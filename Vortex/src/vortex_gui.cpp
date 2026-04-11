@@ -225,7 +225,7 @@ void VortexGUI::inspector_info(VortexModel* model, ParticleSystem *ps)
             ImGui::Spacing();
             ImGui::SeparatorText("Model Info");
 
-            ImGui::Text("Objects: %zu", model->objects.size());
+            ImGui::Text("Objects: %zu", model->shared_data->objects.size());
 
             ImGui::Spacing();
             ImGui::SeparatorText("Attached Scripts");

@@ -21,10 +21,13 @@
 #include "vortex_shaders.hpp"
 #include "vortex_camera.hpp"
 #include "vortex_application.hpp"
+#include "vortex_assetmanager.hpp"
 #include "util/vortex_behaviour.hpp"
 #include "util/vortex_global_vars.hpp"
 
 #include "stb_image.h"
+
+struct SharedMesh;
 
 struct VortexModel_Vertex
 {
@@ -55,33 +58,20 @@ bool check_collision(const VortexModel_Object &a, const VortexModel_Object &b);
 
 class VortexModel
 {
-    unsigned int VAO=0;
-    unsigned int VBO=0;
-    float min_y=0.0f;
-    float max_y=0.0f;
-    void load_obj(const std::string& path);
-    void parse_mtl(const std::string& mtl_filename);
-    unsigned int load_texture(const std::string& texture_path);
-    void setup_mesh();
-
-    std::vector<unsigned int> m_gpu_allocated_textures;
 public:
     VortexApplication *app;
     std::string model_name;
-    std::vector<VortexModel_Vertex> vertices;
-    std::vector<VortexModel_Object> objects;
+    
     glm::vec3 position = glm::vec3(0.0f);
     glm::vec3 rotation = glm::vec3(0.0f);
     glm::vec3 scale = glm::vec3(1.0f);
-    unsigned int texture_id=0;
-    unsigned int roughness_id=0;
-    unsigned int metallic_id=0;
-    unsigned int normal_id=0;
-    float model_height=0.0f;
 
     bool should_destroy = false;
+    bool is_active = true;
 
     std::string file_path;
+
+    SharedMesh *shared_data;
 
     std::vector<VortexMonoBehaviour*> behaviours;
     std::vector<std::string> script_names;

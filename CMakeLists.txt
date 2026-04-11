@@ -82,6 +82,7 @@ add_executable(engine
     Vortex/src/vortex_skybox.cpp
     Vortex/src/vortex_grid.cpp
     Vortex/src/util/vortex_save_load.cpp
+    Vortex/src/vortex_assetmanager.cpp
     ${USER_SCRIPTS}
 )
 
