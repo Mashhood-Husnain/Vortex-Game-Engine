@@ -14,10 +14,10 @@
 #include <glm/gtc/matrix_transform.hpp>
 #include <string>
 
+#include "util/vortex_keyboard.hpp"
+
 class VortexCamera
 {
-    void update_camera_vectors();
-
     float near_plane = 0.1f;
     float far_plane = 100.0f;
 public:
@@ -40,7 +40,8 @@ public:
     glm::mat4 getViewMatrix();
     void processKeyboard(const std::string& direction, float deltaTime);
     void processMouseMovement(float xoffset, float yoffset);
-    void check_camera_movement(GLFWwindow* window, float deltaTime);
+    void check_camera_movement(float deltaTime);
     glm::mat4 getProjectionMatrix();
     void look_at(glm::vec3 target);
+    void update_camera_vectors();
 };

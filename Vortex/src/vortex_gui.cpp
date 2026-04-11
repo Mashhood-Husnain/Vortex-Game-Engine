@@ -512,6 +512,7 @@ void VortexGUI::creator_window(
                 script_file << "#include \"vortex_behaviour.hpp\"\n";
                 script_file << "#include \"vortex_script_registry.hpp\"\n";
                 script_file << "#include \"util/vortex_keyboard.hpp\"\n\n";
+                script_file << "#include \"util/vortex_mouse.hpp\"\n\n";
                 
                 script_file << "class " << class_name << " : public VortexMonoBehaviour\n";
                 script_file << "{\n";

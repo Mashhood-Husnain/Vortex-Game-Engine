@@ -48,13 +48,13 @@ include_directories(vendor/nvml)
 # ----------------------------
 # Shaders & Assets
 # ----------------------------
-file(GLOB SHADER_FILES "Vortex/shaders/*")
+file(GLOB SHADER_FILES CONFIGURE_DEPENDS "Vortex/shaders/*")
 foreach(SHADER ${SHADER_FILES})
     get_filename_component(SHADER_NAME ${SHADER} NAME)
     configure_file(${SHADER} ${CMAKE_BINARY_DIR}/shaders/${SHADER_NAME} COPYONLY)
 endforeach()
 
-file(GLOB_RECURSE MODEL_FILES "Vortex/assets/*")
+file(GLOB_RECURSE MODEL_FILES CONFIGURE_DEPENDS "Vortex/assets/*")
 foreach(MODEL ${MODEL_FILES})
     file(RELATIVE_PATH REL_PATH "${CMAKE_SOURCE_DIR}/Vortex/assets" ${MODEL})
     configure_file(${MODEL} "${CMAKE_BINARY_DIR}/assets/${REL_PATH}" COPYONLY)
@@ -74,7 +74,6 @@ add_executable(engine
     Vortex/src/vortex_shaders.cpp
     Vortex/src/vortex_camera.cpp
     Vortex/src/vortex_model.cpp
-    Vortex/src/vortex_player.cpp
     Vortex/src/vortex_particlesystem.cpp
     Vortex/src/vortex_shadowmanager.cpp
     Vortex/src/vortex_gui.cpp

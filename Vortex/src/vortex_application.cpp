@@ -72,11 +72,6 @@ void VortexApplication::key_callback(GLFWwindow* window, int key, int scancode, 
             case GLFW_KEY_T:
                 app->show_wireframe = !app->show_wireframe;
                 break;
-            // temporary solution
-            // disabled for now, until i clean up the player code and come up with a better solution
-            case GLFW_KEY_R:
-                app->camera->anchored = !app->camera->anchored;
-                break;
             case GLFW_KEY_V:
                 app->view_world_axis = !app->view_world_axis;
                 break;
@@ -86,10 +81,6 @@ void VortexApplication::key_callback(GLFWwindow* window, int key, int scancode, 
                 if (app->show_mouse_cursor) glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_NORMAL);
                 else glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
                 break;
-            // temporary commented
-            // case GLFW_KEY_G:
-            //     app->gui.show_gui = !app->gui.show_gui;
-            //     break;
         }
     }
 }
@@ -173,8 +164,9 @@ VortexApplication::VortexApplication(std::string window_name, int width, int hei
     stored_window_y_pos = 100;
     this->window_name = window_name + " - " + GLOBAL::VORTEX_VERSION;
 
-    camera = new VortexCamera(glm::vec3(15.0f, 2.0f, 1.0f));
-    camera->look_at(glm::vec3(0.0f, 2.0f, 0.0f));
+    editor_camera = new VortexCamera(glm::vec3(15.0f, 2.0f, 1.0f));
+    editor_camera->look_at(glm::vec3(0.0f, 2.0f, 0.0f));
+    camera = editor_camera;
 
     glfwWindowHint(GLFW_VISIBLE, GLFW_FALSE);
 
@@ -210,6 +202,7 @@ VortexApplication::VortexApplication(std::string window_name, int width, int hei
     environment_grid = new VortexGrid();
 
     VortexKeyboard::init(window);
+    VortexMouse::init(window);
 
     // V-sync
     glfwSwapInterval(1);
@@ -248,6 +241,7 @@ VortexApplication::~VortexApplication()
     delete particle_shader;
     delete model_shader;
     delete environment_grid;
+    delete editor_camera;
 
     for (VortexModel* model : dynamic_models)
     {
@@ -275,6 +269,7 @@ VortexApplication::~VortexApplication()
     shadow_manager = nullptr;
     window = nullptr;
     camera = nullptr;
+    editor_camera = nullptr;
     post_processor = nullptr;
     skybox = nullptr;
     particle_shader = nullptr;
@@ -358,7 +353,15 @@ void VortexApplication::mouse_callback(GLFWwindow* window, double xposIn, double
         app->mouse_last_y = ypos;
         if (!app->show_mouse_cursor)
         {
-            app->camera->processMouseMovement(xoffset, yoffset);
+            if (app->current_state == EngineState::EDITOR)
+            {
+                app->editor_camera->processMouseMovement(xoffset, yoffset);
+            }
+
+            else if (app->current_state == EngineState::PLAY && app->camera)
+            {
+                app->camera->processMouseMovement(xoffset, yoffset);
+            }
         }
     }
 }
@@ -389,6 +392,8 @@ void VortexApplication::run(std::function<void()> draw_callback)
                 current_state = EngineState::EDITOR;
                 gui.show_gui = true;
 
+                camera = editor_camera;
+
                 VortexProject::load_project("temp_playmode_backup", dynamic_models, dynamic_particlesystems, this);
             }
             else
@@ -397,13 +402,13 @@ void VortexApplication::run(std::function<void()> draw_callback)
             }
         }
 
-        if (!show_mouse_cursor)
+        if (!show_mouse_cursor && current_state == EngineState::EDITOR)
         {
-            camera->check_camera_movement(window, deltaTime);
+            editor_camera->check_camera_movement(deltaTime);
         }
 
         // draw shadow map
-        // shadow_manager->draw_shadow_map(draw_callback, camera);
+        // shadow_manager->draw_shadow_map(draw_callback, editor_camera);
         
         if (post_processor)
         {
@@ -522,6 +527,7 @@ void VortexApplication::run(std::function<void()> draw_callback)
 
         gui.render();
         VortexKeyboard::update();
+        VortexMouse::update();
         // swap buffers and poll IO
         glfwSwapBuffers(window);
     }

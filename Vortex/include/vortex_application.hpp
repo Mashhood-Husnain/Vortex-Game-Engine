@@ -30,6 +30,7 @@
 #include "util/vortex_global_vars.hpp"
 #include "util/vortex_gpu_pre_init.hpp"
 #include "util/vortex_keyboard.hpp"
+#include "util/vortex_mouse.hpp"
 #include "util/vortex_save_load.hpp"
 
 enum class EngineState
@@ -49,7 +50,6 @@ class VortexApplication
     int stored_window_y_pos;
     int stored_window_width;
     int stored_window_height;
-    VortexCamera *camera = nullptr;
     float mouse_last_x = default_window_width / 2;
     float mouse_last_y = default_window_height / 2;
     bool first_mouse = true;
@@ -78,6 +78,9 @@ class VortexApplication
     void draw_world_axis_gizmo();
 public:
     EngineState current_state = EngineState::EDITOR;
+
+    VortexCamera *camera = nullptr;
+    VortexCamera *editor_camera = nullptr;
 
     std::vector<VortexModel*> dynamic_models;
     std::vector<VortexModel*> pending_models;

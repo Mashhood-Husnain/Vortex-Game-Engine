@@ -65,16 +65,16 @@ void VortexCamera::processMouseMovement(float xoffset, float yoffset)
     update_camera_vectors();
 }
 
-void VortexCamera::check_camera_movement(GLFWwindow* window, float deltaTime)
+void VortexCamera::check_camera_movement(float deltaTime)
 {
     if (anchored) return;
 
-    if (glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS) processKeyboard("FORWARD", deltaTime);
-    if (glfwGetKey(window, GLFW_KEY_S) == GLFW_PRESS) processKeyboard("BACKWARD", deltaTime);
-    if (glfwGetKey(window, GLFW_KEY_A) == GLFW_PRESS) processKeyboard("LEFT", deltaTime);
-    if (glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS) processKeyboard("RIGHT", deltaTime);
-    if (glfwGetKey(window, GLFW_KEY_Q) == GLFW_PRESS) processKeyboard("UP", deltaTime);
-    if (glfwGetKey(window, GLFW_KEY_E) == GLFW_PRESS) processKeyboard("DOWN", deltaTime);
+    if (VortexKeyboard::get_key("W")) processKeyboard("FORWARD", deltaTime);
+    if (VortexKeyboard::get_key("S")) processKeyboard("BACKWARD", deltaTime);
+    if (VortexKeyboard::get_key("A")) processKeyboard("LEFT", deltaTime);
+    if (VortexKeyboard::get_key("D")) processKeyboard("RIGHT", deltaTime);
+    if (VortexKeyboard::get_key("Q")) processKeyboard("UP", deltaTime);
+    if (VortexKeyboard::get_key("E")) processKeyboard("DOWN", deltaTime);
 }
 
 glm::mat4 VortexCamera::getProjectionMatrix()
