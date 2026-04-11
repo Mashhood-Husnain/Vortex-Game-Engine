@@ -525,7 +525,7 @@ void VortexGUI::creator_window(
                 script_file << "    void on_update(float deltaTime) override\n";
                 script_file << "    {\n";
                 script_file << "        // write code here to run every frame\n";
-                script_file << "    }\n";
+                script_file << "    }\n\n";
                 script_file << "    void late_update(float deltaTime) override\n";
                 script_file << "    {\n";
                 script_file << "        // write code here to run at the end of every frame\n";

@@ -9,11 +9,19 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 # OS-Specific Definitions
 # ----------------------------
 if(MSVC)
-    add_compile_definitions(_USE_MATH_DEFINES)
+    add_compile_definitions(_USE_MATH_DEFINES NOMINMAX WIN32_LEAN_AND_MEAN)
+endif()
+
+if(UNIX AND NOT APPLE)
+    find_package(PkgConfig REQUIRED)
     
-    add_compile_definitions(NOMINMAX)
+    pkg_check_modules(VORTEX_LINUX_DEPS x11 xrandr xinerama xcursor xi xkbcommon)
     
-    add_compile_definitions(WIN32_LEAN_AND_MEAN)
+    if(NOT VORTEX_LINUX_DEPS_FOUND)
+        message(FATAL_ERROR "\n[VORTEX ENGINE] Missing required Linux graphics headers!\n"
+                            "Please run the included setup script: ./setup_linux.sh\n"
+                            "Or manually install: X11, Xrandr, Xinerama, Xcursor, Xi, and Xkbcommon dev packages.\n")
+    endif()
 endif()
 
 # ----------------------------
@@ -115,10 +123,5 @@ target_link_libraries(engine
 
 # OS-Specific Libraries
 if(UNIX AND NOT APPLE)
-    target_link_libraries(engine 
-        ${CMAKE_DL_LIBS}
-        dl
-    )
-elseif(WIN32)
-    target_link_libraries(engine)
+    target_link_libraries(engine ${CMAKE_DL_LIBS} dl)
 endif()
