@@ -85,12 +85,15 @@ public:
 
     std::vector<VortexMonoBehaviour*> behaviours;
     std::vector<std::string> script_names;
-    void add_behaviour(const std::string &script_name, VortexMonoBehaviour *script);
-    void update(float deltaTime);
 
     VortexModel(const std::string& model_path, VortexApplication *window);
     void draw(const VortexShader& shader, VortexCamera& camera, bool wireframe);
     std::vector<VortexModel_Object>& get_objects();
+
+    void add_behaviour(const std::string &script_name, VortexMonoBehaviour *script);
+    void update(float deltaTime);
+    void late_update(float deltaTime);
+    
     ~VortexModel();
 };
 

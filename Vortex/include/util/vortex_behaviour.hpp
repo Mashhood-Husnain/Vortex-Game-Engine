@@ -11,6 +11,7 @@ public:
 
     virtual void on_start() {};
     virtual void on_update(float deltaTime) {};
+    virtual void late_update(float deltaTime) {};
 
     virtual ~VortexMonoBehaviour() = default;
 };

@@ -448,6 +448,11 @@ void VortexApplication::run(std::function<void()> draw_callback)
                 model->update(deltaTime);
             }
 
+            for (VortexModel *model : dynamic_models)
+            {
+                model->late_update(deltaTime);
+            }
+
             if (!pending_models.empty())
             {
                 for (VortexModel* new_model : pending_models)

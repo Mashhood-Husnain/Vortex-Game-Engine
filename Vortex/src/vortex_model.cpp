@@ -500,6 +500,14 @@ void VortexModel::update(float deltaTime)
     }
 }
 
+void VortexModel::late_update(float deltaTime)
+{
+    for (VortexMonoBehaviour *script : behaviours)
+    {
+        script->late_update(deltaTime);
+    }
+}
+
 void align_on_top(VortexModel& top_obj, const VortexModel& bottom_obj)
 {
     float bottom_surface = bottom_obj.position.y + (bottom_obj.model_height * bottom_obj.scale.y / 2.0f);

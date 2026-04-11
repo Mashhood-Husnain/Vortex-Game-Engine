@@ -19,7 +19,7 @@ public:
         gameObject->app->camera = my_camera;
     }
 
-    void on_update(float deltaTime) override
+    void late_update(float deltaTime) override
     {
         my_camera->position = gameObject->position + head_offset;
 
