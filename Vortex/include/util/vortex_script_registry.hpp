@@ -44,6 +44,8 @@ public:
     }
 };
 
+
+// some macro that links the scripts, fuck me if i know how it works
 #define VORTEX_REGISTER_SCRIPT(className) \
     class className##_Registrar { \
     public: \

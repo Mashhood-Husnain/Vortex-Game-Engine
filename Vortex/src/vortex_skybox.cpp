@@ -55,7 +55,6 @@ unsigned int VortexSkybox::load_cubemap(std::vector<std::string> faces)
     glBindTexture(GL_TEXTURE_CUBE_MAP, textureID);
 
     int width, height, nrChannels;
-    std::cout << "-------------------------------------------------------" << std::endl;
 
     stbi_set_flip_vertically_on_load(false);
     for (unsigned int i = 0; i < faces.size(); i++)
@@ -97,8 +96,6 @@ unsigned int VortexSkybox::load_cubemap(std::vector<std::string> faces)
     glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
     glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
     glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_R, GL_CLAMP_TO_EDGE);
-
-    std::cout << "-------------------------------------------------------" << std::endl;
 
     return textureID;
 }

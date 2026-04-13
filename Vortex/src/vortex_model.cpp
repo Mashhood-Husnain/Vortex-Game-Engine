@@ -91,13 +91,13 @@ void VortexModel::draw(const VortexShader& shader, VortexCamera& camera, bool wi
         if (obj.vertex_count == 0) continue;
 
         glm::mat4 model_matrix = glm::mat4(1.0f);
-        model_matrix = glm::translate(model_matrix, this->position + obj.position);
+        model_matrix = glm::translate(model_matrix, transform.position + obj.transform.position);
 
-        glm::vec3 total_rot = this->rotation + obj.rotation;
+        glm::vec3 total_rot = transform.rotation + obj.transform.rotation;
         model_matrix = glm::rotate(model_matrix, glm::radians(total_rot.x), glm::vec3(1, 0, 0));
         model_matrix = glm::rotate(model_matrix, glm::radians(total_rot.y), glm::vec3(0, 1, 0));
         model_matrix = glm::rotate(model_matrix, glm::radians(total_rot.z), glm::vec3(0, 0, 1));
-        model_matrix = glm::scale(model_matrix, glm::vec3(this->scale * obj.scale));
+        model_matrix = glm::scale(model_matrix, glm::vec3(transform.scale * obj.transform.scale));
 
         active_shader->setMat4("model", model_matrix);
 
@@ -158,8 +158,8 @@ void VortexModel::late_update(float deltaTime)
 
 void align_on_top(VortexModel& top_obj, const VortexModel& bottom_obj)
 {
-    float bottom_surface = bottom_obj.position.y + (bottom_obj.shared_data->model_height * bottom_obj.scale.y / 2.0f);
-    float top_half_height = (top_obj.shared_data->model_height * top_obj.scale.y) / 2.0f;
+    float bottom_surface = bottom_obj.transform.position.y + (bottom_obj.shared_data->model_height * bottom_obj.transform.scale.y / 2.0f);
+    float top_half_height = (top_obj.shared_data->model_height * top_obj.transform.scale.y) / 2.0f;
     
-    top_obj.position.y = bottom_surface + top_half_height;
+    top_obj.transform.position.y = bottom_surface + top_half_height;
 }

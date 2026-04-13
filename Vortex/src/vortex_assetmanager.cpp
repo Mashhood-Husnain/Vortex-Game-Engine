@@ -87,7 +87,6 @@ SharedMesh* VortexAssetManager::get_mesh(const std::string &filepath)
         return mesh_vault[filepath];
     }
 
-    std::cout << "-------------------------------------------------------" << std::endl;
     std::cout << "[ASSET MANAGER] First time loading: " << filepath << std::endl;
 
     SharedMesh *new_mesh = new SharedMesh();
@@ -135,9 +134,9 @@ SharedMesh* VortexAssetManager::get_mesh(const std::string &filepath)
             ss >> new_obj.name;
             new_obj.vertex_offset = (int)vertices.size();
             new_obj.vertex_count = 0;
-            new_obj.position = glm::vec3(0.0f);
-            new_obj.rotation = glm::vec3(0.0f);
-            new_obj.scale = glm::vec3(1.0f);
+            new_obj.transform.position = glm::vec3(0.0f);
+            new_obj.transform.rotation = glm::vec3(0.0f);
+            new_obj.transform.scale = glm::vec3(1.0f);
             new_mesh->objects.push_back(new_obj);
             current_obj = &new_mesh->objects.back();
         }
@@ -215,9 +214,9 @@ SharedMesh* VortexAssetManager::get_mesh(const std::string &filepath)
             vertices[obj.vertex_offset + i].position.y -= min_p.y; 
         }
 
-        obj.position = glm::vec3(centroid.x, min_p.y, centroid.z);
-        obj.b_min = min_p - obj.position;
-        obj.b_max = max_p - obj.position;
+        obj.transform.position = glm::vec3(centroid.x, min_p.y, centroid.z);
+        obj.b_min = min_p - obj.transform.position;
+        obj.b_max = max_p - obj.transform.position;
     }
 
     glGenVertexArrays(1, &new_mesh->VAO);

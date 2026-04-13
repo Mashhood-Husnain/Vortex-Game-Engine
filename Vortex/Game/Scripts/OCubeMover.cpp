@@ -20,7 +20,7 @@ public:
 
     void on_update(float deltaTime) override
     {
-        gameObject->position += fly_direction * speed * deltaTime;
+        gameObject->transform.position += fly_direction * speed * deltaTime;
         distance_traveled += speed * deltaTime;
 
         if (distance_traveled >= 200.0f)

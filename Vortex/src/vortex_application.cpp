@@ -55,32 +55,38 @@ void VortexApplication::framebuffer_size_callback(GLFWwindow* window, int width,
     }
 }
 
-void VortexApplication::key_callback(GLFWwindow* window, int key, int scancode, int action, int mods)
+void VortexApplication::check_key_press()
 {
-    auto* app = static_cast<VortexApplication*>(glfwGetWindowUserPointer(window));
-
-    if (!app) return;
-
-    if (action == GLFW_PRESS)
+    if (current_state == EngineState::EDITOR)
     {
-        switch (key)
+        if (VortexKeyboard::get_key_down("F"))
         {
-            case GLFW_KEY_F:
-                app->is_fullscreen = !app->is_fullscreen;
-                app->change_window_size();
-                break;
-            case GLFW_KEY_T:
-                app->show_wireframe = !app->show_wireframe;
-                break;
-            case GLFW_KEY_V:
-                app->view_world_axis = !app->view_world_axis;
-                break;
-            case GLFW_KEY_M:
-                app->show_mouse_cursor = !app->show_mouse_cursor;
+            is_fullscreen = !is_fullscreen;
+            change_window_size();
+        }
 
-                if (app->show_mouse_cursor) glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_NORMAL);
-                else glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
-                break;
+        if (VortexKeyboard::get_key_down("T")) show_wireframe = !show_wireframe;
+        if (VortexKeyboard::get_key_down("V")) view_world_axis = !view_world_axis;
+        if (VortexKeyboard::get_key_down("M")) show_mouse(!show_mouse_cursor);
+    }
+
+    if (VortexKeyboard::get_key_down("ESCAPE"))
+    {
+        if (current_state == EngineState::PLAY)
+        {
+            std::cout << "[ENGINE] Exiting Play Mode..." << std::endl;
+            current_state = EngineState::EDITOR;
+            gui.show_gui = true;
+
+            show_mouse(true);
+
+            camera = editor_camera;
+
+            VortexProject::load_project("temp_playmode_backup", dynamic_models, dynamic_particlesystems, this);
+        }
+        else
+        {
+            glfwSetWindowShouldClose(window, true);
         }
     }
 }
@@ -181,7 +187,6 @@ VortexApplication::VortexApplication(std::string window_name, int width, int hei
     glfwMakeContextCurrent(window);
     glfwSetWindowUserPointer(window, this);
     glfwSetFramebufferSizeCallback(window, framebuffer_size_callback);
-    glfwSetKeyCallback(window, key_callback);
     glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
     glfwSetCursorPosCallback(window, mouse_callback);
 
@@ -370,39 +375,20 @@ void VortexApplication::mouse_callback(GLFWwindow* window, double xposIn, double
 
 void VortexApplication::run(std::function<void()> draw_callback)
 {
-    std::cout << "-------------------------------------------------------" << std::endl;
     std::cout << "VORTEX ENGINE RUNNING ON:" << std::endl;
     std::cout << "VENDOR:   " << glGetString(GL_VENDOR) << std::endl;
     std::cout << "RENDERER: " << glGetString(GL_RENDERER) << std::endl;
-    std::cout << "-------------------------------------------------------" << std::endl;
 
     glfwShowWindow(window);
 
     while(!glfwWindowShouldClose(window))
     {
         glfwPollEvents();
+        check_key_press();
 
         float currentFrame = static_cast<float>(glfwGetTime());
         deltaTime = currentFrame - last_frame;
         last_frame = currentFrame;
-
-        if (VortexKeyboard::get_key_down("ESCAPE"))
-        {
-            if (current_state == EngineState::PLAY)
-            {
-                std::cout << "[ENGINE] Exiting Play Mode..." << std::endl;
-                current_state = EngineState::EDITOR;
-                gui.show_gui = true;
-
-                camera = editor_camera;
-
-                VortexProject::load_project("temp_playmode_backup", dynamic_models, dynamic_particlesystems, this);
-            }
-            else
-            {
-                glfwSetWindowShouldClose(window, true);
-            }
-        }
 
         if (!show_mouse_cursor && current_state == EngineState::EDITOR)
         {
@@ -573,4 +559,18 @@ void VortexApplication::set_skybox(VortexSkybox *skybox)
 {
     delete this->skybox;
     this->skybox = skybox;
+}
+
+void VortexApplication::show_mouse(bool status)
+{
+    show_mouse_cursor = status;
+
+    if (status)
+    {
+        glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_NORMAL);
+    }
+    else
+    {
+        glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
+    }
 }

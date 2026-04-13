@@ -19,11 +19,11 @@ public:
             flat_forward.y = 0.0f;
             flat_forward = glm::normalize(flat_forward);
 
-            bullet->position = gameObject->position + (flat_forward);
+            bullet->transform.position = gameObject->transform.position + (flat_forward);
 
-            bullet->scale = glm::vec3(0.1f, 0.1f, 1.0f);
+            bullet->transform.scale = glm::vec3(0.1f, 0.1f, 1.0f);
 
-            bullet->rotation.y = gameObject->rotation.y;
+            bullet->transform.rotation.y = gameObject->transform.rotation.y;
 
 
             VortexMonoBehaviour *move_script = ScriptRegistry::get().create("OCubeMover");

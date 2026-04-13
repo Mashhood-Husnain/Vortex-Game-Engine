@@ -7,7 +7,6 @@
 
 class VortexKeyboard
 {
-private:
     inline static GLFWwindow* s_window = nullptr;
     inline static std::unordered_map<std::string, int> s_key_map;
     inline static std::unordered_map<std::string, bool> s_previous_keys;
@@ -66,7 +65,6 @@ public:
             bool is_down_now = (glfwGetKey(s_window, it->second) == GLFW_PRESS);
             bool was_down_last_frame = s_previous_keys[key];
             
-            // It's a valid press ONLY if it wasn't already held down last frame!
             return is_down_now && !was_down_last_frame;
         }
 
@@ -90,6 +88,7 @@ public:
         }
 
         std::cerr << "[INPUT WARNING] Key '" << key << "' is not recognized!" << std::endl;
+        
         return false;
     }
 };

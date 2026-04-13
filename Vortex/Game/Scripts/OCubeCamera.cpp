@@ -21,14 +21,14 @@ public:
 
     void late_update(float deltaTime) override
     {
-        my_camera->position = gameObject->position + head_offset;
+        my_camera->position = gameObject->transform.position + head_offset;
 
         if (my_camera->pitch >45.0f) my_camera->pitch = 45.0f;
         if (my_camera->pitch < -45.0f) my_camera->pitch = -45.0f;
 
         my_camera->update_camera_vectors();
 
-        gameObject->rotation.y = -(my_camera->yaw + 90.0f);
+        gameObject->transform.rotation.y = -(my_camera->yaw + 90.0f);
     }
 };
 

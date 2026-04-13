@@ -29,6 +29,13 @@
 
 struct SharedMesh;
 
+struct Transform
+{
+    glm::vec3 position;
+    glm::vec3 rotation;
+    glm::vec3 scale;
+};
+
 struct VortexModel_Vertex
 {
     glm::vec3 position;
@@ -38,9 +45,7 @@ struct VortexModel_Vertex
 
 struct VortexModel_Object
 {
-    glm::vec3 position = glm::vec3(0.0f);
-    glm::vec3 rotation;
-    glm::vec3 scale;
+    Transform transform;
 
     std::string name;
     // accessing the object from the overal vertices when loaded from VortexModel class
@@ -50,8 +55,8 @@ struct VortexModel_Object
     // for object collision
     glm::vec3 b_min;
     glm::vec3 b_max;
-    glm::vec3 get_world_min() const {return position + b_min;}
-    glm::vec3 get_world_max() const {return position + b_max;};
+    glm::vec3 get_world_min() const {return transform.position + b_min;}
+    glm::vec3 get_world_max() const {return transform.position + b_max;};
 };
 
 bool check_collision(const VortexModel_Object &a, const VortexModel_Object &b);
@@ -62,9 +67,11 @@ public:
     VortexApplication *app;
     std::string model_name;
     
-    glm::vec3 position = glm::vec3(0.0f);
-    glm::vec3 rotation = glm::vec3(0.0f);
-    glm::vec3 scale = glm::vec3(1.0f);
+    Transform transform = {
+        .position = glm::vec3(0.0f),
+        .rotation = glm::vec3(0.0f),
+        .scale = glm::vec3(1.0f)
+    };
 
     bool should_destroy = false;
     bool is_active = true;

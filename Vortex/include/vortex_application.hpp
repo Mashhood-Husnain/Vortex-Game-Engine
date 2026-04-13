@@ -59,7 +59,6 @@ class VortexApplication
     VortexShader *worldaxis_shader = nullptr;
     unsigned int world_axisVAO;
     unsigned int world_axisVBO;
-    bool view_world_axis = false;
 
     PostProcessor *post_processor = nullptr;
     VortexSkybox *skybox = nullptr;
@@ -71,7 +70,7 @@ class VortexApplication
 
     GLFWmonitor* get_current_monitor(GLFWwindow* window);
     static void framebuffer_size_callback(GLFWwindow* window, int width, int height);
-    static void key_callback(GLFWwindow* window, int key, int scancode, int action, int mods);
+    void check_key_press();
     static void mouse_callback(GLFWwindow* window, double xposIn, double yposIn);
     void change_window_size();
     void setup_world_axis_buffers();
@@ -90,6 +89,7 @@ public:
     float deltaTime = 0.0f;
     bool show_wireframe = false;
     bool show_mouse_cursor = false;
+    bool view_world_axis = false;
     ShadowManager *shadow_manager = nullptr;
     VortexGUI gui;
 
@@ -101,4 +101,6 @@ public:
 
     void set_post_processor(PostProcessor *post_processor);
     void set_skybox(VortexSkybox *skybox);
+
+    void show_mouse(bool status);
 };

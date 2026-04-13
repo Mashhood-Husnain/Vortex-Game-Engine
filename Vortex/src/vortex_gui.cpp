@@ -80,6 +80,9 @@ void VortexGUI::render()
             VortexProject::save_project("temp_playmode_backup", app->dynamic_models, app->dynamic_particlesystems);
 
             app->current_state = EngineState::PLAY;
+            app->show_mouse(false);
+            app->show_wireframe = false;
+            app->view_world_axis = false;
             show_gui = false;
 
             for (VortexModel *model : app->dynamic_models)
@@ -296,19 +299,19 @@ void VortexGUI::inspector_info(VortexModel* model, ParticleSystem *ps)
                 ImGui::Text("Position");
                 ImGui::TableNextColumn();
                 ImGui::SetNextItemWidth(-FLT_MIN);            
-                ImGui::DragFloat3("##pos", &model->position.x, 0.1f);
+                ImGui::DragFloat3("##pos", &model->transform.position.x, 0.1f);
 
                 ImGui::TableNextColumn();
                 ImGui::Text("Scale");
                 ImGui::TableNextColumn();
                 ImGui::SetNextItemWidth(-FLT_MIN);
-                ImGui::DragFloat3("##scale", &model->scale.x, 0.01f, 0.001f, 10.0f);
+                ImGui::DragFloat3("##scale", &model->transform.scale.x, 0.01f, 0.001f, 10.0f);
 
                 ImGui::TableNextColumn();
                 ImGui::Text("Rotation");
                 ImGui::TableNextColumn();
                 ImGui::SetNextItemWidth(-FLT_MIN);
-                ImGui::DragFloat3("##rot", &model->rotation.x, 0.1f);
+                ImGui::DragFloat3("##rot", &model->transform.rotation.x, 0.1f);
 
                 ImGui::EndTable();
             }
@@ -316,10 +319,10 @@ void VortexGUI::inspector_info(VortexModel* model, ParticleSystem *ps)
             ImGui::Spacing();
             ImGui::SeparatorText("Scaling");
 
-            float uniform_scale = model->scale.x;
+            float uniform_scale = model->transform.scale.x;
             if (ImGui::SliderFloat("Uniform Scale", &uniform_scale, 0.001f, 10.0f))
             {
-                model->scale = glm::vec3(uniform_scale);
+                model->transform.scale = glm::vec3(uniform_scale);
             }
 
             ImGui::Spacing();
@@ -329,9 +332,9 @@ void VortexGUI::inspector_info(VortexModel* model, ParticleSystem *ps)
 
             if (ImGui::Button("Reset Transform", ImVec2(-1, 0)))
             {
-                model->position = glm::vec3(0.0f);
-                model->scale    = glm::vec3(1.0f);
-                model->rotation = glm::vec3(0.0f);
+                model->transform.position = glm::vec3(0.0f);
+                model->transform.scale = glm::vec3(1.0f);
+                model->transform.rotation = glm::vec3(0.0f);
             }
 
             if (ImGui::Button("Delete Model", ImVec2(-1, 0)))

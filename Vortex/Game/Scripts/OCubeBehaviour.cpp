@@ -25,11 +25,11 @@ public:
         if (!is_grounded)
         {
             velocity_y -= gravity * deltaTime;
-            gameObject->position.y += velocity_y * deltaTime;
+            gameObject->transform.position.y += velocity_y * deltaTime;
 
-            if (gameObject->position.y <= 0.0f)
+            if (gameObject->transform.position.y <= 0.0f)
             {
-                gameObject->position.y = 0.0f;
+                gameObject->transform.position.y = 0.0f;
                 velocity_y = 0.0f;
                 is_grounded = true;
             }
@@ -44,10 +44,10 @@ public:
         cam_forward = glm::normalize(cam_forward);
         cam_right = glm::normalize(cam_right);
 
-        if (VortexKeyboard::get_key("W")) gameObject->position += cam_forward * movement_speed * deltaTime;
-        if (VortexKeyboard::get_key("S")) gameObject->position -= cam_forward * movement_speed * deltaTime;
-        if (VortexKeyboard::get_key("A")) gameObject->position -= cam_right * movement_speed * deltaTime;
-        if (VortexKeyboard::get_key("D")) gameObject->position += cam_right * movement_speed * deltaTime;
+        if (VortexKeyboard::get_key("W")) gameObject->transform.position += cam_forward * movement_speed * deltaTime;
+        if (VortexKeyboard::get_key("S")) gameObject->transform.position -= cam_forward * movement_speed * deltaTime;
+        if (VortexKeyboard::get_key("A")) gameObject->transform.position -= cam_right * movement_speed * deltaTime;
+        if (VortexKeyboard::get_key("D")) gameObject->transform.position += cam_right * movement_speed * deltaTime;
     }
 };
 
