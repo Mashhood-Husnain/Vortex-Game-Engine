@@ -24,7 +24,7 @@ VortexModel::VortexModel(const std::string& path, VortexApplication *window)
     shared_data = VortexAssetManager::get_mesh(path);
 }
 
-void VortexModel::draw(const VortexShader& shader, VortexCamera& camera, bool wireframe)
+void VortexModel::draw(const VortexShader &shader, VortexCamera &camera, bool wireframe)
 {
     const VortexShader *active_shader = &shader;
 
@@ -90,7 +90,7 @@ void VortexModel::draw(const VortexShader& shader, VortexCamera& camera, bool wi
     {
         if (obj.vertex_count == 0) continue;
 
-        glm::mat4 model_matrix = glm::mat4(1.0f);
+        model_matrix = glm::mat4(1.0f);
         model_matrix = glm::translate(model_matrix, transform.position + obj.transform.position);
 
         glm::vec3 total_rot = transform.rotation + obj.transform.rotation;
@@ -111,15 +111,6 @@ void VortexModel::draw(const VortexShader& shader, VortexCamera& camera, bool wi
 std::vector<VortexModel_Object>& VortexModel::get_objects()
 {
     return shared_data->objects;
-}
-
-bool check_collision(const VortexModel_Object &a, const VortexModel_Object &b)
-{
-    bool x_axis = a.get_world_min().x <= b.get_world_max().x && a.get_world_max().x >= b.get_world_min().x;
-    bool y_axis = a.get_world_min().y <= b.get_world_max().y && a.get_world_max().y >= b.get_world_min().y;
-    bool z_axis = a.get_world_min().z <= b.get_world_max().z && a.get_world_max().z >= b.get_world_min().z;
-
-    return x_axis && y_axis && z_axis;
 }
 
 VortexModel::~VortexModel()

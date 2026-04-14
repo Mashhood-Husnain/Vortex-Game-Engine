@@ -14,7 +14,7 @@
 #include <glm/gtc/matrix_transform.hpp>
 #include <string>
 
-#include "util/vortex_keyboard.hpp"
+#include "vortex_keyboard.hpp"
 
 class VortexCamera
 {

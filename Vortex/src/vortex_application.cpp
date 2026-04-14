@@ -199,7 +199,8 @@ VortexApplication::VortexApplication(std::string window_name, int width, int hei
 
     particle_shader = new VortexShader("shaders/particles.vert", "shaders/particles.frag");
     model_shader = new VortexShader("shaders/default.vert", "shaders/default.frag");
-    worldaxis_shader = new VortexShader("shaders/world_axis.vert", "shaders/world_axis.frag");    
+    collider_shader = new VortexShader("shaders/collider.vert", "shaders/collider.frag");
+    worldaxis_shader = new VortexShader("shaders/world_axis.vert", "shaders/world_axis.frag");
     setup_world_axis_buffers();
 
     shadow_manager = new ShadowManager();
@@ -245,6 +246,7 @@ VortexApplication::~VortexApplication()
     delete skybox;
     delete particle_shader;
     delete model_shader;
+    delete collider_shader;
     delete environment_grid;
     delete editor_camera;
 
@@ -281,6 +283,7 @@ VortexApplication::~VortexApplication()
     skybox = nullptr;
     particle_shader = nullptr;
     model_shader = nullptr;
+    collider_shader = nullptr;
     environment_grid = nullptr;
 
     if (window)
@@ -290,6 +293,8 @@ VortexApplication::~VortexApplication()
     }
 
     glfwTerminate();
+
+    std::cout << "[ENGINE] Successfully Closed Application!" << std::endl;
 }
 
 void VortexApplication::change_window_size()
@@ -469,6 +474,10 @@ void VortexApplication::run(std::function<void()> draw_callback)
             if (model->is_active)
             {
                 model->draw(*model_shader, *camera, show_wireframe);
+                if (model->show_collider)
+                {
+                    model->shared_data->collider.draw(*collider_shader, *camera, model);
+                }
             }
         }
 

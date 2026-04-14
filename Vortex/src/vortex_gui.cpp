@@ -286,6 +286,36 @@ void VortexGUI::inspector_info(VortexModel* model, ParticleSystem *ps)
             }
 
             ImGui::Spacing();
+            ImGui::Checkbox("Show Collider", &model->show_collider);
+
+            if (model->show_collider)
+            {
+                ImGui::Indent();
+                
+                ImGui::DragFloat3("Collider Scale", &model->collider_scale.x, 0.01f, 0.01f, 10.0f);
+                
+                float collider_uniform_scale = model->collider_scale.x;
+                if (ImGui::SliderFloat("Uniform Scale##Collider", &collider_uniform_scale, 0.001f, 10.0f))
+                {
+                    model->collider_scale = glm::vec3(collider_uniform_scale);
+                }
+
+                ImGui::Spacing();
+
+                ImGui::PushStyleColor(ImGuiCol_Button, ImVec4(0.8f, 0.2f, 0.2f, 1.0f));
+                ImGui::PushStyleColor(ImGuiCol_ButtonHovered, ImVec4(1.0f, 0.3f, 0.3f, 1.0f));
+
+                if (ImGui::Button("Reset Collider Size", ImVec2(-1, 0)))
+                {
+                    model->collider_scale = glm::vec3(1.0f);
+                }
+
+                ImGui::PopStyleColor(2);
+
+                ImGui::Unindent();
+            }
+
+            ImGui::Spacing();
             ImGui::SeparatorText("Transform");
 
             ImGui::PushStyleVar(ImGuiStyleVar_ItemSpacing, ImVec2(10, 8));
@@ -513,9 +543,10 @@ void VortexGUI::creator_window(
                 std::ofstream script_file(file_path);
 
                 script_file << "#include \"vortex_behaviour.hpp\"\n";
-                script_file << "#include \"vortex_script_registry.hpp\"\n";
-                script_file << "#include \"util/vortex_keyboard.hpp\"\n\n";
-                script_file << "#include \"util/vortex_mouse.hpp\"\n\n";
+                script_file << "#include \"util/vortex_script_registry.hpp\"\n";
+                script_file << "#include \"vortex_keyboard.hpp\"\n";
+                script_file << "#include \"vortex_mouse.hpp\"\n";
+                script_file << "#include \"vortex_physics.hpp\"\n\n";
                 
                 script_file << "class " << class_name << " : public VortexMonoBehaviour\n";
                 script_file << "{\n";

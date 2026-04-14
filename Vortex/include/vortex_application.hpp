@@ -27,11 +27,11 @@
 #include "vortex_model.hpp"
 #include "vortex_grid.hpp"
 #include "vortex_assetmanager.hpp"
+#include "vortex_keyboard.hpp"
+#include "vortex_mouse.hpp"
 
 #include "util/vortex_global_vars.hpp"
 #include "util/vortex_gpu_pre_init.hpp"
-#include "util/vortex_keyboard.hpp"
-#include "util/vortex_mouse.hpp"
 #include "util/vortex_save_load.hpp"
 
 enum class EngineState
@@ -65,6 +65,7 @@ class VortexApplication
 
     VortexShader *particle_shader = nullptr;
     VortexShader *model_shader = nullptr;
+    VortexShader *collider_shader = nullptr;
 
     VortexGrid *environment_grid = nullptr;
 

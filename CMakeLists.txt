@@ -91,6 +91,10 @@ add_executable(engine
     Vortex/src/vortex_grid.cpp
     Vortex/src/util/vortex_save_load.cpp
     Vortex/src/vortex_assetmanager.cpp
+    Vortex/src/vortex_keyboard.cpp
+    Vortex/src/vortex_mouse.cpp
+    Vortex/src/vortex_physics.cpp
+    Vortex/src/vortex_collider.cpp
     ${USER_SCRIPTS}
 )
 

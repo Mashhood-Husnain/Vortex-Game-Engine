@@ -1,12 +1,13 @@
 #include "vortex_behaviour.hpp"
-#include "vortex_script_registry.hpp"
-#include "util/vortex_keyboard.hpp"
-#include "util/vortex_mouse.hpp"
+#include "util/vortex_script_registry.hpp"
+#include "vortex_keyboard.hpp"
+#include "vortex_mouse.hpp"
+#include "vortex_physics.hpp"
 
 #include "vortex_camera.hpp"
 #include <glm/glm.hpp>
 
-class OCubeCamera : public VortexMonoBehaviour
+class PlayerCamera : public VortexMonoBehaviour
 {
 private:
     VortexCamera *my_camera = nullptr;
@@ -32,4 +33,4 @@ public:
     }
 };
 
-VORTEX_REGISTER_SCRIPT(OCubeCamera);
+VORTEX_REGISTER_SCRIPT(PlayerCamera);

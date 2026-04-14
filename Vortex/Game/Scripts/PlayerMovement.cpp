@@ -1,9 +1,10 @@
 #include "vortex_behaviour.hpp"
-#include "vortex_script_registry.hpp"
-#include "util/vortex_keyboard.hpp"
-#include "util/vortex_mouse.hpp"
+#include "util/vortex_script_registry.hpp"
+#include "vortex_keyboard.hpp"
+#include "vortex_mouse.hpp"
+#include "vortex_physics.hpp"
 
-class OCubeBehaviour : public VortexMonoBehaviour
+class PlayerMovement : public VortexMonoBehaviour
 {
 private:
     // float rotation_speed = 45.0f;
@@ -51,4 +52,4 @@ public:
     }
 };
 
-VORTEX_REGISTER_SCRIPT(OCubeBehaviour);
+VORTEX_REGISTER_SCRIPT(PlayerMovement);

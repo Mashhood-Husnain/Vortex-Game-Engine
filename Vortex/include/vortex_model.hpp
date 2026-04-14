@@ -22,7 +22,7 @@
 #include "vortex_camera.hpp"
 #include "vortex_application.hpp"
 #include "vortex_assetmanager.hpp"
-#include "util/vortex_behaviour.hpp"
+#include "vortex_behaviour.hpp"
 #include "util/vortex_global_vars.hpp"
 
 #include "stb_image.h"
@@ -51,15 +51,7 @@ struct VortexModel_Object
     // accessing the object from the overal vertices when loaded from VortexModel class
     int vertex_offset;
     int vertex_count;
-
-    // for object collision
-    glm::vec3 b_min;
-    glm::vec3 b_max;
-    glm::vec3 get_world_min() const {return transform.position + b_min;}
-    glm::vec3 get_world_max() const {return transform.position + b_max;};
 };
-
-bool check_collision(const VortexModel_Object &a, const VortexModel_Object &b);
 
 class VortexModel
 {
@@ -76,15 +68,19 @@ public:
     bool should_destroy = false;
     bool is_active = true;
 
+    bool show_collider = false;
+
     std::string file_path;
 
     SharedMesh *shared_data;
+    glm::mat4 model_matrix;
+    glm::vec3 collider_scale = glm::vec3(1.0f);
 
     std::vector<VortexMonoBehaviour*> behaviours;
     std::vector<std::string> script_names;
 
-    VortexModel(const std::string& model_path, VortexApplication *window);
-    void draw(const VortexShader& shader, VortexCamera& camera, bool wireframe);
+    VortexModel(const std::string &model_path, VortexApplication *window);
+    void draw(const VortexShader &shader, VortexCamera &camera, bool wireframe);
     std::vector<VortexModel_Object>& get_objects();
 
     void add_behaviour(const std::string &script_name, VortexMonoBehaviour *script);

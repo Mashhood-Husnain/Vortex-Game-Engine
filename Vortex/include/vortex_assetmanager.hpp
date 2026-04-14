@@ -11,6 +11,7 @@
 #include "stb_image.h"
 
 #include "vortex_model.hpp"
+#include "vortex_collider.hpp"
 
 struct VortexModel_Object;
 struct VortexModel_Vertex;
@@ -26,6 +27,8 @@ struct SharedMesh
     unsigned int normal_id = 0;
     
     float model_height = 0.0f;
+
+    VortexBoxCollider collider;
     
     std::vector<VortexModel_Object> objects;
     std::vector<unsigned int> m_gpu_allocated_textures;

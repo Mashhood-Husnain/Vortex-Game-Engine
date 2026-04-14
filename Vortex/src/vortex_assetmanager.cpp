@@ -215,9 +215,25 @@ SharedMesh* VortexAssetManager::get_mesh(const std::string &filepath)
         }
 
         obj.transform.position = glm::vec3(centroid.x, min_p.y, centroid.z);
-        obj.b_min = min_p - obj.transform.position;
-        obj.b_max = max_p - obj.transform.position;
     }
+
+    glm::vec3 global_min(1e10f);
+    glm::vec3 global_max(-1e10f);
+
+    for (const auto& v : vertices) 
+    {
+        if (v.position.x < global_min.x) global_min.x = v.position.x;
+        if (v.position.y < global_min.y) global_min.y = v.position.y;
+        if (v.position.z < global_min.z) global_min.z = v.position.z;
+
+        if (v.position.x > global_max.x) global_max.x = v.position.x;
+        if (v.position.y > global_max.y) global_max.y = v.position.y;
+        if (v.position.z > global_max.z) global_max.z = v.position.z;
+    }
+
+    new_mesh->collider.min = global_min;
+    new_mesh->collider.max = global_max;
+    new_mesh->collider.setup_visual_mesh();
 
     glGenVertexArrays(1, &new_mesh->VAO);
     glGenBuffers(1, &new_mesh->VBO);

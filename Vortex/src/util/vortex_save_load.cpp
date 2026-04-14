@@ -23,6 +23,9 @@ void VortexProject::save_project(
         j_model["rotation"] = {model->transform.rotation.x, model->transform.rotation.y, model->transform.rotation.z};
         j_model["scale"] = {model->transform.scale.x, model->transform.scale.y, model->transform.scale.z};
 
+        j_model["show_collider"] = model->show_collider;
+        j_model["collider_scale"] = {model->collider_scale.x, model->collider_scale.y, model->collider_scale.z};
+
         j_model["scripts"] = json::array();
         for (const std::string &s_name : model->script_names)
         {
@@ -91,6 +94,16 @@ void VortexProject::load_project(
         new_model->transform.position = glm::vec3(j_model["position"][0], j_model["position"][1], j_model["position"][2]);
         new_model->transform.rotation = glm::vec3(j_model["rotation"][0], j_model["rotation"][1], j_model["rotation"][2]);
         new_model->transform.scale = glm::vec3(j_model["scale"][0], j_model["scale"][1], j_model["scale"][2]);
+
+        if (j_model.contains("show_collider"))
+        {
+            new_model->show_collider = j_model["show_collider"];
+        }
+        
+        if (j_model.contains("collider_scale"))
+        {
+            new_model->collider_scale = glm::vec3(j_model["collider_scale"][0], j_model["collider_scale"][1], j_model["collider_scale"][2]);
+        }
 
         if (j_model.contains("scripts"))
         {
