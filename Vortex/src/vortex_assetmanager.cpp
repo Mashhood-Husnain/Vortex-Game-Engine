@@ -194,46 +194,59 @@ SharedMesh* VortexAssetManager::get_mesh(const std::string &filepath)
     if (current_obj != nullptr) current_obj->vertex_count = (int)vertices.size() - current_obj->vertex_offset;
     new_mesh->model_height = max_y - min_y;
 
-    for (auto &obj : new_mesh->objects)
-    {
-        if (obj.vertex_count == 0) continue;
-        glm::vec3 min_p(1e10f), max_p(-1e10f), centroid(0.0f);
-        
-        for (int i = 0; i < obj.vertex_count; i++)
-        {
-            glm::vec3 p = vertices[obj.vertex_offset + i].position;
-            centroid += p;
-            if (p.x < min_p.x) min_p.x = p.x; if (p.y < min_p.y) min_p.y = p.y; if (p.z < min_p.z) min_p.z = p.z;
-            if (p.x > max_p.x) max_p.x = p.x; if (p.y > max_p.y) max_p.y = p.y; if (p.z > max_p.z) max_p.z = p.z;
-        }
-        centroid /= (float)obj.vertex_count;
-
-        for (int i = 0; i < obj.vertex_count; i++)
-        {
-            vertices[obj.vertex_offset + i].position.x -= centroid.x;
-            vertices[obj.vertex_offset + i].position.z -= centroid.z;
-            vertices[obj.vertex_offset + i].position.y -= min_p.y; 
-        }
-
-        obj.transform.position = glm::vec3(centroid.x, min_p.y, centroid.z);
-    }
-
-    glm::vec3 global_min(1e10f);
-    glm::vec3 global_max(-1e10f);
+    glm::vec3 global_min(1e10f), global_max(-1e10f), global_centroid(0.0f);
 
     for (const auto& v : vertices) 
     {
-        if (v.position.x < global_min.x) global_min.x = v.position.x;
-        if (v.position.y < global_min.y) global_min.y = v.position.y;
-        if (v.position.z < global_min.z) global_min.z = v.position.z;
+        global_centroid += v.position;
 
+        if (v.position.y < global_min.y) global_min.y = v.position.y;
+        if (v.position.x < global_min.x) global_min.x = v.position.x;
+        if (v.position.z < global_min.z) global_min.z = v.position.z;
         if (v.position.x > global_max.x) global_max.x = v.position.x;
         if (v.position.y > global_max.y) global_max.y = v.position.y;
         if (v.position.z > global_max.z) global_max.z = v.position.z;
     }
+    
+    global_centroid /= (float)vertices.size();
 
-    new_mesh->collider.min = global_min;
-    new_mesh->collider.max = global_max;
+    for (auto& v : vertices) 
+    {
+        v.position.x -= global_centroid.x;
+        v.position.z -= global_centroid.z;
+        v.position.y -= global_min.y; 
+    }
+
+    for (auto &obj : new_mesh->objects)
+    {
+        obj.transform.position = glm::vec3(0.0f);
+        obj.transform.rotation = glm::vec3(0.0f);
+        obj.transform.scale = glm::vec3(1.0f);
+
+        if (obj.vertex_count == 0) continue;
+
+        glm::vec3 obj_min(1e10f), obj_max(-1e10f);
+
+        for (int i = 0; i < obj.vertex_count; i++)
+        {
+            glm::vec3 p = vertices[obj.vertex_offset + i].position;
+            if (p.x < obj_min.x) obj_min.x = p.x;
+            if (p.y < obj_min.y) obj_min.y = p.y;
+            if (p.z < obj_min.z) obj_min.z = p.z;
+
+            if (p.x > obj_max.x) obj_max.x = p.x;
+            if (p.y > obj_max.y) obj_max.y = p.y;
+            if (p.z > obj_max.z) obj_max.z = p.z;
+        }
+
+        obj.collider.min = obj_min;
+        obj.collider.max = obj_max;
+        
+        obj.collider.setup_visual_mesh(); 
+    }
+
+    new_mesh->collider.min = glm::vec3(global_min.x - global_centroid.x, 0.0f, global_min.z - global_centroid.z);
+    new_mesh->collider.max = glm::vec3(global_max.x - global_centroid.x, global_max.y - global_min.y, global_max.z - global_centroid.z);
     new_mesh->collider.setup_visual_mesh();
 
     glGenVertexArrays(1, &new_mesh->VAO);

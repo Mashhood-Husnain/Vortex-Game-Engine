@@ -6,11 +6,12 @@
 #include "vortex_objectmanager.hpp"
 #include "vortex_model.hpp"
 #include "vortex_hud.hpp"
+#include "vortex_audio.hpp"
 
 class PlayerBulletMover : public VortexMonoBehaviour
 {
 private:
-    float speed = 100.0f;
+    float speed = 150.0f;
     float distance_traveled = 0.0f;
     glm::vec3 fly_direction;
     float bullet_damage = 5.0f;
@@ -18,11 +19,23 @@ private:
 public:
     void on_start() override
     {
-        fly_direction = gameObject->app->camera->front;
-
-        fly_direction = glm::normalize(fly_direction);
-
         player = VortexObjectManager::get_object_by_tag("Player");
+        VortexCamera* cam = gameObject->app->camera;
+
+        glm::vec3 crosshair_target = cam->position + (cam->front * 100.0f);
+
+        glm::vec3 base_direction = glm::normalize(crosshair_target - gameObject->transform.position);
+
+        bool is_aiming = VortexMouse::get_button("RIGHT");
+        float spread_factor = is_aiming ? 0.005f : 0.05f; 
+
+        glm::vec3 spread(
+            ((rand() / (float)RAND_MAX) - 0.5f) * spread_factor,
+            ((rand() / (float)RAND_MAX) - 0.5f) * spread_factor,
+            ((rand() / (float)RAND_MAX) - 0.5f) * spread_factor
+        );
+
+        fly_direction = glm::normalize(base_direction + spread);
     }
 
     void on_update(float deltaTime) override
@@ -33,6 +46,7 @@ public:
         if (distance_traveled >= 200.0f)
         {
             gameObject->should_destroy = true;
+            return;
         }
 
         for (VortexModel* target_model : VortexObjectManager::active_models) 
@@ -49,8 +63,10 @@ public:
                 }
             }
 
-            if (is_enemy && VortexPhysics::check_collision(gameObject, target_model)) 
+            if (is_enemy && VortexPhysics::check_collision(gameObject, target_model))
             {
+                VortexAudio::play_sound("assets/audio/gunshot_hit.wav", 0.5f);
+
                 VortexMonoBehaviour *script = player->behaviours[0];
                 VortexMonoBehaviour *enemy_script = target_model->behaviours[0];
 
@@ -70,7 +86,6 @@ public:
                 }
 
                 gameObject->should_destroy = true;
-
                 return;
             }
         }

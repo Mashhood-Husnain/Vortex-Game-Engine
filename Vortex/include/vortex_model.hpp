@@ -24,6 +24,7 @@
 #include "vortex_assetmanager.hpp"
 #include "vortex_behaviour.hpp"
 #include "util/vortex_global_vars.hpp"
+#include "vortex_collider.hpp"
 
 #include "stb_image.h"
 
@@ -51,6 +52,8 @@ struct VortexModel_Object
     // accessing the object from the overal vertices when loaded from VortexModel class
     int vertex_offset;
     int vertex_count;
+
+    VortexBoxCollider collider;
 };
 
 class VortexModel

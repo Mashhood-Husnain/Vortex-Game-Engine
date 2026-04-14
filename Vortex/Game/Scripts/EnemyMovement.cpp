@@ -6,13 +6,14 @@
 #include "vortex_objectmanager.hpp"
 #include "vortex_model.hpp"
 #include "vortex_hud.hpp"
+#include "vortex_audio.hpp"
 
 class EnemyMovement : public VortexMonoBehaviour
 {
 private:
     float speed = 5.0f;
     float health = 20.0f;
-    float enemy_damage = 1.5f;
+    float enemy_damage = 5.5f;
     VortexModel *target_player = nullptr;
 public:
     void on_start() override
@@ -56,10 +57,17 @@ public:
 
             if (script)
             {
-                script->VortexMonoBehaviour_set_value(
-                    "player_health",
-                    script->VortexMonoBehaviour_get_value("player_health") - enemy_damage
-                );
+                float current_cooldown = script->VortexMonoBehaviour_get_value("player_damage_cooldown");
+
+                if (current_cooldown >= 1.0f)
+                {
+                    script->VortexMonoBehaviour_set_value("player_damage_cooldown", 0.0f);
+
+                    float current_hp = script->VortexMonoBehaviour_get_value("player_health");
+                    script->VortexMonoBehaviour_set_value("player_health", current_hp - enemy_damage);
+
+                    VortexAudio::play_sound("assets/audio/player_damage.wav", 1.0f);
+                }
             }
         }
 

@@ -559,6 +559,7 @@ void VortexGUI::creator_window(VortexApplication *window)
                 script_file << "#include \"vortex_objectmanager.hpp\"\n";
                 script_file << "#include \"vortex_model.hpp\"\n";
                 script_file << "#include \"vortex_hud.hpp\"\n";
+                script_file << "#include \"vortex_audio.hpp\"\n";
                 script_file << "#include \"vortex_physics.hpp\"\n\n";
                 
                 script_file << "class " << class_name << " : public VortexMonoBehaviour\n";

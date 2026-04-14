@@ -6,16 +6,16 @@
 #include "vortex_objectmanager.hpp"
 #include "vortex_model.hpp"
 #include "vortex_hud.hpp"
+#include "vortex_audio.hpp"
 
 class PlayerMovement : public VortexMonoBehaviour
 {
 private:
-    // float rotation_speed = 45.0f;
-    float jump_force = 20.0f;
+    float jump_force = 15.0f;
     float velocity_y = 0.0f;
     float gravity = 25.0f;
     bool is_grounded = true;
-    float movement_speed = 10.0f;
+    float movement_speed = 15.0f;
 
     glm::vec2 crosshair;
 public:

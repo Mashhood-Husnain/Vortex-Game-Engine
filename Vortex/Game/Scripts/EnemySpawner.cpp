@@ -6,6 +6,7 @@
 #include "vortex_objectmanager.hpp"
 #include "vortex_model.hpp"
 #include "vortex_hud.hpp"
+#include "vortex_audio.hpp"
 
 #include <cstdlib>
 #include <cmath>

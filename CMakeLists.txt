@@ -53,6 +53,10 @@ target_include_directories(imgui PUBLIC vendor/imgui vendor/glfw/include)
 target_include_directories(imgui PUBLIC vendor/nvml)
 include_directories(vendor/nvml)
 
+# miniaudio
+add_library(miniaudio vendor/miniaudio/miniaudio.c)
+target_include_directories(miniaudio PUBLIC vendor/miniaudio)
+
 # ----------------------------
 # Shaders & Assets
 # ----------------------------
@@ -96,6 +100,7 @@ add_executable(engine
     Vortex/src/vortex_collider.cpp
     Vortex/src/vortex_objectmanager.cpp
     Vortex/src/vortex_hud.cpp
+    Vortex/src/vortex_audio.cpp
 
     Vortex/src/util/vortex_save_load.cpp
     Vortex/src/util/vortex_nvml.cpp
@@ -115,6 +120,7 @@ target_include_directories(engine PUBLIC
     vendor/imgui
     vendor/nvml
     vendor/nlohmann_json
+    vendor/miniaudio
 )
 
 # ----------------------------
@@ -127,10 +133,13 @@ target_link_libraries(engine
     glad
     stb_image
     imgui
+    miniaudio
     Threads::Threads
+    m
+    rt
 )
 
 # OS-Specific Libraries
 if(UNIX AND NOT APPLE)
-    target_link_libraries(engine ${CMAKE_DL_LIBS} dl)
+    target_link_libraries(engine ${CMAKE_DL_LIBS} dl asound)
 endif()

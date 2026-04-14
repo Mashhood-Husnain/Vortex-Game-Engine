@@ -81,9 +81,15 @@ void VortexObjectManager::draw(VortexCamera &camera, bool show_wireframe)
         if (model->is_active)
         {
             model->draw(*model_shader, camera, show_wireframe);
+            
             if (model->show_collider)
             {
                 model->shared_data->collider.draw(*collider_shader, camera, model);
+
+                for (auto& obj : model->shared_data->objects)
+                {
+                    obj.collider.draw(*collider_shader, camera, model);
+                }
             }
         }
     }

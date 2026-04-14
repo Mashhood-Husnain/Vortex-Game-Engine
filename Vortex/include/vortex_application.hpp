@@ -29,6 +29,7 @@
 #include "vortex_assetmanager.hpp"
 #include "vortex_keyboard.hpp"
 #include "vortex_mouse.hpp"
+#include "vortex_audio.hpp"
 #include "vortex_objectmanager.hpp"
 
 #include "util/vortex_global_vars.hpp"

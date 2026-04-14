@@ -213,6 +213,7 @@ VortexApplication::VortexApplication(std::string window_name, int width, int hei
     VortexObjectManager::init();
     VortexKeyboard::init(window);
     VortexMouse::init(window);
+    VortexAudio::init();
 
     // V-sync
     glfwSwapInterval(1);
@@ -253,6 +254,7 @@ VortexApplication::~VortexApplication()
 
     VortexAssetManager::clean_up();
     VortexObjectManager::clean_up();
+    VortexAudio::clean_up();
 
     if (window)
     {
@@ -453,6 +455,7 @@ void VortexApplication::run(std::function<void()> draw_callback)
         gui.render();
         VortexKeyboard::update();
         VortexMouse::update();
+        VortexAudio::update();
         // swap buffers and poll IO
         glfwSwapBuffers(window);
     }
