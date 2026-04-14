@@ -63,4 +63,6 @@ When you launch the engine, you will start in Editor Mode attached to the defaul
 | **M** | Release/Capture Mouse (Use this to interact with the Creator Tool or Inspector) |
 | **T** | Toggle Wireframe view for all models |
 | **F** | Toggle Fullscreen / Windowed mode |
+| **V** | Toggle XYZ Gizmo |
+| **TAB** | Toggle Engine Stats view in Play Mode (this binding only works in Play Mode)|
 | **Escape** | Exit Play Mode (if playing) OR Exit Engine (if in editor) |

@@ -70,6 +70,11 @@ void VortexApplication::check_key_press()
         if (VortexKeyboard::get_key_down("M")) show_mouse(!show_mouse_cursor);
     }
 
+    if (VortexKeyboard::get_key_down("TAB") && current_state == EngineState::PLAY)
+    {
+        gui.show_debug_gui = !gui.show_debug_gui;
+    }
+
     if (VortexKeyboard::get_key_down("ESCAPE"))
     {
         if (current_state == EngineState::PLAY)
@@ -77,12 +82,13 @@ void VortexApplication::check_key_press()
             std::cout << "[ENGINE] Exiting Play Mode..." << std::endl;
             current_state = EngineState::EDITOR;
             gui.show_gui = true;
+            gui.show_debug_gui = true;
 
             show_mouse(true);
 
             camera = editor_camera;
 
-            VortexProject::load_project("temp_playmode_backup", dynamic_models, dynamic_particlesystems, this);
+            VortexProject::load_project("temp_playmode_backup", VortexObjectManager::active_models, VortexObjectManager::active_particlesystems, this);
         }
         else
         {
@@ -197,9 +203,6 @@ VortexApplication::VortexApplication(std::string window_name, int width, int hei
         exit(EXIT_FAILURE);
     }
 
-    particle_shader = new VortexShader("shaders/particles.vert", "shaders/particles.frag");
-    model_shader = new VortexShader("shaders/default.vert", "shaders/default.frag");
-    collider_shader = new VortexShader("shaders/collider.vert", "shaders/collider.frag");
     worldaxis_shader = new VortexShader("shaders/world_axis.vert", "shaders/world_axis.frag");
     setup_world_axis_buffers();
 
@@ -207,6 +210,7 @@ VortexApplication::VortexApplication(std::string window_name, int width, int hei
 
     environment_grid = new VortexGrid();
 
+    VortexObjectManager::init();
     VortexKeyboard::init(window);
     VortexMouse::init(window);
 
@@ -244,25 +248,11 @@ VortexApplication::~VortexApplication()
     delete worldaxis_shader;
     delete shadow_manager;
     delete skybox;
-    delete particle_shader;
-    delete model_shader;
-    delete collider_shader;
     delete environment_grid;
     delete editor_camera;
 
-    for (VortexModel* model : dynamic_models)
-    {
-        delete model;
-    }
-    dynamic_models.clear();
-
     VortexAssetManager::clean_up();
-
-    for (ParticleSystem* ps : dynamic_particlesystems)
-    {
-        delete ps;
-    }
-    dynamic_particlesystems.clear();
+    VortexObjectManager::clean_up();
 
     if (window)
     {
@@ -281,9 +271,6 @@ VortexApplication::~VortexApplication()
     editor_camera = nullptr;
     post_processor = nullptr;
     skybox = nullptr;
-    particle_shader = nullptr;
-    model_shader = nullptr;
-    collider_shader = nullptr;
     environment_grid = nullptr;
 
     if (window)
@@ -426,7 +413,7 @@ void VortexApplication::run(std::function<void()> draw_callback)
         gui.camera_info(camera);
         gui.post_process_options(this);
         gui.skybox_options(this);
-        gui.creator_window(this, dynamic_particlesystems, dynamic_models);
+        gui.creator_window(this);
         gui.begin_scene_inspector();
 
         if (skybox)
@@ -436,90 +423,17 @@ void VortexApplication::run(std::function<void()> draw_callback)
 
         if (current_state == EngineState::PLAY)
         {
-            for (VortexModel *model : dynamic_models)
-            {
-                if (model->is_active)
-                {
-                    model->update(deltaTime);
-                }
-            }
-
-            for (VortexModel *model : dynamic_models)
-            {
-                if (model->is_active)
-                {
-                    model->late_update(deltaTime);
-                }
-            }
-
-            if (!pending_models.empty())
-            {
-                for (VortexModel* new_model : pending_models)
-                {
-                    dynamic_models.push_back(new_model);
-                    
-                    for (VortexMonoBehaviour* script : new_model->behaviours)
-                    {
-                        script->on_start();
-                    }
-                }
-                pending_models.clear(); 
-            }
+            VortexObjectManager::update(deltaTime);
         }
 
         draw_callback();
 
-        for (VortexModel *model : dynamic_models)
-        {
-            if (model->is_active)
-            {
-                model->draw(*model_shader, *camera, show_wireframe);
-                if (model->show_collider)
-                {
-                    model->shared_data->collider.draw(*collider_shader, *camera, model);
-                }
-            }
-        }
-
-        for (ParticleSystem *ps : dynamic_particlesystems)
-        {
-            ps->update(deltaTime);
-            ps->draw(*particle_shader, *camera);
-        }
-
-        environment_grid->draw(*camera);
-
-        dynamic_particlesystems.erase(
-            std::remove_if(
-                dynamic_particlesystems.begin(),
-                dynamic_particlesystems.end(),
-                [](ParticleSystem *ps){
-                    if (ps->should_destroy)
-                    {
-                        delete ps;
-                        return true;
-                    }
-                    return false;
-                }),
-            dynamic_particlesystems.end()
-        );
-
-        dynamic_models.erase(
-            std::remove_if(
-                dynamic_models.begin(),
-                dynamic_models.end(),
-                [](VortexModel *model){
-                    if (model->should_destroy)
-                    {
-                        delete model;
-                        return true;
-                    }
-                    return false;
-                }),
-            dynamic_models.end()
-        );
+        VortexObjectManager::draw(*camera, show_wireframe);
+        VortexObjectManager::check_object_status();
 
         gui.end_scene_inspector();
+
+        environment_grid->draw(*camera);
 
         if (post_processor) {
             post_processor->end();

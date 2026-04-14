@@ -3,31 +3,35 @@
 #include "vortex_keyboard.hpp"
 #include "vortex_mouse.hpp"
 #include "vortex_physics.hpp"
+#include "vortex_objectmanager.hpp"
+#include "vortex_model.hpp"
+#include "vortex_hud.hpp"
 
 class EnemyMovement : public VortexMonoBehaviour
 {
 private:
     float speed = 5.0f;
+    float health = 20.0f;
+    float enemy_damage = 1.5f;
     VortexModel *target_player = nullptr;
 public:
     void on_start() override
     {
-        for (VortexModel* model : gameObject->app->dynamic_models)
-        {
-            for (const std::string& script_name : model->script_names)
-            {
-                if (script_name == "PlayerMovement")
-                {
-                    target_player = model;
-                    return;
-                }
-            }
-        }
+        VortexMonoBehaviour_set_value("enemy_health", health);
+        target_player = VortexObjectManager::get_object_by_tag("Player");
     }
 
     void on_update(float deltaTime) override
     {
         if (!target_player || target_player->should_destroy) return; 
+
+        health = VortexMonoBehaviour_get_value("enemy_health");
+
+        if (health <= 0.0f)
+        {
+            gameObject->should_destroy = true;
+            return;
+        }
 
         glm::vec3 player_pos = target_player->transform.position;
         player_pos.y = 0.0f;
@@ -45,6 +49,34 @@ public:
             float angle = atan2(direction.x, direction.z);
             gameObject->transform.rotation.y = glm::degrees(angle);
         }
+
+        if (VortexPhysics::check_collision(gameObject, target_player))
+        {
+            VortexMonoBehaviour *script = target_player->behaviours[0];
+
+            if (script)
+            {
+                script->VortexMonoBehaviour_set_value(
+                    "player_health",
+                    script->VortexMonoBehaviour_get_value("player_health") - enemy_damage
+                );
+            }
+        }
+
+        draw_health_bar();
+    }
+
+    void draw_health_bar()
+    {
+        VortexHUD::Begin();
+
+        glm::vec3 label_pos = gameObject->transform.position + glm::vec3(0, 2.5f, 0);
+        VortexHUD::WorldLabel("HEALTH", label_pos, gameObject->app->camera, ImVec4(1, 1, 1, 1));
+
+        glm::vec3 bar_pos = gameObject->transform.position + glm::vec3(0, 2.2f, 0);
+        VortexHUD::WorldBar(health, 20.0f, bar_pos, gameObject->app->camera, ImVec2(80, 8), ImVec4(1, 0, 0, 1));
+
+        VortexHUD::End();
     }
 };
 

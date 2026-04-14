@@ -23,6 +23,7 @@ void VortexKeyboard::init(GLFWwindow* window)
             {"ENTER", GLFW_KEY_ENTER},
             {"LEFTSHIFT", GLFW_KEY_LEFT_SHIFT},
             {"RIGHTSHIFT", GLFW_KEY_RIGHT_SHIFT},
+            {"TAB", GLFW_KEY_TAB},
             {"ESCAPE", GLFW_KEY_ESCAPE},
             {"UP", GLFW_KEY_UP},
             {"DOWN", GLFW_KEY_DOWN},

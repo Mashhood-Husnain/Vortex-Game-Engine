@@ -5,6 +5,7 @@
 #include <imgui_impl_opengl3.h>
 #include <glad/glad.h>
 #include <GLFW/glfw3.h>
+#include <glm/glm.hpp>
 #include <set>
 #include <filesystem>
 #include <vector>
@@ -16,7 +17,6 @@
 class VortexApplication;
 class VortexModel;
 class VortexCamera;
-class VortexApplication;
 class ParticleSystem;
 class VortexProject;
 class ScriptRegistry;
@@ -53,6 +53,15 @@ namespace VortexGuiLambda
     };
 }
 
+struct HUDElement
+{
+    std::string label;
+    float* value_ptr;
+    float max_value;
+    ImVec4 color;
+    bool is_visible = true;
+};
+
 class VortexGUI
 {
     VortexApplication *app;
@@ -87,6 +96,7 @@ class VortexGUI
     void refresh_skybox_list();
 public:
     bool show_gui = true;
+    bool show_debug_gui = true;
 
     VortexGUI();
     ~VortexGUI();
@@ -99,7 +109,7 @@ public:
     void inspector_info(VortexModel *model, ParticleSystem *ps);
     void end_scene_inspector();
 
-    void creator_window(VortexApplication *window, std::vector<ParticleSystem*> &active_systems, std::vector<VortexModel*> &active_models);
+    void creator_window(VortexApplication *window);
 
     void camera_info(VortexCamera *camera);
 

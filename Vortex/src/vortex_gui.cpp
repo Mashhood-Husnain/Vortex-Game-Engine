@@ -6,6 +6,7 @@
 #include "vortex_particlesystem.hpp"
 #include "util/vortex_save_load.hpp"
 #include "util/vortex_script_registry.hpp"
+#include "vortex_objectmanager.hpp"
 
 VortexGUI::VortexGUI()
 {
@@ -77,15 +78,16 @@ void VortexGUI::render()
         if (ImGui::Button("RUN GAME", ImVec2(100, 30)))
         {
             std::cout << "[ENGINE] Entering Play Mode..." << std::endl;
-            VortexProject::save_project("temp_playmode_backup", app->dynamic_models, app->dynamic_particlesystems);
+            VortexProject::save_project("temp_playmode_backup", VortexObjectManager::active_models, VortexObjectManager::active_particlesystems);
 
             app->current_state = EngineState::PLAY;
             app->show_mouse(false);
             app->show_wireframe = false;
             app->view_world_axis = false;
             show_gui = false;
+            show_debug_gui = false;
 
-            for (VortexModel *model : app->dynamic_models)
+            for (VortexModel *model : VortexObjectManager::active_models)
             {
                 for (VortexMonoBehaviour *script : model->behaviours)
                 {
@@ -106,6 +108,8 @@ void VortexGUI::render()
 EngineStatsThreaded g_engine_stats;
 void VortexGUI::engine_stats()
 {
+    if (!show_debug_gui) return;
+
     ImGui::SetNextWindowPos(ImVec2(10, 15), ImGuiCond_FirstUseEver);
 
     ImGui::Begin(
@@ -155,7 +159,7 @@ void VortexGUI::engine_stats()
 
 void VortexGUI::camera_info(VortexCamera *camera)
 {
-    if (!camera) return;
+    if (!camera || !show_debug_gui) return;
 
     ImGui::SetNextWindowPos(ImVec2(180, 10), ImGuiCond_FirstUseEver);
 
@@ -216,7 +220,7 @@ void VortexGUI::inspector_info(VortexModel* model, ParticleSystem *ps)
 
         m_processed_models.insert(model);
         
-        std::string header_id = model->model_name + "##" + std::to_string((uintptr_t)model);
+        std::string header_id = model->model_name + "###" + std::to_string((uintptr_t)model);
 
         if (ImGui::CollapsingHeader(header_id.c_str()))
         {
@@ -227,6 +231,16 @@ void VortexGUI::inspector_info(VortexModel* model, ParticleSystem *ps)
 
             ImGui::Spacing();
             ImGui::SeparatorText("Model Info");
+
+            char name_buffer[256];
+            memset(name_buffer, 0, sizeof(name_buffer));
+            strncpy(name_buffer, model->model_name.c_str(), sizeof(name_buffer));
+
+            if (ImGui::InputText("Object Name", name_buffer, IM_ARRAYSIZE(name_buffer)))
+            {
+                model->model_name = std::string(name_buffer);
+            }
+            ImGui::Text("File: %s", model->file_path.c_str());
 
             ImGui::Text("Objects: %zu", model->shared_data->objects.size());
 
@@ -464,11 +478,7 @@ void VortexGUI::end_scene_inspector()
     ImGui::End();
 }
 
-void VortexGUI::creator_window(
-    VortexApplication *window,
-    std::vector<ParticleSystem*> &active_systems,
-    std::vector<VortexModel*> &active_models
-)
+void VortexGUI::creator_window(VortexApplication *window)
 {
     if (!show_gui) return;
 
@@ -496,11 +506,11 @@ void VortexGUI::creator_window(
 
     if (ImGui::Button("Save Project", ImVec2(160, 30)))
     {
-        VortexProject::save_project(std::string(project_name_buf), active_models, active_systems);
+        VortexProject::save_project(std::string(project_name_buf), VortexObjectManager::active_models, VortexObjectManager::active_particlesystems);
     }
     if (ImGui::Button("Load Project", ImVec2(160, 30)))
     {
-        VortexProject::load_project(std::string(project_name_buf), active_models, active_systems, window);
+        VortexProject::load_project(std::string(project_name_buf), VortexObjectManager::active_models, VortexObjectManager::active_particlesystems, window);
     }
 
     ImGui::Spacing();
@@ -546,6 +556,9 @@ void VortexGUI::creator_window(
                 script_file << "#include \"util/vortex_script_registry.hpp\"\n";
                 script_file << "#include \"vortex_keyboard.hpp\"\n";
                 script_file << "#include \"vortex_mouse.hpp\"\n";
+                script_file << "#include \"vortex_objectmanager.hpp\"\n";
+                script_file << "#include \"vortex_model.hpp\"\n";
+                script_file << "#include \"vortex_hud.hpp\"\n";
                 script_file << "#include \"vortex_physics.hpp\"\n\n";
                 
                 script_file << "class " << class_name << " : public VortexMonoBehaviour\n";
@@ -603,7 +616,7 @@ void VortexGUI::creator_window(
             std::string target_name = std::string(new_ps_name);
             bool name_exists = false;
 
-            for (ParticleSystem *ps : active_systems)
+            for (ParticleSystem *ps : VortexObjectManager::active_particlesystems)
             {
                 if (ps->name == target_name)
                 {
@@ -622,7 +635,7 @@ void VortexGUI::creator_window(
 
                 ParticleSystem *new_ps = new ParticleSystem(new_ps_max, window, std::string(new_ps_name));
                 new_ps->get_emitter("Default Emitter");
-                active_systems.push_back(new_ps);
+                VortexObjectManager::active_particlesystems.push_back(new_ps);
             }
         }
 
@@ -676,7 +689,7 @@ void VortexGUI::creator_window(
                 if (ImGui::Button(m_available_model_names[i].c_str(), ImVec2(-1, button_double_height)))
                 {
                     VortexModel *new_model = new VortexModel(m_available_model_paths[i].c_str(), window);
-                    active_models.push_back(new_model);
+                    VortexObjectManager::active_models.push_back(new_model);
                 }
             }
             ImGui::PopStyleColor(2);

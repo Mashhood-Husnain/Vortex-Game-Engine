@@ -3,7 +3,9 @@
 #include "vortex_keyboard.hpp"
 #include "vortex_mouse.hpp"
 #include "vortex_physics.hpp"
+#include "vortex_objectmanager.hpp"
 #include "vortex_model.hpp"
+#include "vortex_hud.hpp"
 
 #include <cstdlib>
 #include <cmath>
@@ -19,6 +21,11 @@ private:
     float max_radius = 60.0f;
     
 public:
+    void on_start() override
+    {
+        spawn_timer = 0.0f;
+    }
+
     void on_update(float deltaTime) override
     {
         spawn_timer += deltaTime;
@@ -29,7 +36,7 @@ public:
             
             for (int i = 0; i < enemies_per_wave; i++) 
             {
-                VortexModel *enemy = new VortexModel("assets/models/obj/cube.obj", gameObject->app);
+                VortexModel *enemy = new VortexModel("assets/models/obj/capsule.obj", gameObject->app);
                 
                 float random_angle = static_cast<float>(rand()) / RAND_MAX * (2.0f * 3.14159f);
                 
@@ -44,11 +51,9 @@ public:
                 
                 VortexMonoBehaviour *enemy_script = ScriptRegistry::get().create("EnemyMovement");
 
-                enemy->show_collider = true;
-
                 enemy->add_behaviour("EnemyMovement", enemy_script);
                 
-                gameObject->app->pending_models.push_back(enemy);
+                VortexObjectManager::pending_models.push_back(enemy);
             }
         }
     }

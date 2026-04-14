@@ -38,6 +38,8 @@ class VortexAssetManager
 {
     static std::unordered_map<std::string, SharedMesh*> mesh_vault;
 public:
+    static std::unordered_map<std::string, int> spawn_counts;
+    
     static SharedMesh* get_mesh(const std::string &filepath);
     static void clean_up();
 };

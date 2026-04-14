@@ -78,6 +78,7 @@ public:
 
     std::vector<VortexMonoBehaviour*> behaviours;
     std::vector<std::string> script_names;
+    std::map<std::string, float> *model_blackboard;
 
     VortexModel(const std::string &model_path, VortexApplication *window);
     void draw(const VortexShader &shader, VortexCamera &camera, bool wireframe);

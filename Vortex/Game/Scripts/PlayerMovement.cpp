@@ -3,6 +3,9 @@
 #include "vortex_keyboard.hpp"
 #include "vortex_mouse.hpp"
 #include "vortex_physics.hpp"
+#include "vortex_objectmanager.hpp"
+#include "vortex_model.hpp"
+#include "vortex_hud.hpp"
 
 class PlayerMovement : public VortexMonoBehaviour
 {
@@ -13,10 +16,19 @@ private:
     float gravity = 25.0f;
     bool is_grounded = true;
     float movement_speed = 10.0f;
+
+    glm::vec2 crosshair;
 public:
+
+    void on_start() override
+    {
+        crosshair = VortexHUD::GetScreenDimensions();
+    }
 
     void on_update(float deltaTime) override
     {
+        draw_crosshair();
+
         if (is_grounded && VortexKeyboard::get_key_down("SPACE"))
         {
             is_grounded = false;
@@ -49,6 +61,15 @@ public:
         if (VortexKeyboard::get_key("S")) gameObject->transform.position -= cam_forward * movement_speed * deltaTime;
         if (VortexKeyboard::get_key("A")) gameObject->transform.position -= cam_right * movement_speed * deltaTime;
         if (VortexKeyboard::get_key("D")) gameObject->transform.position += cam_right * movement_speed * deltaTime;
+    }
+
+    void draw_crosshair()
+    {
+        VortexHUD::Begin();
+
+        VortexHUD::Rect(ImVec2(crosshair.x / 2, crosshair.y / 2), ImVec2(10, 10), ImVec4(0, 1, 0, 1), 2.0f);
+
+        VortexHUD::End();
     }
 };
 

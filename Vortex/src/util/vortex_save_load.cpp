@@ -19,6 +19,7 @@ void VortexProject::save_project(
     {
         json j_model;
         j_model["path"] = model->file_path;
+        j_model["name"] = model->model_name;
         j_model["position"] = {model->transform.position.x, model->transform.position.y, model->transform.position.z};
         j_model["rotation"] = {model->transform.rotation.x, model->transform.rotation.y, model->transform.rotation.z};
         j_model["scale"] = {model->transform.scale.x, model->transform.scale.y, model->transform.scale.z};
@@ -94,6 +95,7 @@ void VortexProject::load_project(
         new_model->transform.position = glm::vec3(j_model["position"][0], j_model["position"][1], j_model["position"][2]);
         new_model->transform.rotation = glm::vec3(j_model["rotation"][0], j_model["rotation"][1], j_model["rotation"][2]);
         new_model->transform.scale = glm::vec3(j_model["scale"][0], j_model["scale"][1], j_model["scale"][2]);
+        new_model->model_name = j_model["name"];
 
         if (j_model.contains("show_collider"))
         {

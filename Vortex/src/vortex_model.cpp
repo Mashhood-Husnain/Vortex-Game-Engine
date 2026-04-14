@@ -20,8 +20,14 @@ VortexModel::VortexModel(const std::string& path, VortexApplication *window)
     app = window;
     file_path = path;
 
-    model_name = std::filesystem::path(path).stem().string();
+    std::string base_name = std::filesystem::path(path).stem().string();
+    int id = VortexAssetManager::spawn_counts[base_name]++;
+
+    model_name = base_name + "_" + std::to_string(id);
+
     shared_data = VortexAssetManager::get_mesh(path);
+
+    model_blackboard = new std::map<std::string, float>();
 }
 
 void VortexModel::draw(const VortexShader &shader, VortexCamera &camera, bool wireframe)
@@ -127,6 +133,7 @@ VortexModel::~VortexModel()
 void VortexModel::add_behaviour(const std::string &script_name, VortexMonoBehaviour *script)
 {
     script->gameObject = this;
+    script->blackboard = model_blackboard;
     behaviours.push_back(script);
     script_names.push_back(script_name);
 }

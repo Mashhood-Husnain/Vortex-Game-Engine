@@ -1,6 +1,7 @@
 #include "vortex_assetmanager.hpp"
 
 std::unordered_map<std::string, SharedMesh*> VortexAssetManager::mesh_vault;
+std::unordered_map<std::string, int> VortexAssetManager::spawn_counts;
 
 static unsigned int load_texture_helper(const std::string& path, SharedMesh* mesh)
 {

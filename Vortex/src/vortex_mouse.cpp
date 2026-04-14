@@ -54,7 +54,7 @@ bool VortexMouse::get_button_down(const std::string &button)
     return false;
 }
 
-bool VortexMouse::get_button(std::string &button)
+bool VortexMouse::get_button(const std::string &button)
 {
     if (!s_window) return false;
 

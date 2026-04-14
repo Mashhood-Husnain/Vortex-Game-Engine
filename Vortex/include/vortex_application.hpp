@@ -29,6 +29,7 @@
 #include "vortex_assetmanager.hpp"
 #include "vortex_keyboard.hpp"
 #include "vortex_mouse.hpp"
+#include "vortex_objectmanager.hpp"
 
 #include "util/vortex_global_vars.hpp"
 #include "util/vortex_gpu_pre_init.hpp"
@@ -63,10 +64,6 @@ class VortexApplication
     PostProcessor *post_processor = nullptr;
     VortexSkybox *skybox = nullptr;
 
-    VortexShader *particle_shader = nullptr;
-    VortexShader *model_shader = nullptr;
-    VortexShader *collider_shader = nullptr;
-
     VortexGrid *environment_grid = nullptr;
 
     GLFWmonitor* get_current_monitor(GLFWwindow* window);
@@ -82,10 +79,6 @@ public:
 
     VortexCamera *camera = nullptr;
     VortexCamera *editor_camera = nullptr;
-
-    std::vector<VortexModel*> dynamic_models;
-    std::vector<VortexModel*> pending_models;
-    std::vector<ParticleSystem*> dynamic_particlesystems;
 
     float deltaTime = 0.0f;
     bool show_wireframe = false;

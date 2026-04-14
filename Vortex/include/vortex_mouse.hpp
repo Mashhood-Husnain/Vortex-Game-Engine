@@ -17,7 +17,7 @@ public:
     static void init(GLFWwindow *window);
     static void update();
     static bool get_button_down(const std::string &button);
-    static bool get_button(std::string &button);
+    static bool get_button(const std::string &button);
 
     static double get_x();
     static double get_y();
