@@ -2,33 +2,11 @@
 PENDING ISSUES:
 =====================================================================================================================================================
 
-[BUG] [LOW] Window Tearing Issue:
-----------------------------------------------------------------
-[DESC]:
-Window tears when in fullscreen mode
-[STATUS] [PENDING]
-
-
-[BUG] [LOW] Player-Camera Anchor:
-----------------------------------------------------------------
-[DESC]:
-when camera is not specified for a player, the camera must not
-be anchored when 'R' is pressed
-[STATUS] [PENDING]
-
-
 [BUG] [LOW] Shadow Issue:
 [DESC]:
 Shadows suddenly disappear when one object occludes another, the
 shadow becomes visible again once the occlusion is removed. The
 shadow should slowly decrease instead of disappearing
-[STATUS] [PENDING]
-
-
-[REFACTOR] [LOW] Player Logic:
-----------------------------------------------------------------
-[DESC]:
-it's a fucking mess
 [STATUS] [PENDING]
 
 
@@ -104,3 +82,12 @@ i just needed to delete the fbos in the destructor to reset the buffers,
 because everytime different post-processor was selected it was not
 deleting the previous buffer.
 [STATUS] [SOLVED]
+
+
+[FIXED] Window Tearing Issue:
+----------------------------------------------------------------
+[DESC]:
+Window tears when in fullscreen mode
+[SOL]:
+I have a potato PC.
+[STATUS] [SOLVED?]

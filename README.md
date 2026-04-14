@@ -34,9 +34,13 @@ Troubleshooting: If the script fails, you can manually check for missing package
 Once your dependencies are installed, generate the build files and compile:
 
 ```bash
-cmake -B build
+mkdir -p build
+
 cd build
-make -j8
+
+cmake -DCMAKE_BUILD_TYPE=Release ..
+
+make -j$(proc)
 ```
 
 4. Run the engine
