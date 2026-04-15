@@ -52,6 +52,7 @@ public:
                 
                 VortexMonoBehaviour *enemy_script = ScriptRegistry::get().create("EnemyMovement");
 
+                // enemy->show_collider = true;
                 enemy->add_behaviour("EnemyMovement", enemy_script);
                 
                 VortexObjectManager::pending_models.push_back(enemy);

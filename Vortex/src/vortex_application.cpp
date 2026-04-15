@@ -88,7 +88,17 @@ void VortexApplication::check_key_press()
 
             camera = editor_camera;
 
-            VortexProject::load_project("temp_playmode_backup", VortexObjectManager::active_models, VortexObjectManager::active_particlesystems, this);
+            std::string project_name = "temp_playmode_backup";
+            SaveScene_snapshot scene_snapshot = {
+                project_name,
+                VortexObjectManager::active_models,
+                VortexObjectManager::active_particlesystems,
+                gui.m_selected_skybox_idx,
+                gui.m_selected_shader_idx,
+                this
+            };
+
+            VortexProject::load_project(&scene_snapshot);
         }
         else
         {
@@ -413,9 +423,9 @@ void VortexApplication::run(std::function<void()> draw_callback)
         gui.update();
         gui.engine_stats();
         gui.camera_info(camera);
-        gui.post_process_options(this);
-        gui.skybox_options(this);
-        gui.creator_window(this);
+        gui.post_process_options();
+        gui.skybox_options();
+        gui.creator_window();
         gui.begin_scene_inspector();
 
         if (skybox)

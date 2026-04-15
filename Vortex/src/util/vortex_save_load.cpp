@@ -1,10 +1,6 @@
 #include "util/vortex_save_load.hpp"
 
-void VortexProject::save_project(
-    const std::string &project_name,
-    const std::vector<VortexModel*> &active_models,
-    const std::vector<ParticleSystem*> &active_systems
-)
+void VortexProject::save_project(SaveScene_snapshot *scene_snapshot)
 {
     if (!std::filesystem::exists("saves"))
     {
@@ -12,10 +8,10 @@ void VortexProject::save_project(
     }
 
     json save_data;
-    save_data["project_name"] = project_name;
+    save_data["project_name"] = scene_snapshot->project_name;
 
     save_data["models"] = json::array();
-    for (VortexModel *model : active_models)
+    for (VortexModel *model : scene_snapshot->active_models)
     {
         json j_model;
         j_model["path"] = model->file_path;
@@ -37,7 +33,7 @@ void VortexProject::save_project(
     }
 
     save_data["particle_systems"] = json::array();
-    for (ParticleSystem *ps : active_systems)
+    for (ParticleSystem *ps : scene_snapshot->active_systems)
     {
         json j_ps;
         j_ps["name"] = ps->name;
@@ -52,7 +48,10 @@ void VortexProject::save_project(
         save_data["particle_systems"].push_back(j_ps);
     }
 
-    std::string file_path = "saves/" + project_name + ".vtx";
+    save_data["m_selected_skybox_idx"] = scene_snapshot->m_selected_skybox_idx;
+    save_data["m_selected_shader_idx"] = scene_snapshot->m_selected_shader_idx;
+
+    std::string file_path = "saves/" + scene_snapshot->project_name + ".vtx";
     std::ofstream file(file_path);
 
     file << save_data.dump(4);
@@ -61,14 +60,9 @@ void VortexProject::save_project(
     std::cout << "[PROJECT] Successfully saved to " << file_path << std::endl;
 }
 
-void VortexProject::load_project(
-    const std::string &project_name,
-    std::vector<VortexModel*> &active_models,
-    std::vector<ParticleSystem*> &active_systems,
-    VortexApplication *window
-)
+void VortexProject::load_project(SaveScene_snapshot *scene_snapshot)
 {
-    std::string file_path = "saves/" + project_name + ".vtx";
+    std::string file_path = "saves/" + scene_snapshot->project_name + ".vtx";
 
     if (!std::filesystem::exists(file_path))
     {
@@ -82,15 +76,15 @@ void VortexProject::load_project(
     file >> save_data;
     file.close();
 
-    for (VortexModel *model : active_models) model->should_destroy = true;
-    for (ParticleSystem *ps : active_systems) ps->should_destroy = true;
+    for (VortexModel *model : scene_snapshot->active_models) model->should_destroy = true;
+    for (ParticleSystem *ps : scene_snapshot->active_systems) ps->should_destroy = true;
 
-    active_models.clear();
-    active_systems.clear();
+    scene_snapshot->active_models.clear();
+    scene_snapshot->active_systems.clear();
 
     for (const auto &j_model : save_data["models"])
     {
-        VortexModel *new_model = new VortexModel(j_model["path"], window);
+        VortexModel *new_model = new VortexModel(j_model["path"], scene_snapshot->window);
 
         new_model->transform.position = glm::vec3(j_model["position"][0], j_model["position"][1], j_model["position"][2]);
         new_model->transform.rotation = glm::vec3(j_model["rotation"][0], j_model["rotation"][1], j_model["rotation"][2]);
@@ -120,12 +114,12 @@ void VortexProject::load_project(
             }
         }
 
-        active_models.push_back(new_model);
+        scene_snapshot->active_models.push_back(new_model);
     }
 
     for (const auto &j_ps : save_data["particle_systems"])
     {
-        ParticleSystem *new_ps = new ParticleSystem(j_ps["max_particles"], window, j_ps["name"]);
+        ParticleSystem *new_ps = new ParticleSystem(j_ps["max_particles"], scene_snapshot->window, j_ps["name"]);
 
         auto &emitter = new_ps->get_emitter("Default_Emitter");
         if (j_ps.contains("emitter_pos"))
@@ -133,8 +127,11 @@ void VortexProject::load_project(
             emitter.position = glm::vec3(j_ps["emitter_pos"][0], j_ps["emitter_pos"][1], j_ps["emitter_pos"][2]);
         }
 
-        active_systems.push_back(new_ps);
+        scene_snapshot->active_systems.push_back(new_ps);
     }
 
-    std::cout << "[PROJECT] Successfully loaded " << project_name << std::endl;
+    scene_snapshot->m_selected_skybox_idx = save_data["m_selected_skybox_idx"];
+    scene_snapshot->m_selected_shader_idx = save_data["m_selected_shader_idx"];
+
+    std::cout << "[PROJECT] Successfully loaded " << scene_snapshot->project_name << std::endl;
 }

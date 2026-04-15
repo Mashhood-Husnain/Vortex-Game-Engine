@@ -18,19 +18,21 @@
 
 using json = nlohmann::json;
 
+struct SaveScene_snapshot
+{
+
+    std::string &project_name;
+    std::vector<VortexModel*> &active_models;
+    std::vector<ParticleSystem*> &active_systems;
+    int &m_selected_skybox_idx;
+    int &m_selected_shader_idx;
+    VortexApplication *window;
+};
+
 class VortexProject
 {
 public:
-    static void save_project(
-        const std::string &project_name,
-        const std::vector<VortexModel*> &active_models,
-        const std::vector<ParticleSystem*> &active_systems
-    );
+    static void save_project(SaveScene_snapshot *snapshot);
 
-    static void load_project(
-        const std::string &project_name,
-        std::vector<VortexModel*> &active_models,
-        std::vector<ParticleSystem*> &active_systems,
-        VortexApplication *window
-    );
+    static void load_project(SaveScene_snapshot *snapshot);
 };

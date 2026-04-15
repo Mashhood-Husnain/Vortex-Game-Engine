@@ -92,6 +92,7 @@ public:
 
         VortexMonoBehaviour *move_script = ScriptRegistry::get().create("PlayerBulletMover");
         bullet->add_behaviour("PlayerBulletMover", move_script);
+        // bullet->show_collider = true;
 
         VortexObjectManager::pending_models.push_back(bullet);
     }

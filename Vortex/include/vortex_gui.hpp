@@ -72,12 +72,10 @@ class VortexGUI
 
     std::vector<std::string> m_shader_files;
     std::vector<std::string> m_display_names;
-    int m_selected_shader_idx = 0;
     bool m_shaders_loaded = false;
 
     std::vector<std::vector<std::string>> m_skybox_files;
     std::vector<std::string> m_skybox_display_names;
-    int m_selected_skybox_idx = 0;
     bool m_skybox_loaded = false;
 
     ImVec2 m_scene_pos = ImVec2(0, 0);
@@ -92,11 +90,18 @@ class VortexGUI
     std::vector<std::string> m_available_model_paths;
     bool m_models_scanned = false;
 
-    void refresh_shader_list();
     void refresh_skybox_list();
+    void gui_set_skybox();
+
+    void refresh_shader_list();
+    void gui_set_post_processor();
+
 public:
     bool show_gui = true;
     bool show_debug_gui = true;
+
+    int m_selected_skybox_idx = 0;
+    int m_selected_shader_idx = 0;
 
     VortexGUI();
     ~VortexGUI();
@@ -109,12 +114,11 @@ public:
     void inspector_info(VortexModel *model, ParticleSystem *ps);
     void end_scene_inspector();
 
-    void creator_window(VortexApplication *window);
-
+    void creator_window();
     void camera_info(VortexCamera *camera);
 
-    void post_process_options(VortexApplication *window);
-    void skybox_options(VortexApplication *window);
+    void post_process_options();
+    void skybox_options();
 
     void engine_stats();
 };

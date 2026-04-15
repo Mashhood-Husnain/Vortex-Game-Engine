@@ -78,7 +78,18 @@ void VortexGUI::render()
         if (ImGui::Button("RUN GAME", ImVec2(100, 30)))
         {
             std::cout << "[ENGINE] Entering Play Mode..." << std::endl;
-            VortexProject::save_project("temp_playmode_backup", VortexObjectManager::active_models, VortexObjectManager::active_particlesystems);
+
+            std::string project_name = "temp_playmode_backup";
+            SaveScene_snapshot snapshot = {
+                project_name,
+                VortexObjectManager::active_models,
+                VortexObjectManager::active_particlesystems,
+                m_selected_skybox_idx,
+                m_selected_shader_idx,
+                app
+            };
+
+            VortexProject::save_project(&snapshot);
 
             app->current_state = EngineState::PLAY;
             app->show_mouse(false);
@@ -478,7 +489,7 @@ void VortexGUI::end_scene_inspector()
     ImGui::End();
 }
 
-void VortexGUI::creator_window(VortexApplication *window)
+void VortexGUI::creator_window()
 {
     if (!show_gui) return;
 
@@ -506,11 +517,37 @@ void VortexGUI::creator_window(VortexApplication *window)
 
     if (ImGui::Button("Save Project", ImVec2(160, 30)))
     {
-        VortexProject::save_project(std::string(project_name_buf), VortexObjectManager::active_models, VortexObjectManager::active_particlesystems);
+        std::string project_name = std::string(project_name_buf);
+        SaveScene_snapshot snapshot = {
+            project_name,
+            VortexObjectManager::active_models,
+            VortexObjectManager::active_particlesystems,
+            m_selected_skybox_idx,
+            m_selected_shader_idx,
+            app
+        };
+        
+        VortexProject::save_project(&snapshot);
     }
     if (ImGui::Button("Load Project", ImVec2(160, 30)))
     {
-        VortexProject::load_project(std::string(project_name_buf), VortexObjectManager::active_models, VortexObjectManager::active_particlesystems, window);
+        std::string project_name = std::string(project_name_buf);
+        SaveScene_snapshot snapshot = {
+            project_name,
+            VortexObjectManager::active_models,
+            VortexObjectManager::active_particlesystems,
+            m_selected_skybox_idx,
+            m_selected_shader_idx,
+            app
+        };
+
+        VortexProject::load_project(&snapshot);
+
+        if (!m_skybox_loaded) refresh_skybox_list();
+        if (!m_shaders_loaded) refresh_shader_list();
+
+        gui_set_skybox();
+        gui_set_post_processor();
     }
 
     ImGui::Spacing();
@@ -634,7 +671,7 @@ void VortexGUI::creator_window(VortexApplication *window)
             {
                 show_error_message_ps = false;
 
-                ParticleSystem *new_ps = new ParticleSystem(new_ps_max, window, std::string(new_ps_name));
+                ParticleSystem *new_ps = new ParticleSystem(new_ps_max, app, std::string(new_ps_name));
                 new_ps->get_emitter("Default Emitter");
                 VortexObjectManager::active_particlesystems.push_back(new_ps);
             }
@@ -689,7 +726,7 @@ void VortexGUI::creator_window(VortexApplication *window)
             {
                 if (ImGui::Button(m_available_model_names[i].c_str(), ImVec2(-1, button_double_height)))
                 {
-                    VortexModel *new_model = new VortexModel(m_available_model_paths[i].c_str(), window);
+                    VortexModel *new_model = new VortexModel(m_available_model_paths[i].c_str(), app);
                     VortexObjectManager::active_models.push_back(new_model);
                 }
             }
@@ -733,7 +770,20 @@ void VortexGUI::refresh_shader_list()
     m_shaders_loaded = true;
 }
 
-void VortexGUI::post_process_options(VortexApplication *window)
+void VortexGUI::gui_set_post_processor()
+{
+    if (m_selected_shader_idx == 0)
+    {
+        app->set_post_processor(nullptr);
+    }
+    else
+    {
+        std::string fragPath = "shaders/" + m_shader_files[m_selected_shader_idx];
+        app->set_post_processor(new PostProcessor("shaders/post_process.vert", fragPath));
+    }
+}
+
+void VortexGUI::post_process_options()
 {
     if (!show_gui) return;
     if (!m_shaders_loaded) refresh_shader_list();
@@ -743,15 +793,7 @@ void VortexGUI::post_process_options(VortexApplication *window)
 
     if (ImGui::Combo("Effect", &m_selected_shader_idx, VortexGuiLambda::DataGetter, static_cast<void*>(&m_display_names), static_cast<int>(m_display_names.size())))
     {
-        if (m_selected_shader_idx == 0)
-        {
-            window->set_post_processor(nullptr);
-        }
-        else
-        {
-            std::string fragPath = "shaders/" + m_shader_files[m_selected_shader_idx];
-            window->set_post_processor(new PostProcessor("shaders/post_process.vert", fragPath));
-        }
+        gui_set_post_processor();
     }
 
     if (ImGui::Button("Refresh Shaders")) m_shaders_loaded = false;
@@ -792,7 +834,19 @@ void VortexGUI::refresh_skybox_list()
     m_skybox_loaded = true;
 }
 
-void VortexGUI::skybox_options(VortexApplication *window)
+void VortexGUI::gui_set_skybox()
+{
+    if (m_selected_skybox_idx == 0)
+    {
+        app->set_skybox(nullptr);
+    }
+    else
+    {
+        app->set_skybox(new VortexSkybox(m_skybox_files[m_selected_skybox_idx]));
+    }
+}
+
+void VortexGUI::skybox_options()
 {   
     if (!show_gui) return;
     if (!m_skybox_loaded) refresh_skybox_list();
@@ -814,14 +868,7 @@ void VortexGUI::skybox_options(VortexApplication *window)
     {
         if (ImGui::Combo("Environment", &m_selected_skybox_idx, VortexGuiLambda::DataGetter, static_cast<void*>(&m_skybox_display_names), static_cast<int>(m_skybox_display_names.size())))
         {
-            if (m_selected_skybox_idx == 0)
-            {
-                window->set_skybox(nullptr);
-            }
-            else
-            {
-                window->set_skybox(new VortexSkybox(m_skybox_files[m_selected_skybox_idx]));
-            }
+            gui_set_skybox();
         }
     }
 
