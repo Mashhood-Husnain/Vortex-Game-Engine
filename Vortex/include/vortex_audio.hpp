@@ -6,6 +6,8 @@
 #include <iostream>
 #include <vector>
 
+#include "util/vortex_logs.hpp"
+
 class VortexAudio {
 private:
     static ma_engine* sound_engine;

@@ -11,12 +11,13 @@ void VortexAudio::init()
 
     if (result != MA_SUCCESS)
     {
-        std::cerr << "[AUDIO ERROR] Failed to initialize audio engine!" << std::endl;
+        VORTEX_ERROR("[AUDIO ERROR] Failed to initialize audio engine!");
         exit(EXIT_FAILURE);
     }
 
     initialized = true;
-    std::cout << "[AUDIO] System initialized successfully." << std::endl;
+
+    VORTEX_INFO("[AUDIO] System initialized successfully.");
 }
 
 void VortexAudio::play_sound(const std::string& filepath, float volume)
@@ -35,7 +36,7 @@ void VortexAudio::play_sound(const std::string& filepath, float volume)
     } 
     else 
     {
-        std::cerr << "[AUDIO WARNING] Could not load: " << filepath << std::endl;
+        VORTEX_ERROR("[AUDIO WARNING] Could not load: ", filepath);
         delete sound;
     }
 }

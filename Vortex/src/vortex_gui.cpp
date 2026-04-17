@@ -78,7 +78,7 @@ void VortexGUI::render()
         
         if (ImGui::Button("RUN GAME", ImVec2(100, 30)))
         {
-            std::cout << "[ENGINE] Entering Play Mode..." << std::endl;
+            VORTEX_INFO("[ENGINE] Entering Play Mode...");
 
             std::string project_name = "temp_playmode_backup";
             SaveScene_snapshot snapshot = {
@@ -632,7 +632,7 @@ void VortexGUI::creator_window()
                 
                 script_file.close();
                 
-                std::cout << "[EDITOR] Auto-Generated Script: " << file_path << std::endl;
+                VORTEX_INFO("[EDITOR] Auto-Generated Script: ", file_path);
             }
         }
         ImGui::PopStyleColor(2);

@@ -13,6 +13,7 @@
 #include <fstream>
 
 #include "util/vortex_engine_stats.hpp"
+#include "util/vortex_logs.hpp"
 
 class VortexApplication;
 class VortexModel;

@@ -1,4 +1,5 @@
 #include "util/vortex_save_load.hpp"
+#include "util/vortex_logs.hpp"
 
 void VortexProject::save_project(SaveScene_snapshot *scene_snapshot)
 {
@@ -57,7 +58,7 @@ void VortexProject::save_project(SaveScene_snapshot *scene_snapshot)
     file << save_data.dump(4);
     file.close();
 
-    std::cout << "[PROJECT] Successfully saved to " << file_path << std::endl;
+    VORTEX_INFO("[PROJECT] Successfully saved to ", file_path);
 }
 
 void VortexProject::load_project(SaveScene_snapshot *scene_snapshot)
@@ -66,7 +67,7 @@ void VortexProject::load_project(SaveScene_snapshot *scene_snapshot)
 
     if (!std::filesystem::exists(file_path))
     {
-        std::cout << "[PROJECT ERROR] Save fiel not found: " << file_path << std::endl;
+        VORTEX_WARN("[PROJECT ERROR] Save file not found: ", file_path);
         return;
     }
 
@@ -133,5 +134,5 @@ void VortexProject::load_project(SaveScene_snapshot *scene_snapshot)
     scene_snapshot->m_selected_skybox_idx = save_data["m_selected_skybox_idx"];
     scene_snapshot->m_selected_shader_idx = save_data["m_selected_shader_idx"];
 
-    std::cout << "[PROJECT] Successfully loaded " << scene_snapshot->project_name << std::endl;
+    VORTEX_INFO("[PROJECT] Successfully loaded ", scene_snapshot->project_name);
 }
