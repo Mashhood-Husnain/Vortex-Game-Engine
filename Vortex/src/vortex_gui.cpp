@@ -4,6 +4,7 @@
 #include "vortex_camera.hpp"
 #include "vortex_application.hpp"
 #include "vortex_particlesystem.hpp"
+#include "vortex_rigidbody.hpp"
 #include "util/vortex_save_load.hpp"
 #include "util/vortex_script_registry.hpp"
 #include "vortex_objectmanager.hpp"
@@ -279,6 +280,15 @@ void VortexGUI::inspector_info(VortexModel* model, ParticleSystem *ps)
                     if (ImGui::SmallButton("Remove"))
                     {
                         script_to_delete = static_cast<int>(i);
+                    }
+
+                    VortexRigidbody* rigid_body = dynamic_cast<VortexRigidbody*>(model->behaviours[i]);
+                    if (rigid_body)
+                    {
+                        ImGui::Indent();
+                        ImGui::Checkbox("Is Kinematic", &rigid_body->is_kinematic);
+                        ImGui::DragFloat("Gravity", &rigid_body->gravity, 0.1f);
+                        ImGui::Unindent();
                     }
 
                     ImGui::PopID();
@@ -597,7 +607,8 @@ void VortexGUI::creator_window()
                 script_file << "#include \"vortex_model.hpp\"\n";
                 script_file << "#include \"vortex_hud.hpp\"\n";
                 script_file << "#include \"vortex_audio.hpp\"\n";
-                script_file << "#include \"vortex_physics.hpp\"\n\n";
+                script_file << "#include \"vortex_physics.hpp\"\n";
+                script_file << "#include \"vortex_rigidbody.hpp\"\n\n";
                 
                 script_file << "class " << class_name << " : public VortexMonoBehaviour\n";
                 script_file << "{\n";

@@ -94,7 +94,7 @@ void VortexModel::draw(const VortexShader &shader, VortexCamera &camera, bool wi
     glBindVertexArray(shared_data->VAO);
     for (const auto& obj : shared_data->objects)
     {
-        if (obj.vertex_count == 0) continue;
+        if (!obj.is_active || obj.vertex_count == 0) continue;
 
         model_matrix = glm::mat4(1.0f);
         model_matrix = glm::translate(model_matrix, transform.position + obj.transform.position);

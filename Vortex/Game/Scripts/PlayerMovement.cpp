@@ -7,6 +7,7 @@
 #include "vortex_model.hpp"
 #include "vortex_hud.hpp"
 #include "vortex_audio.hpp"
+#include "vortex_rigidbody.hpp"
 
 class PlayerMovement : public VortexMonoBehaviour
 {

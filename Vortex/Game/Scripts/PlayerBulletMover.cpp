@@ -7,6 +7,9 @@
 #include "vortex_model.hpp"
 #include "vortex_hud.hpp"
 #include "vortex_audio.hpp"
+#include "vortex_rigidbody.hpp"
+
+#include <cstdlib>
 
 class PlayerBulletMover : public VortexMonoBehaviour
 {
@@ -40,54 +43,69 @@ public:
 
     void on_update(float deltaTime) override
     {
-        gameObject->transform.position += fly_direction * speed * deltaTime;
-        distance_traveled += speed * deltaTime;
+        float move_dist = speed * deltaTime;
 
-        if (distance_traveled >= 200.0f)
+        RaycastHit hit = VortexPhysics::raycast(gameObject->transform.position, fly_direction, move_dist);
+
+        if (hit.has_hit)
         {
-            gameObject->should_destroy = true;
-            return;
-        }
+            gameObject->transform.position = hit.hit_point;
 
-        for (VortexModel* target_model : VortexObjectManager::active_models) 
-        {
-            if (target_model == gameObject) continue;
-            if (!target_model->is_active || target_model->should_destroy) continue;
-
-            bool is_enemy = false;
-            for (const std::string& script_name : target_model->script_names) 
+            bool is_destructible = false;
+            for (const std::string& script_name : hit.hit_model->script_names)
             {
-                if (script_name == "EnemyMovement") {
-                    is_enemy = true;
+                if (script_name == "VortexTagDestructible")
+                {
+                    is_destructible = true;
                     break;
                 }
             }
 
-            if (is_enemy && VortexPhysics::check_collision(gameObject, target_model))
+            if (is_destructible && hit.hit_sub_object_index != -1)
             {
                 VortexAudio::play_sound("assets/audio/gunshot_hit.wav", 0.5f);
-
-                VortexMonoBehaviour *script = player->behaviours[0];
-                VortexMonoBehaviour *enemy_script = target_model->behaviours[0];
-
-                if (enemy_script)
-                {
-                    enemy_script->VortexMonoBehaviour_set_value(
-                        "enemy_health",
-                        enemy_script->VortexMonoBehaviour_get_value("enemy_health") - bullet_damage
-                    );
-                }
-
-                if (script && enemy_script->VortexMonoBehaviour_get_value("enemy_health") <= 0.0f)
-                {
-                    script->VortexMonoBehaviour_set_value(
-                        "player_points", script->VortexMonoBehaviour_get_value("player_points") + 1.0f
-                    );
-                }
-
-                gameObject->should_destroy = true;
-                return;
+                hit.hit_model->shared_data->objects[hit.hit_sub_object_index].is_active = false;
             }
+
+            bool is_enemy = false;
+            VortexMonoBehaviour *enemy_script = nullptr;
+            
+            for (size_t i = 0; i < hit.hit_model->script_names.size(); i++) 
+            {
+                if (hit.hit_model->script_names[i] == "EnemyMovement") {
+                    is_enemy = true;
+                    enemy_script = hit.hit_model->behaviours[i];
+                    break;
+                }
+            }
+
+            if (is_enemy && enemy_script)
+            {
+                VortexAudio::play_sound("assets/audio/gunshot_hit.wav", 0.5f);
+                float current_hp = enemy_script->VortexMonoBehaviour_get_value("enemy_health");
+                enemy_script->VortexMonoBehaviour_set_value("enemy_health", current_hp - bullet_damage);
+
+                if (player && !player->behaviours.empty()) 
+                {
+                    VortexMonoBehaviour *player_script = player->behaviours[0];
+                    if ((current_hp - bullet_damage) <= 0.0f)
+                    {
+                        float pts = player_script->VortexMonoBehaviour_get_value("player_points");
+                        player_script->VortexMonoBehaviour_set_value("player_points", pts + 1.0f);
+                    }
+                }
+            }
+
+            gameObject->should_destroy = true;
+            return;
+        }
+
+        gameObject->transform.position += fly_direction * move_dist;
+        distance_traveled += move_dist;
+
+        if (distance_traveled >= 200.0f)
+        {
+            gameObject->should_destroy = true;
         }
     }
 };

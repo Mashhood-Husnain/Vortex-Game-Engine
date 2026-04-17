@@ -54,6 +54,7 @@ struct VortexModel_Object
     int vertex_count;
 
     VortexBoxCollider collider;
+    bool is_active = true;
 };
 
 class VortexModel
