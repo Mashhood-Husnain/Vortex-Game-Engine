@@ -28,12 +28,14 @@ static unsigned int load_texture_helper(const std::string& path, SharedMesh* mes
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 
-        std::cout << "[TEXTURE] Successfully loaded: " << path << std::endl;
+        VORTEX_INFO("[TEXTURE] Successfully loaded: ", path);
+
         stbi_image_free(data);
     }
     else
     {
-        std::cerr << "[TEXTURE ERROR] Failed to load: " << path << std::endl;
+        VORTEX_ERROR("[TEXTURE ERROR] Failed to load: ", path);
+
         stbi_image_free(data);
         exit(EXIT_FAILURE);
     }
@@ -50,7 +52,8 @@ static void parse_mtl_helper(const std::string& mtl_filepath, SharedMesh* mesh)
     std::ifstream file(mtl_filepath);
     if (!file.is_open()) return;
 
-    std::cout << "[MTL] Reading material: " << mtl_filepath << std::endl;
+    VORTEX_INFO("[MTL] Reading material: ", mtl_filepath);
+
     std::string line;
     while(std::getline(file, line))
     {
@@ -88,7 +91,7 @@ SharedMesh* VortexAssetManager::get_mesh(const std::string &filepath)
         return mesh_vault[filepath];
     }
 
-    std::cout << "[ASSET MANAGER] First time loading: " << filepath << std::endl;
+    VORTEX_INFO("[ASSET MANAGER] First time loading: ", filepath);
 
     SharedMesh *new_mesh = new SharedMesh();
     std::vector<VortexModel_Vertex> vertices;
@@ -261,7 +264,8 @@ SharedMesh* VortexAssetManager::get_mesh(const std::string &filepath)
 
     mesh_vault[filepath] = new_mesh;
     
-    std::cout << "[ASSET MANAGER] Success! Cached in VRAM." << std::endl;
+    VORTEX_INFO("[ASSET MANAGER] Success! Cached in VRAM.");
+
     return new_mesh;
 }
 

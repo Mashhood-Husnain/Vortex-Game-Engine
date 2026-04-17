@@ -21,7 +21,7 @@ PostProcessor::PostProcessor(std::string shader_vert_path, std::string shader_fr
 
     if (glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE)
     {
-        std::cerr << "ERROR::FRAMEBUFFER:: Framebuffer is not complete!" << std::endl;
+        VORTEX_ERROR("ERROR::FRAMEBUFFER:: Framebuffer is not complete!");
         exit(EXIT_FAILURE);
     }
 

@@ -39,7 +39,11 @@ void VortexMouse::update()
 
 bool VortexMouse::get_button_down(const std::string &button)
 {
-    if (!s_window) return false;
+    if (!s_window)
+    {
+        VORTEX_WARN("[INPUT WARNING] Mouse not initialized! Call VortexMouse::init(window) first.");
+        return false;
+    }
 
     auto it = s_button_map.find(button);
     if (it != s_button_map.end())
@@ -50,13 +54,17 @@ bool VortexMouse::get_button_down(const std::string &button)
         return is_down_now && !was_down_last_frame;
     }
 
-    std::cerr << "[INPUT WARNING] Mouse Button '" << button << "' is not recognized!" << std::endl;
+    VORTEX_WARN("[INPUT WARNING] Mouse Button '", button, "' is not recognized!");
     return false;
 }
 
 bool VortexMouse::get_button(const std::string &button)
 {
-    if (!s_window) return false;
+    if (!s_window)
+    {
+        VORTEX_WARN("[INPUT WARNING] Mouse not initialized! Call VortexMouse::init(window) first.");
+        return false;
+    }
 
     auto it = s_button_map.find(button);
     if (it != s_button_map.end())
@@ -64,6 +72,7 @@ bool VortexMouse::get_button(const std::string &button)
         return (glfwGetMouseButton(s_window, it->second));
     }
 
+    VORTEX_WARN("[INPUT WARNING] Mouse Button '", button, "' is not recognized!");
     return false;
 }
 

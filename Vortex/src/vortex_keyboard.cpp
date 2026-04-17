@@ -50,7 +50,11 @@ void VortexKeyboard::update()
 
 bool VortexKeyboard::get_key_down(const std::string& key)
 {
-    if (!s_window) return false;
+    if (!s_window)
+    {
+        VORTEX_WARN("[INPUT WARNING] Keyboard not initialized! Call VortexKeyboard::init(window) first.");
+        return false;
+    }
 
     auto it = s_key_map.find(key);
     if (it != s_key_map.end())
@@ -61,7 +65,8 @@ bool VortexKeyboard::get_key_down(const std::string& key)
         return is_down_now && !was_down_last_frame;
     }
 
-    std::cerr << "[INPUT WARNING] Key '" << key << "' is not recognized!" << std::endl;
+    VORTEX_WARN("[INPUT WARNING] Key '", key, "' is not recognized!");
+
     return false;
 }
 
@@ -69,7 +74,7 @@ bool VortexKeyboard::get_key(const std::string& key)
 {
     if (!s_window) 
     {
-        std::cerr << "[INPUT ERROR] Keyboard not initialized! Call VortexKeyboard::init(window) first." << std::endl;
+        VORTEX_WARN("[INPUT WARNING] Keyboard not initialized! Call VortexKeyboard::init(window) first.");
         return false;
     }
 
@@ -80,7 +85,7 @@ bool VortexKeyboard::get_key(const std::string& key)
         return (glfwGetKey(s_window, it->second) == GLFW_PRESS);
     }
 
-    std::cerr << "[INPUT WARNING] Key '" << key << "' is not recognized!" << std::endl;
+    VORTEX_WARN("[INPUT WARNING] Key '", key, "' is not recognized!");
     
     return false;
 }

@@ -5,6 +5,8 @@
 #include <iostream>
 #include <GLFW/glfw3.h>
 
+#include "util/vortex_logs.hpp"
+
 class VortexKeyboard
 {
     static GLFWwindow* s_window;

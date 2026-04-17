@@ -17,6 +17,8 @@
 #include <fstream>
 #include <sstream>
 
+#include "util/vortex_logs.hpp"
+
 class VortexShader
 {
     std::string vertex_shader_code;

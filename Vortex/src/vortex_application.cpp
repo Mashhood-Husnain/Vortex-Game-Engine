@@ -79,7 +79,8 @@ void VortexApplication::check_key_press()
     {
         if (current_state == EngineState::PLAY)
         {
-            std::cout << "[ENGINE] Exiting Play Mode..." << std::endl;
+            VORTEX_INFO("[ENGINE] Exiting Play Mode...");
+
             current_state = EngineState::EDITOR;
             gui.show_gui = true;
             gui.show_debug_gui = true;
@@ -167,7 +168,7 @@ VortexApplication::VortexApplication(std::string window_name, int width, int hei
     // Initialize GLFW;
     if (!glfwInit())
     {
-        std::cerr << "Failed to initialize GLFW" << std::endl;
+        VORTEX_ERROR("Failed to initialize GLFW");
         exit(EXIT_FAILURE);
     }
 
@@ -195,7 +196,7 @@ VortexApplication::VortexApplication(std::string window_name, int width, int hei
     window = glfwCreateWindow(default_window_width, default_window_height, this->window_name.c_str(), nullptr, nullptr);
     if (window == nullptr)
     {
-        std::cerr << "Failed to create GLFW window" << std::endl;
+        VORTEX_ERROR("Failed to create GLFW window");
         glfwTerminate();
         exit(EXIT_FAILURE);
     }
@@ -209,7 +210,7 @@ VortexApplication::VortexApplication(std::string window_name, int width, int hei
     // Initialize GLAD
     if (!gladLoadGLLoader((GLADloadproc)glfwGetProcAddress))
     {
-        std::cerr << "Failed to initialize GLAD" << std::endl;
+        VORTEX_ERROR("Failed to initialize GLAD");
         exit(EXIT_FAILURE);
     }
 
@@ -293,7 +294,7 @@ VortexApplication::~VortexApplication()
 
     glfwTerminate();
 
-    std::cout << "[ENGINE] Successfully Closed Application!" << std::endl;
+    VORTEX_INFO("[ENGINE] Successfully Closed Application!");
 }
 
 void VortexApplication::change_window_size()
@@ -379,9 +380,9 @@ void VortexApplication::mouse_callback(GLFWwindow* window, double xposIn, double
 
 void VortexApplication::run(std::function<void()> draw_callback)
 {
-    std::cout << "VORTEX ENGINE RUNNING ON:" << std::endl;
-    std::cout << "VENDOR:   " << glGetString(GL_VENDOR) << std::endl;
-    std::cout << "RENDERER: " << glGetString(GL_RENDERER) << std::endl;
+    VORTEX_INFO("VORTEX ENGINE RUNNING ON:");
+    VORTEX_INFO("VENDOR:   ", glGetString(GL_VENDOR));
+    VORTEX_INFO("RENDERER: ", glGetString(GL_RENDERER));
 
     glfwShowWindow(window);
 
