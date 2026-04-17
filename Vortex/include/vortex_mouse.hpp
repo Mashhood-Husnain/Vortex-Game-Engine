@@ -5,6 +5,8 @@
 #include <iostream>
 #include <GLFW/glfw3.h>
 
+#include "vortex_logs.hpp"
+
 class VortexMouse
 {
     static GLFWwindow *s_window;

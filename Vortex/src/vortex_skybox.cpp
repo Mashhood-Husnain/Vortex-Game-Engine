@@ -59,12 +59,11 @@ unsigned int VortexSkybox::load_cubemap(std::vector<std::string> faces)
     stbi_set_flip_vertically_on_load(false);
     for (unsigned int i = 0; i < faces.size(); i++)
     {
-        std::cout << "[SKYBOX] Loading: " << faces[i];
+        VORTEX_INFO("[SKYBOX] Loading: ", faces[i]);
 
         unsigned char *data = stbi_load(faces[i].c_str(), &width, &height, &nrChannels, 0);
         if (data)
         {
-            std::cout << " [SUCCESS]" << std::endl; 
             GLenum format;
             if (nrChannels == 1)
                 format = GL_RED;
@@ -83,8 +82,7 @@ unsigned int VortexSkybox::load_cubemap(std::vector<std::string> faces)
         }
         else
         {
-            std::cout << " [FAILED]" << std::endl;
-            std::cout << "[SKYBOX ERROR] Cubemap texture failed to load at path: " << faces[i] << std::endl;
+            VORTEX_ERROR("[SKYBOX ERROR] Cubemap texture failed to load at path: ", faces[i]);
             stbi_image_free(data);
 
             exit(EXIT_FAILURE);
@@ -119,7 +117,7 @@ std::vector<std::string> get_skyboxes(std::string path)
 
     if (!std::filesystem::exists(path) || !std::filesystem::is_directory(path))
     {
-        std::cout << "[SKYBOX ERROR] Path specified does not exist: " << path << std::endl;
+        VORTEX_ERROR("[SKYBOX ERROR] Path specified does not exist: ", path);
         exit(EXIT_FAILURE);
     }
 

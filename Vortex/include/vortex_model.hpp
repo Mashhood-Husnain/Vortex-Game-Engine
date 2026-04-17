@@ -24,6 +24,7 @@
 #include "vortex_assetmanager.hpp"
 #include "vortex_behaviour.hpp"
 #include "util/vortex_global_vars.hpp"
+#include "util/vortex_logs.hpp"
 #include "vortex_collider.hpp"
 
 #include "stb_image.h"

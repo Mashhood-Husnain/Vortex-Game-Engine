@@ -35,6 +35,7 @@
 #include "util/vortex_global_vars.hpp"
 #include "util/vortex_gpu_pre_init.hpp"
 #include "util/vortex_save_load.hpp"
+#include "util/vortex_logs.hpp"
 
 enum class EngineState
 {

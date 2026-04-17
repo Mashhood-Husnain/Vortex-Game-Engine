@@ -12,6 +12,7 @@
 
 #include "vortex_model.hpp"
 #include "vortex_collider.hpp"
+#include "util/vortex_logs.hpp"
 
 struct VortexModel_Object;
 struct VortexModel_Vertex;

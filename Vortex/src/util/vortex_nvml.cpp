@@ -1,4 +1,5 @@
 #include "util/vortex_nvml.hpp"
+#include "util/vortex_logs.hpp"
 
 #if defined(_WIN32) || defined(_WIN64)
     #include <windows.h>
@@ -31,7 +32,8 @@ bool VortexNVML::init()
     lib_handle = (void*)LOAD_LIBRARY(NVML_LIB_NAME);
     if (!lib_handle)
     {
-        std::cout << "[VortexNVML] NVIDIA Driver not found. Disabling GPU metrics." << std::endl;
+        VORTEX_WARN("[VortexNVML] NVIDIA Driver not found. Disabling GPU metrics.");
+    
         return false;
     }
 
@@ -43,7 +45,7 @@ bool VortexNVML::init()
 
     if (!ptr_nvmlInit || !ptr_nvmlDeviceGetHandleByIndex || !ptr_nvmlDeviceGetMemoryInfo || !ptr_nvmlDeviceGetUtilizationRates)
     {
-        std::cerr << "[VortexNVML] Failed to map NVML functions." << std::endl;
+        VORTEX_WARN("[VortexNVML] Failed to map NVML functions.");
         FREE_LIBRARY(lib_handle);
         return false;
     }
