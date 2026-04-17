@@ -86,9 +86,12 @@ void VortexObjectManager::draw(VortexCamera &camera, bool show_wireframe)
             {
                 model->shared_data->collider.draw(*collider_shader, camera, model);
 
-                for (auto& obj : model->shared_data->objects)
+                for (size_t i = 0; i < model->shared_data->objects.size(); i++)
                 {
-                    obj.collider.draw(*collider_shader, camera, model);
+                    if (model->active_parts[i])
+                    {
+                        model->shared_data->objects[i].collider.draw(*collider_shader, camera, model);
+                    }
                 }
             }
         }
@@ -122,6 +125,22 @@ void VortexObjectManager::check_object_status()
             active_models.begin(),
             active_models.end(),
             [](VortexModel *model){
+
+                if (!model->active_parts.empty())
+                {
+                    bool any_part_alive = false;
+                    for (bool is_alive : model->active_parts)
+                    {
+                        if (is_alive)
+                        {
+                            any_part_alive = true;
+                            break;
+                        }
+                    }
+
+                    if (!any_part_alive) model->should_destroy = true;
+                }
+
                 if (model->should_destroy)
                 {
                     delete model;

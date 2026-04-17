@@ -26,6 +26,10 @@ VortexModel::VortexModel(const std::string& path, VortexApplication *window)
     model_name = base_name + "_" + std::to_string(id);
 
     shared_data = VortexAssetManager::get_mesh(path);
+    if (shared_data)
+    {
+        active_parts.resize(shared_data->objects.size(), true);
+    }
 
     model_blackboard = new std::map<std::string, float>();
 }
@@ -92,8 +96,12 @@ void VortexModel::draw(const VortexShader &shader, VortexCamera &camera, bool wi
     }
 
     glBindVertexArray(shared_data->VAO);
-    for (const auto& obj : shared_data->objects)
+    for (size_t i = 0; i < shared_data->objects.size(); i++)
     {
+        if (!active_parts[i]) continue;
+
+        auto &obj = shared_data->objects[i];
+
         if (obj.vertex_count == 0) continue;
 
         model_matrix = glm::mat4(1.0f);

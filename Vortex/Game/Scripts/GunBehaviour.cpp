@@ -86,13 +86,15 @@ public:
 
         VortexModel *bullet = new VortexModel("assets/models/obj/cube.obj", gameObject->app);
 
+        bullet->model_name = "Bullet";
+
         bullet->transform.position = barrel_tip;
         bullet->transform.scale = glm::vec3(0.1f, 0.1f, 0.1f);
         bullet->transform.rotation.y = gameObject->transform.rotation.y;
 
         VortexMonoBehaviour *move_script = ScriptRegistry::get().create("PlayerBulletMover");
         bullet->add_behaviour("PlayerBulletMover", move_script);
-        // bullet->show_collider = true;
+        bullet->show_collider = true;
 
         VortexObjectManager::pending_models.push_back(bullet);
     }

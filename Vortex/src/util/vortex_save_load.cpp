@@ -25,9 +25,18 @@ void VortexProject::save_project(SaveScene_snapshot *scene_snapshot)
         j_model["collider_scale"] = {model->collider_scale.x, model->collider_scale.y, model->collider_scale.z};
 
         j_model["scripts"] = json::array();
-        for (const std::string &s_name : model->script_names)
+        j_model["script_data"] = json::object();
+        for (size_t i = 0; i < model->script_names.size(); i++)
         {
+            std::string s_name = model->script_names[i];
             j_model["scripts"].push_back(s_name);
+
+            json script_json;
+            model->behaviours[i]->serialize(script_json);
+            if (!script_json.empty())
+            {
+                j_model["script_data"][s_name] = script_json;
+            }
         }
 
         save_data["models"].push_back(j_model);
@@ -87,6 +96,14 @@ void VortexProject::load_project(SaveScene_snapshot *scene_snapshot)
     {
         VortexModel *new_model = new VortexModel(j_model["path"], scene_snapshot->window);
 
+        if (new_model->shared_data)
+        {
+            for (size_t i = 0; i < new_model->shared_data->objects.size(); i++)
+            {
+                new_model->active_parts[i] = true;
+            }
+        }
+
         new_model->transform.position = glm::vec3(j_model["position"][0], j_model["position"][1], j_model["position"][2]);
         new_model->transform.rotation = glm::vec3(j_model["rotation"][0], j_model["rotation"][1], j_model["rotation"][2]);
         new_model->transform.scale = glm::vec3(j_model["scale"][0], j_model["scale"][1], j_model["scale"][2]);
@@ -108,8 +125,14 @@ void VortexProject::load_project(SaveScene_snapshot *scene_snapshot)
             {
                 std::string name = j_script_name;
                 VortexMonoBehaviour *new_script = ScriptRegistry::get().create(name);
+
                 if (new_script)
                 {
+                    if (j_model.contains("script_data") && j_model["script_data"].contains(name))
+                    {
+                        new_script->deserialize(j_model["script_data"][name]);
+                    }
+
                     new_model->add_behaviour(name, new_script);
                 }
             }

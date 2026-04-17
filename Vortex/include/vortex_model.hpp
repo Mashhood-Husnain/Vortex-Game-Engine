@@ -84,6 +84,8 @@ public:
     std::vector<std::string> script_names;
     std::map<std::string, float> *model_blackboard;
 
+    std::vector<bool> active_parts;
+
     VortexModel(const std::string &model_path, VortexApplication *window);
     void draw(const VortexShader &shader, VortexCamera &camera, bool wireframe);
     std::vector<VortexModel_Object>& get_objects();
