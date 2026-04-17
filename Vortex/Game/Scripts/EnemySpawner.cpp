@@ -7,6 +7,7 @@
 #include "vortex_model.hpp"
 #include "vortex_hud.hpp"
 #include "vortex_audio.hpp"
+#include "vortex_rigidbody.hpp"
 
 #include <cstdlib>
 #include <cmath>
@@ -20,7 +21,6 @@ private:
     int enemies_per_wave = 5;
     float min_radius = 40.0f;
     float max_radius = 60.0f;
-    
 public:
     void on_start() override
     {
@@ -49,11 +49,17 @@ public:
                 
                 enemy->transform.position = glm::vec3(spawn_x, 0.0f, spawn_z);
                 enemy->transform.scale = glm::vec3(2.0f, 2.0f, 2.0f);
+
+                enemy->model_name = "Enemy";
                 
                 VortexMonoBehaviour *enemy_script = ScriptRegistry::get().create("EnemyMovement");
+                VortexRigidbody *rigidbody = new VortexRigidbody();
 
-                // enemy->show_collider = true;
+                enemy->show_collider = true;
                 enemy->add_behaviour("EnemyMovement", enemy_script);
+
+                rigidbody->gravity = true;
+                enemy->add_behaviour("VortexRigidbody", rigidbody);
                 
                 VortexObjectManager::pending_models.push_back(enemy);
             }

@@ -19,33 +19,34 @@ CollisionHit VortexPhysics::check_collision_detailed(VortexModel *modela, Vortex
 
     glm::vec3 scale_a = modela->transform.scale * modela->collider_scale;
     glm::vec3 scale_b = modelb->transform.scale * modelb->collider_scale;
-    float padding = 0.05f;
 
     WorldAABB global_a, global_b;
-    global_a.min = modela->transform.position + (modela->shared_data->collider.min * scale_a) - padding;
-    global_a.max = modela->transform.position + (modela->shared_data->collider.max * scale_a) + padding;
-    global_b.min = modelb->transform.position + (modelb->shared_data->collider.min * scale_b) - padding;
-    global_b.max = modelb->transform.position + (modelb->shared_data->collider.max * scale_b) + padding;
+    global_a.min = modela->transform.position + (modela->shared_data->collider.min * scale_a);
+    global_a.max = modela->transform.position + (modela->shared_data->collider.max * scale_a);
+    global_b.min = modelb->transform.position + (modelb->shared_data->collider.min * scale_b);
+    global_b.max = modelb->transform.position + (modelb->shared_data->collider.max * scale_b);
 
     if (!test_AABB_overlap(global_a, global_b)) return result;
 
     for (size_t i = 0; i < modela->shared_data->objects.size(); i++)
     {
+        if (!modela->active_parts[i]) continue;
+
         const auto& obj_a = modela->shared_data->objects[i];
-        if (!obj_a.is_active) continue;
 
         WorldAABB sub_a;
-        sub_a.min = modela->transform.position + (obj_a.collider.min * scale_a) - padding;
-        sub_a.max = modela->transform.position + (obj_a.collider.max * scale_a) + padding;
+        sub_a.min = modela->transform.position + (obj_a.collider.min * scale_a);
+        sub_a.max = modela->transform.position + (obj_a.collider.max * scale_a);
 
         for (size_t j = 0; j < modelb->shared_data->objects.size(); j++)
         {
+            if (!modelb->active_parts[j]) continue;
+
             const auto& obj_b = modelb->shared_data->objects[j];
-            if (!obj_b.is_active) continue;
 
             WorldAABB sub_b;
-            sub_b.min = modelb->transform.position + (obj_b.collider.min * scale_b) - padding;
-            sub_b.max = modelb->transform.position + (obj_b.collider.max * scale_b) + padding;
+            sub_b.min = modelb->transform.position + (obj_b.collider.min * scale_b);
+            sub_b.max = modelb->transform.position + (obj_b.collider.max * scale_b);
 
             if (test_AABB_overlap(sub_a, sub_b))
             {
@@ -77,7 +78,7 @@ static bool ray_intersect_aabb(glm::vec3 ray_origin, glm::vec3 ray_dir, WorldAAB
     return true;
 }
 
-RaycastHit VortexPhysics::raycast(glm::vec3 origin, glm::vec3 direction, float max_distance)
+RaycastHit VortexPhysics::raycast(glm::vec3 origin, glm::vec3 direction, float max_distance, std::vector<VortexModel*> ignore_list)
 {
     RaycastHit closest_hit;
     closest_hit.distance = max_distance;
@@ -88,12 +89,23 @@ RaycastHit VortexPhysics::raycast(glm::vec3 origin, glm::vec3 direction, float m
     {
         if (!model->is_active || model->should_destroy || !model->shared_data) continue;
 
+        bool skip = false;
+        for (VortexModel * ignored_model : ignore_list)
+        {
+            if (model == ignored_model)
+            {
+                skip = true;
+                break;
+            }
+        }
+
+        if (skip) continue;
+
         glm::vec3 scale = model->transform.scale * model->collider_scale;
-        float padding = 0.05f;
 
         WorldAABB global_box;
-        global_box.min = model->transform.position + (model->shared_data->collider.min * scale) - padding;
-        global_box.max = model->transform.position + (model->shared_data->collider.max * scale) + padding;
+        global_box.min = model->transform.position + (model->shared_data->collider.min * scale);
+        global_box.max = model->transform.position + (model->shared_data->collider.max * scale);
 
         float global_t = 0.0f;
         if (!ray_intersect_aabb(origin, dir_norm, global_box, global_t) || global_t > closest_hit.distance)
@@ -103,12 +115,13 @@ RaycastHit VortexPhysics::raycast(glm::vec3 origin, glm::vec3 direction, float m
 
         for (size_t i = 0; i < model->shared_data->objects.size(); i++)
         {
+            if (!model->active_parts[i]) continue;
+            
             const auto& obj = model->shared_data->objects[i];
-            if (!obj.is_active) continue;
 
             WorldAABB sub_box;
-            sub_box.min = model->transform.position + (obj.collider.min * scale) - padding;
-            sub_box.max = model->transform.position + (obj.collider.max * scale) + padding;
+            sub_box.min = model->transform.position + (obj.collider.min * scale);
+            sub_box.max = model->transform.position + (obj.collider.max * scale);
 
             float sub_t = 0.0f;
             if (ray_intersect_aabb(origin, dir_norm, sub_box, sub_t))

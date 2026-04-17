@@ -19,10 +19,13 @@ private:
     glm::vec3 fly_direction;
     float bullet_damage = 5.0f;
     VortexModel *player;
+    VortexModel *gun;
 public:
     void on_start() override
     {
         player = VortexObjectManager::get_object_by_tag("Player");
+        gun = VortexObjectManager::get_object_by_tag("Gun");
+
         VortexCamera* cam = gameObject->app->camera;
 
         glm::vec3 crosshair_target = cam->position + (cam->front * 100.0f);
@@ -45,7 +48,7 @@ public:
     {
         float move_dist = speed * deltaTime;
 
-        RaycastHit hit = VortexPhysics::raycast(gameObject->transform.position, fly_direction, move_dist);
+        RaycastHit hit = VortexPhysics::raycast(gameObject->transform.position, fly_direction, move_dist, {gameObject, player, gun});
 
         if (hit.has_hit)
         {
@@ -64,7 +67,7 @@ public:
             if (is_destructible && hit.hit_sub_object_index != -1)
             {
                 VortexAudio::play_sound("assets/audio/gunshot_hit.wav", 0.5f);
-                hit.hit_model->shared_data->objects[hit.hit_sub_object_index].is_active = false;
+                hit.hit_model->active_parts[hit.hit_sub_object_index] = false;
             }
 
             bool is_enemy = false;

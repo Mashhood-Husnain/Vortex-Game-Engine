@@ -25,6 +25,11 @@ public:
     void on_update(float deltaTime) override
     {
         if (!target_player || target_player->should_destroy) return; 
+        if (gameObject->transform.position.y >= 0.25f)
+        {
+            gameObject->should_destroy = true;
+            return;
+        }
 
         health = VortexMonoBehaviour_get_value("enemy_health");
 

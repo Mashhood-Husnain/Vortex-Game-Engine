@@ -28,5 +28,5 @@ class VortexPhysics
 public:
     static bool check_collision(VortexModel *modela, VortexModel *modelb);
     static CollisionHit check_collision_detailed(VortexModel *modela, VortexModel *modelb);
-    static RaycastHit raycast(glm::vec3 origin, glm::vec3 direction, float max_distance);
+    static RaycastHit raycast(glm::vec3 origin, glm::vec3 direction, float max_distance, std::vector<VortexModel*> ignore_list = {});
 };

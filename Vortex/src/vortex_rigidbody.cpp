@@ -4,7 +4,7 @@ void VortexRigidbody::on_update(float deltaTime)
 {
     if (is_kinematic) return;
 
-    velocity.y -= gravity * deltaTime;
+    if (gravity) velocity.y -= gravity_value * deltaTime;
 
     gameObject->transform.position.y += velocity.y * deltaTime;
     if (check_world_collision())
@@ -46,6 +46,24 @@ bool VortexRigidbody::check_world_collision()
         }
     }
     return false;
+}
+
+void VortexRigidbody::serialize(json& j)
+{
+    j["is_kinematic"] = is_kinematic;
+    j["gravity"] = gravity;
+}
+
+void VortexRigidbody::deserialize(const json& j)
+{
+    if (j.contains("is_kinematic"))
+    {
+        is_kinematic = j["is_kinematic"];
+    }
+    if (j.contains("gravity"))
+    {
+        gravity = j["gravity"];
+    }
 }
 
 VORTEX_REGISTER_SCRIPT(VortexRigidbody);

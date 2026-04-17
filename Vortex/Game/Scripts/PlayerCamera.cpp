@@ -21,6 +21,9 @@ public:
     {
         my_camera = new VortexCamera();
         my_camera->aspect_ratio = gameObject->app->editor_camera->aspect_ratio;
+        my_camera->position = gameObject->transform.position + head_offset;
+        my_camera->look_at(glm::vec3(0.0f, 1.0f, 0.0f));
+
         gameObject->app->camera = my_camera;
     }
 

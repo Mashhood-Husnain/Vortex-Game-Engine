@@ -2,7 +2,12 @@
 
 #include "vortex_model.hpp"
 
+#include <string>
+#include <json.hpp>
+
 class VortexModel;
+
+using json = nlohmann::json;
 
 class VortexMonoBehaviour
 {
@@ -33,4 +38,7 @@ public:
 
         return 0.0f;
     }
+
+    virtual void serialize(json &j) {}
+    virtual void deserialize(const json &j) {}
 };

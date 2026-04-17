@@ -287,7 +287,11 @@ void VortexGUI::inspector_info(VortexModel* model, ParticleSystem *ps)
                     {
                         ImGui::Indent();
                         ImGui::Checkbox("Is Kinematic", &rigid_body->is_kinematic);
-                        ImGui::DragFloat("Gravity", &rigid_body->gravity, 0.1f);
+                        ImGui::Checkbox("Gravity", &rigid_body->gravity);
+                        if (rigid_body->gravity)
+                        {
+                            ImGui::DragFloat("Gravity Value", &rigid_body->gravity_value, 0.1f);
+                        }
                         ImGui::Unindent();
                     }
 

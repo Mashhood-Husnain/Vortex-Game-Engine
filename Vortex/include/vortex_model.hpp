@@ -55,7 +55,6 @@ struct VortexModel_Object
     int vertex_count;
 
     VortexBoxCollider collider;
-    bool is_active = true;
 };
 
 class VortexModel
@@ -84,6 +83,8 @@ public:
     std::vector<VortexMonoBehaviour*> behaviours;
     std::vector<std::string> script_names;
     std::map<std::string, float> *model_blackboard;
+
+    std::vector<bool> active_parts;
 
     VortexModel(const std::string &model_path, VortexApplication *window);
     void draw(const VortexShader &shader, VortexCamera &camera, bool wireframe);
