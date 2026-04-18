@@ -18,7 +18,6 @@ private:
 public:
     void on_start() override
     {
-        VortexMonoBehaviour_set_value("enemy_health", health);
         target_player = VortexObjectManager::get_object_by_tag("Player");
     }
 
@@ -30,8 +29,6 @@ public:
             gameObject->should_destroy = true;
             return;
         }
-
-        health = VortexMonoBehaviour_get_value("enemy_health");
 
         if (health <= 0.0f)
         {
@@ -58,25 +55,29 @@ public:
 
         if (VortexPhysics::check_collision(gameObject, target_player))
         {
-            VortexMonoBehaviour *script = target_player->behaviours[0];
-
-            if (script)
-            {
-                float current_cooldown = script->VortexMonoBehaviour_get_value("player_damage_cooldown");
-
-                if (current_cooldown >= 1.0f)
-                {
-                    script->VortexMonoBehaviour_set_value("player_damage_cooldown", 0.0f);
-
-                    float current_hp = script->VortexMonoBehaviour_get_value("player_health");
-                    script->VortexMonoBehaviour_set_value("player_health", current_hp - enemy_damage);
-
-                    VortexAudio::play_sound("assets/audio/player_damage.wav", 1.0f);
-                }
-            }
+            target_player->send_message("TAKE_DAMAGE", &enemy_damage);
         }
 
         draw_health_bar();
+    }
+
+    void on_message(const std::string &message, void *data) override
+    {
+        if (message == "TAKE_DAMAGE" && data != nullptr)
+        {
+            float damage = *static_cast<float*>(data);
+            health -= damage;
+
+            if (health <= 0.0f)
+            {
+                gameObject->should_destroy = true;
+                if (target_player)
+                {
+                    float points_to_add = 1.0f;
+                    target_player->send_message("ADD_SCORE", &points_to_add);
+                }
+            }
+        }
     }
 
     void draw_health_bar()

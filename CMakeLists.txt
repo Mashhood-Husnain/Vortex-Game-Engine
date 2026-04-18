@@ -102,7 +102,6 @@ add_executable(engine
     Vortex/src/vortex_hud.cpp
     Vortex/src/vortex_audio.cpp
     Vortex/src/vortex_rigidbody.cpp
-    Vortex/src/vortex_tags.cpp
 
     Vortex/src/util/vortex_save_load.cpp
     Vortex/src/util/vortex_nvml.cpp

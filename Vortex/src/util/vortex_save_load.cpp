@@ -61,6 +61,18 @@ void VortexProject::save_project(SaveScene_snapshot *scene_snapshot)
     save_data["m_selected_skybox_idx"] = scene_snapshot->m_selected_skybox_idx;
     save_data["m_selected_shader_idx"] = scene_snapshot->m_selected_shader_idx;
 
+    if (scene_snapshot->window->editor_camera)
+    {
+        save_data["camera"] = json::object();
+        save_data["camera"]["position"] = {
+            scene_snapshot->window->editor_camera->position.x,
+            scene_snapshot->window->editor_camera->position.y,
+            scene_snapshot->window->editor_camera->position.z
+        };
+        save_data["camera"]["yaw"] = scene_snapshot->window->editor_camera->yaw;
+        save_data["camera"]["pitch"] = scene_snapshot->window->editor_camera->pitch;
+    }
+
     std::string file_path = "saves/" + scene_snapshot->project_name + ".vtx";
     std::ofstream file(file_path);
 
@@ -156,6 +168,20 @@ void VortexProject::load_project(SaveScene_snapshot *scene_snapshot)
 
     scene_snapshot->m_selected_skybox_idx = save_data["m_selected_skybox_idx"];
     scene_snapshot->m_selected_shader_idx = save_data["m_selected_shader_idx"];
+
+    if (save_data.contains("camera") && scene_snapshot->window->editor_camera)
+    {
+        scene_snapshot->window->editor_camera->position = glm::vec3(
+            save_data["camera"]["position"][0],
+            save_data["camera"]["position"][1],
+            save_data["camera"]["position"][2]
+        );
+
+        scene_snapshot->window->editor_camera->yaw = save_data["camera"]["yaw"];
+        scene_snapshot->window->editor_camera->pitch = save_data["camera"]["pitch"];
+
+        scene_snapshot->window->editor_camera->update_camera_vectors();
+    }
 
     VORTEX_INFO("[PROJECT] Successfully loaded ", scene_snapshot->project_name);
 }

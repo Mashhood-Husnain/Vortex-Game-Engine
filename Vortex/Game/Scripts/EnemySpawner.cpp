@@ -9,6 +9,8 @@
 #include "vortex_audio.hpp"
 #include "vortex_rigidbody.hpp"
 
+#include "myTags.hpp"
+
 #include <cstdlib>
 #include <cmath>
 
@@ -60,6 +62,7 @@ public:
 
                 rigidbody->gravity = true;
                 enemy->add_behaviour("VortexRigidbody", rigidbody);
+                enemy->add_behaviour("EnemyTag", new EnemyTag());
                 
                 VortexObjectManager::pending_models.push_back(enemy);
             }

@@ -9,6 +9,8 @@
 #include "vortex_audio.hpp"
 #include "vortex_rigidbody.hpp"
 
+#include "myTags.hpp"
+
 #include <cstdlib>
 
 class PlayerBulletMover : public VortexMonoBehaviour
@@ -54,49 +56,16 @@ public:
         {
             gameObject->transform.position = hit.hit_point;
 
-            bool is_destructible = false;
-            for (const std::string& script_name : hit.hit_model->script_names)
-            {
-                if (script_name == "VortexTagDestructible")
-                {
-                    is_destructible = true;
-                    break;
-                }
-            }
-
-            if (is_destructible && hit.hit_sub_object_index != -1)
+            if (hit.hit_model->get_componant<DestructibleTag>() && hit.hit_sub_object_index != -1)
             {
                 VortexAudio::play_sound("assets/audio/gunshot_hit.wav", 0.5f);
                 hit.hit_model->active_parts[hit.hit_sub_object_index] = false;
             }
 
-            bool is_enemy = false;
-            VortexMonoBehaviour *enemy_script = nullptr;
-            
-            for (size_t i = 0; i < hit.hit_model->script_names.size(); i++) 
-            {
-                if (hit.hit_model->script_names[i] == "EnemyMovement") {
-                    is_enemy = true;
-                    enemy_script = hit.hit_model->behaviours[i];
-                    break;
-                }
-            }
-
-            if (is_enemy && enemy_script)
+            if (hit.hit_model->get_componant<EnemyTag>())
             {
                 VortexAudio::play_sound("assets/audio/gunshot_hit.wav", 0.5f);
-                float current_hp = enemy_script->VortexMonoBehaviour_get_value("enemy_health");
-                enemy_script->VortexMonoBehaviour_set_value("enemy_health", current_hp - bullet_damage);
-
-                if (player && !player->behaviours.empty()) 
-                {
-                    VortexMonoBehaviour *player_script = player->behaviours[0];
-                    if ((current_hp - bullet_damage) <= 0.0f)
-                    {
-                        float pts = player_script->VortexMonoBehaviour_get_value("player_points");
-                        player_script->VortexMonoBehaviour_set_value("player_points", pts + 1.0f);
-                    }
-                }
+                hit.hit_model->send_message("TAKE_DAMAGE", &bullet_damage);
             }
 
             gameObject->should_destroy = true;

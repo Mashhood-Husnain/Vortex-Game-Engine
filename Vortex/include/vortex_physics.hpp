@@ -1,6 +1,9 @@
 #pragma once
 #include "glm/glm.hpp"
 #include "vortex_model.hpp"
+#include "vortex_rigidbody.hpp"
+
+class VortexRigidbody;
 
 struct WorldAABB
 {

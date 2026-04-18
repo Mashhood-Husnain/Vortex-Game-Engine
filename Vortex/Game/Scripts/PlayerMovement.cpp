@@ -72,7 +72,7 @@ public:
         {
             if (other == gameObject || !other->is_active) continue;
             if (other == bullet || other == gun) continue;
-            if (is_enemy(other)) continue;
+            if (other->get_behaviour("EnemyMovement")) continue;
             
             if (VortexPhysics::check_collision(gameObject, other))
             {
@@ -94,7 +94,7 @@ public:
             if (other == gameObject || !other->is_active) continue;
             if (other == bullet || other == gun || other == floor) continue;
 
-            if (is_enemy(other)) continue;
+            if (other->get_behaviour("EnemyMovement")) continue;
 
             CollisionHit hit = VortexPhysics::check_collision_detailed(gameObject, other);
             
@@ -104,21 +104,6 @@ public:
                 break;
             }
         }
-    }
-
-    bool is_enemy(VortexModel *model)
-    {
-        bool is_enemy = false;
-        for (const std::string& s_name : model->script_names)
-        {
-            if (s_name == "EnemyMovement")
-            {
-                is_enemy = true;
-                break;
-            }
-        }
-
-        return is_enemy;
     }
 
     void draw_crosshair()

@@ -630,6 +630,11 @@ void VortexGUI::creator_window()
                 script_file << "    {\n";
                 script_file << "        // write code here to run at the end of every frame\n";
                 script_file << "    }\n";
+                script_file << "    void on_message(const std::string &message, void *data) override\n";
+                script_file << "    {\n";
+                script_file << "        // write code here to receive communicate with scripts\n";
+                script_file << "        // to send message to other object us the model->send_message(message, &data) function\n";
+                script_file << "    }\n";
                 script_file << "};\n\n";
                 
                 script_file << "VORTEX_REGISTER_SCRIPT(" << class_name << ");\n";

@@ -30,8 +30,6 @@ VortexModel::VortexModel(const std::string& path, VortexApplication *window)
     {
         active_parts.resize(shared_data->objects.size(), true);
     }
-
-    model_blackboard = new std::map<std::string, float>();
 }
 
 void VortexModel::draw(const VortexShader &shader, VortexCamera &camera, bool wireframe)
@@ -141,7 +139,6 @@ VortexModel::~VortexModel()
 void VortexModel::add_behaviour(const std::string &script_name, VortexMonoBehaviour *script)
 {
     script->gameObject = this;
-    script->blackboard = model_blackboard;
     behaviours.push_back(script);
     script_names.push_back(script_name);
 }
@@ -168,4 +165,24 @@ void align_on_top(VortexModel& top_obj, const VortexModel& bottom_obj)
     float top_half_height = (top_obj.shared_data->model_height * top_obj.transform.scale.y) / 2.0f;
     
     top_obj.transform.position.y = bottom_surface + top_half_height;
+}
+
+VortexMonoBehaviour* VortexModel::get_behaviour(const std::string& script_name)
+{
+    for (size_t i = 0; i < script_names.size(); i++)
+    {
+        if (script_names[i] == script_name)
+        {
+            return behaviours[i];
+        }
+    }
+    return nullptr;
+}
+
+void VortexModel::send_message(const std::string &message, void *data)
+{
+    for (VortexMonoBehaviour *script : behaviours)
+    {
+        script->on_message(message, data);
+    }
 }

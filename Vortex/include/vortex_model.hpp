@@ -82,7 +82,6 @@ public:
 
     std::vector<VortexMonoBehaviour*> behaviours;
     std::vector<std::string> script_names;
-    std::map<std::string, float> *model_blackboard;
 
     std::vector<bool> active_parts;
 
@@ -95,6 +94,22 @@ public:
     void late_update(float deltaTime);
     
     ~VortexModel();
+
+    VortexMonoBehaviour* get_behaviour(const std::string& script_name);
+
+    void send_message(const std::string &message, void *data=nullptr);
+
+    template <typename T>
+    T* get_componant()
+    {
+        for (VortexMonoBehaviour *script : behaviours)
+        {
+            T *target = dynamic_cast<T*>(script);
+            if (target) return target;
+        }
+
+        return nullptr;
+    }
 };
 
 void align_on_top(VortexModel& top_obj, const VortexModel& bottom_obj);

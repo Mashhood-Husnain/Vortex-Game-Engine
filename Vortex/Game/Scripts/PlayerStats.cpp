@@ -15,23 +15,33 @@ private:
     float health = 100.0f;
     float damage_cooldown = 0.0f;
 public:
-    void on_start() override
-    {
-        VortexMonoBehaviour_set_value("player_health", health);
-        VortexMonoBehaviour_set_value("player_points", points);
-        VortexMonoBehaviour_set_value("player_damage_cooldown", damage_cooldown);
-    }
 
     void on_update(float deltaTime) override
     {
-        health = VortexMonoBehaviour_get_value("player_health");
-        points = VortexMonoBehaviour_get_value("player_points");
-        damage_cooldown = VortexMonoBehaviour_get_value("player_damage_cooldown");
-
         damage_cooldown += deltaTime;
-        VortexMonoBehaviour_set_value("player_damage_cooldown", damage_cooldown);
-
         draw_hud();
+    }
+
+    void on_message(const std::string &message, void *data) override
+    {
+        if (message == "TAKE_DAMAGE" && data != nullptr)
+        {
+            if (damage_cooldown >= 1.0f)
+            {
+                float damage = *static_cast<float*>(data);
+                health -= damage;
+
+                damage_cooldown = 0.0f;
+
+                VortexAudio::play_sound("assets/audio/player_damage.wav", 1.0f);
+            }
+        }
+        else if (message == "ADD_SCORE" && data != nullptr)
+        {
+            float new_points = *static_cast<float*>(data);
+
+            points += new_points;
+        }
     }
 
     void draw_hud()

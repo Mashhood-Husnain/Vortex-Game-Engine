@@ -16,6 +16,7 @@ CollisionHit VortexPhysics::check_collision_detailed(VortexModel *modela, Vortex
 {
     CollisionHit result;
     if (!modela || !modelb || !modela->shared_data || !modelb->shared_data) return result;
+    if (modelb->get_componant<VortexRigidbody>() == nullptr) return result;
 
     glm::vec3 scale_a = modela->transform.scale * modela->collider_scale;
     glm::vec3 scale_b = modelb->transform.scale * modelb->collider_scale;
@@ -88,6 +89,7 @@ RaycastHit VortexPhysics::raycast(glm::vec3 origin, glm::vec3 direction, float m
     for (VortexModel* model : VortexObjectManager::active_models)
     {
         if (!model->is_active || model->should_destroy || !model->shared_data) continue;
+        if (model->get_componant<VortexRigidbody>() == nullptr) continue;
 
         bool skip = false;
         for (VortexModel * ignored_model : ignore_list)
