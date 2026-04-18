@@ -57,7 +57,6 @@ public:
                 VortexMonoBehaviour *enemy_script = ScriptRegistry::get().create("EnemyMovement");
                 VortexRigidbody *rigidbody = new VortexRigidbody();
 
-                enemy->show_collider = true;
                 enemy->add_behaviour("EnemyMovement", enemy_script);
 
                 rigidbody->gravity = true;

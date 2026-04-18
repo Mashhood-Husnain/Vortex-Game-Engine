@@ -100,3 +100,43 @@ glm::vec2 VortexHUD::GetScreenDimensions()
     ImGuiIO& io = ImGui::GetIO();
     return glm::vec2(io.DisplaySize.x, io.DisplaySize.y);
 }
+
+void VortexHUD::Text(const char* format, ...)
+{
+    va_list args;
+    va_start(args, format);
+
+    ImGui::TextV(format, args);
+
+    va_end(args);
+}
+
+
+ImVec2 VortexHUD::GetAnchorPosition(UIAnchor anchor, float offset_x, float offset_y)
+{
+    ImVec2 screen_size = ImGui::GetIO().DisplaySize;
+    ImVec2 base_pos(0.0f, 0.0f);
+
+    switch (anchor)
+    {
+        case UIAnchor::TOP_LEFT:      base_pos = ImVec2(0.0f, 0.0f); break;
+        case UIAnchor::TOP_CENTER:    base_pos = ImVec2(screen_size.x * 0.5f, 0.0f); break;
+        case UIAnchor::TOP_RIGHT:     base_pos = ImVec2(screen_size.x, 0.0f); break;
+        
+        case UIAnchor::CENTER_LEFT:   base_pos = ImVec2(0.0f, screen_size.y * 0.5f); break;
+        case UIAnchor::CENTER:        base_pos = ImVec2(screen_size.x * 0.5f, screen_size.y * 0.5f); break;
+        case UIAnchor::CENTER_RIGHT:  base_pos = ImVec2(screen_size.x, screen_size.y * 0.5f); break;
+        
+        case UIAnchor::BOTTOM_LEFT:   base_pos = ImVec2(0.0f, screen_size.y); break;
+        case UIAnchor::BOTTOM_CENTER: base_pos = ImVec2(screen_size.x * 0.5f, screen_size.y); break;
+        case UIAnchor::BOTTOM_RIGHT:  base_pos = ImVec2(screen_size.x, screen_size.y); break;
+    }
+
+    return ImVec2(base_pos.x + offset_x, base_pos.y + offset_y);
+}
+
+ImVec2 VortexHUD::GetScreenPercent(float percent_x, float percent_y)
+{
+    ImVec2 screen_size = ImGui::GetIO().DisplaySize;
+    return ImVec2(screen_size.x * percent_x, screen_size.y * percent_y);
+}

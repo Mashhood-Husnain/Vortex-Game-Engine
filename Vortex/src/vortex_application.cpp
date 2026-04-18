@@ -463,11 +463,12 @@ void VortexApplication::run(std::function<void()> draw_callback)
             draw_world_axis_gizmo();
         }
 
+        VortexUIManager::render_ui();
+
         gui.render();
         VortexKeyboard::update();
         VortexMouse::update();
         VortexAudio::update();
-        // swap buffers and poll IO
         glfwSwapBuffers(window);
     }
 }

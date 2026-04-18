@@ -612,6 +612,7 @@ void VortexGUI::creator_window()
                 script_file << "#include \"vortex_hud.hpp\"\n";
                 script_file << "#include \"vortex_audio.hpp\"\n";
                 script_file << "#include \"vortex_physics.hpp\"\n";
+                script_file << "#include \"vortex_uimanager.hpp\"\n";
                 script_file << "#include \"vortex_rigidbody.hpp\"\n\n";
                 
                 script_file << "class " << class_name << " : public VortexMonoBehaviour\n";
@@ -629,7 +630,7 @@ void VortexGUI::creator_window()
                 script_file << "    void late_update(float deltaTime) override\n";
                 script_file << "    {\n";
                 script_file << "        // write code here to run at the end of every frame\n";
-                script_file << "    }\n";
+                script_file << "    }\n\n";
                 script_file << "    void on_message(const std::string &message, void *data) override\n";
                 script_file << "    {\n";
                 script_file << "        // write code here to receive communicate with scripts\n";
