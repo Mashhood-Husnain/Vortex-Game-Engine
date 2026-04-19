@@ -7,6 +7,7 @@
  */
 
 #include "vortex_application.hpp"
+#include "vortex_editor.hpp"
 
 GLFWmonitor* VortexApplication::get_current_monitor(GLFWwindow* window)
 {
@@ -55,6 +56,33 @@ void VortexApplication::framebuffer_size_callback(GLFWwindow* window, int width,
     }
 }
 
+void VortexApplication::request_exit()
+{
+    std::string project_name = std::string(gui.save_project_name);
+    SaveScene_snapshot snapshot = {
+        project_name,
+        VortexObjectManager::active_models,
+        VortexObjectManager::active_particlesystems,
+        gui.m_selected_skybox_idx,
+        gui.m_selected_shader_idx,
+        this
+    };
+
+    has_unsaved_changes = !VortexProject::check_save_state(&snapshot);
+    show_exit_modal = true;
+
+    glfwSetWindowShouldClose(window, GLFW_FALSE);
+}
+
+void VortexApplication::window_close_callback(GLFWwindow* window)
+{
+    VortexApplication* app = (VortexApplication*)glfwGetWindowUserPointer(window);
+    if (app)
+    {
+        app->request_exit();
+    }
+}
+
 void VortexApplication::check_key_press()
 {
     if (current_state == EngineState::EDITOR)
@@ -65,7 +93,7 @@ void VortexApplication::check_key_press()
             change_window_size();
         }
 
-        if (VortexKeyboard::get_key_down("T")) show_wireframe = !show_wireframe;
+        if (VortexKeyboard::get_key_down("Z")) show_wireframe = !show_wireframe;
         if (VortexKeyboard::get_key_down("V")) view_world_axis = !view_world_axis;
         if (VortexKeyboard::get_key_down("M")) show_mouse(!show_mouse_cursor);
     }
@@ -103,7 +131,7 @@ void VortexApplication::check_key_press()
         }
         else
         {
-            glfwSetWindowShouldClose(window, true);
+            request_exit();
         }
     }
 }
@@ -206,6 +234,8 @@ VortexApplication::VortexApplication(std::string window_name, int width, int hei
     glfwSetFramebufferSizeCallback(window, framebuffer_size_callback);
     glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
     glfwSetCursorPosCallback(window, mouse_callback);
+    glfwSetWindowCloseCallback(window, window_close_callback);
+
 
     // Initialize GLAD
     if (!gladLoadGLLoader((GLADloadproc)glfwGetProcAddress))
@@ -225,6 +255,8 @@ VortexApplication::VortexApplication(std::string window_name, int width, int hei
     VortexKeyboard::init(window);
     VortexMouse::init(window);
     VortexAudio::init();
+
+    engine_editor = new VortexEditor();
 
     // V-sync
     glfwSwapInterval(1);
@@ -262,6 +294,7 @@ VortexApplication::~VortexApplication()
     delete skybox;
     delete environment_grid;
     delete editor_camera;
+    delete engine_editor;
 
     VortexAssetManager::clean_up();
     VortexObjectManager::clean_up();
@@ -285,6 +318,7 @@ VortexApplication::~VortexApplication()
     post_processor = nullptr;
     skybox = nullptr;
     environment_grid = nullptr;
+    engine_editor = nullptr;
 
     if (window)
     {
@@ -444,6 +478,11 @@ void VortexApplication::run(std::function<void()> draw_callback)
         VortexObjectManager::draw(*camera, show_wireframe);
         VortexObjectManager::check_object_status();
 
+        if (current_state == EngineState::EDITOR)
+        {
+            engine_editor->update(deltaTime, camera, this);
+        }
+
         gui.end_scene_inspector();
 
         environment_grid->draw(*camera);
@@ -464,6 +503,8 @@ void VortexApplication::run(std::function<void()> draw_callback)
         }
 
         VortexUIManager::render_ui();
+
+        gui.draw_exit_modal();
 
         gui.render();
         VortexKeyboard::update();

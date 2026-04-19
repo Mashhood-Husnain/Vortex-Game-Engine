@@ -16,6 +16,8 @@
 
 #include "vortex_keyboard.hpp"
 
+class VortexApplication;
+
 class VortexCamera
 {
     float near_plane = 0.1f;
@@ -30,7 +32,7 @@ public:
     float yaw, pitch;
     float fov = 45.0f;
 
-    float movement_speed = 5.0f;
+    float movement_speed = 10.0f;
     float mouse_sensitivity = 0.05f;
 
     float aspect_ratio;
@@ -44,4 +46,5 @@ public:
     glm::mat4 getProjectionMatrix();
     void look_at(glm::vec3 target);
     void update_camera_vectors();
+    glm::vec3 get_ray_from_mouse(glm::vec2 mouse_pos, VortexApplication *app);
 };

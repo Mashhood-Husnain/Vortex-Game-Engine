@@ -1,13 +1,4 @@
-#include "vortex_behaviour.hpp"
-#include "util/vortex_script_registry.hpp"
-#include "vortex_keyboard.hpp"
-#include "vortex_mouse.hpp"
-#include "vortex_objectmanager.hpp"
-#include "vortex_model.hpp"
-#include "vortex_hud.hpp"
-#include "vortex_physics.hpp"
-#include "vortex_audio.hpp"
-#include "vortex_uimanager.hpp"
+#include "VortexEngine.hpp"
 
 class PlayerStats : public VortexMonoBehaviour
 {

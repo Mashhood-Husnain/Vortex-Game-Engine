@@ -85,3 +85,8 @@ double VortexMouse::get_y()
 {
     return s_mouse_y;
 }
+
+glm::vec2 VortexMouse::get_position()
+{
+    return glm::vec2(s_mouse_x, s_mouse_y);
+}

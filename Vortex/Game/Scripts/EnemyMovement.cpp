@@ -1,12 +1,4 @@
-#include "vortex_behaviour.hpp"
-#include "util/vortex_script_registry.hpp"
-#include "vortex_keyboard.hpp"
-#include "vortex_mouse.hpp"
-#include "vortex_physics.hpp"
-#include "vortex_objectmanager.hpp"
-#include "vortex_model.hpp"
-#include "vortex_hud.hpp"
-#include "vortex_audio.hpp"
+#include "VortexEngine.hpp"
 
 class EnemyMovement : public VortexMonoBehaviour
 {
@@ -36,13 +28,13 @@ public:
             return;
         }
 
-        glm::vec3 player_pos = target_player->transform.position;
+        Vec3 player_pos = target_player->transform.position;
         player_pos.y = 0.0f;
 
-        glm::vec3 my_pos = gameObject->transform.position;
+        Vec3 my_pos = gameObject->transform.position;
         my_pos.y = 0.0f;
 
-        glm::vec3 direction = player_pos - my_pos;
+        Vec3 direction = player_pos - my_pos;
 
         if (glm::length(direction) > 0.1f) 
         {
@@ -50,7 +42,7 @@ public:
             gameObject->transform.position += direction * speed * deltaTime;
 
             float angle = atan2(direction.x, direction.z);
-            gameObject->transform.rotation.y = glm::degrees(angle);
+            gameObject->transform.orientation.y = glm::degrees(angle);
         }
 
         if (VortexPhysics::check_collision(gameObject, target_player))
@@ -84,10 +76,10 @@ public:
     {
         VortexHUD::Begin();
 
-        glm::vec3 label_pos = gameObject->transform.position + glm::vec3(0, 2.5f, 0);
+        Vec3 label_pos = gameObject->transform.position + Vec3(0, 2.5f, 0);
         VortexHUD::WorldLabel("HEALTH", label_pos, gameObject->app->camera, ImVec4(1, 1, 1, 1));
 
-        glm::vec3 bar_pos = gameObject->transform.position + glm::vec3(0, 2.2f, 0);
+        Vec3 bar_pos = gameObject->transform.position + Vec3(0, 2.2f, 0);
         VortexHUD::WorldBar(health, 20.0f, bar_pos, gameObject->app->camera, ImVec2(80, 8), ImVec4(1, 0, 0, 1));
 
         VortexHUD::End();

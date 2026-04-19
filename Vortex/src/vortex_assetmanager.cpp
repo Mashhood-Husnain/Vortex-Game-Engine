@@ -139,7 +139,7 @@ SharedMesh* VortexAssetManager::get_mesh(const std::string &filepath)
             new_obj.vertex_offset = (int)vertices.size();
             new_obj.vertex_count = 0;
             new_obj.transform.position = glm::vec3(0.0f);
-            new_obj.transform.rotation = glm::vec3(0.0f);
+            new_obj.transform.orientation = glm::quat(1.0f, 0.0f, 0.0f, 0.0f);
             new_obj.transform.scale = glm::vec3(1.0f);
             new_mesh->objects.push_back(new_obj);
             current_obj = &new_mesh->objects.back();
@@ -197,33 +197,25 @@ SharedMesh* VortexAssetManager::get_mesh(const std::string &filepath)
     if (current_obj != nullptr) current_obj->vertex_count = (int)vertices.size() - current_obj->vertex_offset;
     new_mesh->model_height = max_y - min_y;
 
-    glm::vec3 global_min(1e10f), global_max(-1e10f), global_centroid(0.0f);
+    glm::vec3 global_min(1e10f), global_max(-1e10f);
 
     for (const auto& v : vertices) 
     {
-        global_centroid += v.position;
-
-        if (v.position.y < global_min.y) global_min.y = v.position.y;
-        if (v.position.x < global_min.x) global_min.x = v.position.x;
-        if (v.position.z < global_min.z) global_min.z = v.position.z;
-        if (v.position.x > global_max.x) global_max.x = v.position.x;
-        if (v.position.y > global_max.y) global_max.y = v.position.y;
-        if (v.position.z > global_max.z) global_max.z = v.position.z;
+        global_min = glm::min(global_min, v.position);
+        global_max = glm::max(global_max, v.position);
     }
     
-    global_centroid /= (float)vertices.size();
+    glm::vec3 center = (global_min + global_max) * 0.5f;
 
     for (auto& v : vertices) 
     {
-        v.position.x -= global_centroid.x;
-        v.position.z -= global_centroid.z;
-        v.position.y -= global_min.y; 
+        v.position -= center;
     }
 
     for (auto &obj : new_mesh->objects)
     {
         obj.transform.position = glm::vec3(0.0f);
-        obj.transform.rotation = glm::vec3(0.0f);
+        obj.transform.orientation = glm::quat(1.0f, 0.0f, 0.0f, 0.0f);
         obj.transform.scale = glm::vec3(1.0f);
 
         if (obj.vertex_count == 0) continue;
@@ -248,8 +240,8 @@ SharedMesh* VortexAssetManager::get_mesh(const std::string &filepath)
         obj.collider.setup_visual_mesh(); 
     }
 
-    new_mesh->collider.min = glm::vec3(global_min.x - global_centroid.x, 0.0f, global_min.z - global_centroid.z);
-    new_mesh->collider.max = glm::vec3(global_max.x - global_centroid.x, global_max.y - global_min.y, global_max.z - global_centroid.z);
+    new_mesh->collider.min = global_min - center;
+    new_mesh->collider.max = global_max - center;
     new_mesh->collider.setup_visual_mesh();
 
     glGenVertexArrays(1, &new_mesh->VAO);

@@ -4,6 +4,7 @@
 #include <unordered_map>
 #include <iostream>
 #include <GLFW/glfw3.h>
+#include <glm/glm.hpp>
 
 #include "vortex_logs.hpp"
 
@@ -23,4 +24,5 @@ public:
 
     static double get_x();
     static double get_y();
+    static glm::vec2 get_position();
 };

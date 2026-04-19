@@ -7,6 +7,7 @@
  */
 
 #include "vortex_camera.hpp"
+#include "vortex_application.hpp"
 
 void VortexCamera::update_camera_vectors()
 {
@@ -90,4 +91,21 @@ void VortexCamera::look_at(glm::vec3 target)
     yaw = glm::degrees(atan2(direction.z, direction.x));
 
     update_camera_vectors();
+}
+
+glm::vec3 VortexCamera::get_ray_from_mouse(glm::vec2 mouse_pos, VortexApplication *app)
+{
+    float x = (2.0f * mouse_pos.x) / app->default_window_width - 1.0f;
+    float y = 1.0f - (2.0f * mouse_pos.y) / app->default_window_height;
+    
+    glm::vec4 ray_clip = glm::vec4(x, y, -1.0f, 1.0f);
+    
+    glm::mat4 invProjection = glm::inverse(getProjectionMatrix());
+    glm::vec4 ray_eye = invProjection * ray_clip;
+    ray_eye = glm::vec4(ray_eye.x, ray_eye.y, -1.0f, 0.0f);
+    
+    glm::mat4 invView = glm::inverse(getViewMatrix());
+    glm::vec3 ray_world = glm::vec3(invView * ray_eye);
+    
+    return glm::normalize(ray_world);
 }

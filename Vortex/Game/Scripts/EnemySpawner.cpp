@@ -1,18 +1,6 @@
-#include "vortex_behaviour.hpp"
-#include "util/vortex_script_registry.hpp"
-#include "vortex_keyboard.hpp"
-#include "vortex_mouse.hpp"
-#include "vortex_physics.hpp"
-#include "vortex_objectmanager.hpp"
-#include "vortex_model.hpp"
-#include "vortex_hud.hpp"
-#include "vortex_audio.hpp"
-#include "vortex_rigidbody.hpp"
+#include "VortexEngine.hpp"
 
 #include "myTags.hpp"
-
-#include <cstdlib>
-#include <cmath>
 
 class EnemySpawner : public VortexMonoBehaviour
 {
@@ -45,12 +33,12 @@ public:
                 
                 float random_radius = min_radius + static_cast<float>(rand()) / RAND_MAX * (max_radius - min_radius);
                 
-                glm::vec3 player_pos = gameObject->transform.position;
+                Vec3 player_pos = gameObject->transform.position;
                 float spawn_x = player_pos.x + (cos(random_angle) * random_radius);
                 float spawn_z = player_pos.z + (sin(random_angle) * random_radius);
                 
-                enemy->transform.position = glm::vec3(spawn_x, 0.0f, spawn_z);
-                enemy->transform.scale = glm::vec3(2.0f, 2.0f, 2.0f);
+                enemy->transform.position = Vec3(spawn_x, 0.0f, spawn_z);
+                enemy->transform.scale = Vec3(2.0f, 2.0f, 2.0f);
 
                 enemy->model_name = "Enemy";
                 

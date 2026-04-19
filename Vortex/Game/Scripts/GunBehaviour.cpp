@@ -1,26 +1,13 @@
-#include "vortex_behaviour.hpp"
-#include "util/vortex_script_registry.hpp"
-#include "vortex_keyboard.hpp"
-#include "vortex_mouse.hpp"
-#include "vortex_objectmanager.hpp"
-#include "vortex_model.hpp"
-#include "vortex_hud.hpp"
-#include "vortex_physics.hpp"
-#include "vortex_audio.hpp"
-#include "vortex_uimanager.hpp"
-
-#include <glm/glm.hpp>
-#include <cstdlib>
-#include <string>
-#include <algorithm>
+#include "VortexEngine.hpp"
 
 class GunBehaviour : public VortexMonoBehaviour
 {
 private:
     float model_yaw_offset = 90.0f;
-    glm::vec3 hip_offset = glm::vec3(0.5f, -0.4f, 1.0f);
-    glm::vec3 ads_offset = glm::vec3(0.0f, -0.3f, 0.8f);
-    glm::vec3 current_offset;
+
+    Vec3 hip_offset = Vec3(0.380044f, -0.264941f, 0.457343f);
+    Vec3 ads_offset = Vec3(0.00759287f, -0.0500511f, -0.207612f);
+    Vec3 current_offset;
 
     float current_recoil = 0.0f;
     float max_recoil = 0.2f;
@@ -37,6 +24,10 @@ private:
     float reload_time = 2.0f;
     float reload_timer = 0.0f;
 
+    float current_spread = 0.0f;
+    float hip_spread = 25.0f;
+    float ads_spread = 5.0f;
+    float recoil_spread_mult = 150.0f;
 public:
     void on_start() override
     {
@@ -55,7 +46,8 @@ public:
         if (is_reloading)
         {
             update_reload(deltaTime);
-            update_gun_transform(cam, deltaTime); 
+            update_gun_transform(cam, deltaTime);
+            draw_crosshair(deltaTime, false);
             return; 
         }
 
@@ -73,12 +65,15 @@ public:
         }
 
         update_gun_transform(cam, deltaTime);
+
+        bool is_aiming = VortexMouse::get_button("RIGHT") && !is_reloading;
+        draw_crosshair(deltaTime, is_aiming);
     }
 
     void update_gun_transform(VortexCamera* cam, float deltaTime)
     {
         bool is_aiming = VortexMouse::get_button("RIGHT") && !is_reloading;
-        glm::vec3 target_offset = is_aiming ? ads_offset : hip_offset;
+        Vec3 target_offset = is_aiming ? ads_offset : hip_offset;
 
         current_offset = glm::mix(current_offset, target_offset, deltaTime * 15.0f);
 
@@ -88,21 +83,39 @@ public:
             if (current_recoil < 0.0f) current_recoil = 0.0f;
         }
 
-        glm::vec3 world_up = glm::vec3(0.0f, 1.0f, 0.0f);
-        glm::vec3 true_right = glm::normalize(glm::cross(cam->front, world_up));
-        glm::vec3 true_up = glm::normalize(glm::cross(true_right, cam->front));
-        
-        glm::vec3 gun_pos = cam->position 
-                          + (cam->front * current_offset.z) 
-                          + (true_up * current_offset.y)
-                          + (true_right * current_offset.x);
+        Vec3 world_up = Vec3(0.0f, 1.0f, 0.0f);
+        Vec3 forward = glm::normalize(cam->front);
+        Vec3 right   = glm::normalize(glm::cross(forward, world_up));
+        Vec3 up      = glm::normalize(glm::cross(right, forward));
 
-        gun_pos += (true_up * current_recoil * 0.3f) - (cam->front * current_recoil * 0.8f);
-        
-        gameObject->transform.position = gun_pos;
-        gameObject->transform.rotation.y = -(cam->yaw + 90.0f) + model_yaw_offset;
-        gameObject->transform.rotation.z = cam->pitch; 
-        gameObject->transform.rotation.x = 0.0f; 
+        Vec3 scale = gameObject->transform.scale;
+        Vec3 scaled_offset = current_offset * scale;
+
+        Vec3 hand_pos = cam->position 
+                        + (forward * scaled_offset.z) 
+                        + (up * scaled_offset.y)
+                        + (right * scaled_offset.x);
+
+        hand_pos += (up * current_recoil * 0.3f * scale.y) - (forward * current_recoil * 0.8f * scale.z);
+
+        Vec3 gun_center_pos = hand_pos 
+                            + (forward * 0.6f * scale.z)
+                            + (up * -0.1f * scale.y);
+
+        gameObject->transform.position = gun_center_pos;
+
+        Mat4 rot = Mat4(1.0f);
+
+        rot[0] = Vec4(right, 0.0f);
+        rot[1] = Vec4(up, 0.0f);
+        rot[2] = Vec4(-forward, 0.0f);
+
+        if (model_yaw_offset != 0.0f)
+        {
+            rot = rot * glm::rotate(Mat4(1.0f), glm::radians(model_yaw_offset), Vec3(0, 1, 0));
+        }
+
+        gameObject->transform.orientation = Quaternion(rot);
     }
 
     void fire_weapon(VortexCamera* cam)
@@ -119,12 +132,13 @@ public:
         current_recoil = max_recoil;
         VortexAudio::play_sound("assets/audio/gunshot.wav", 0.25f);
 
-        glm::vec3 barrel_tip = gameObject->transform.position + (cam->front * 1.5f);
+        Vec3 scale = gameObject->transform.scale;
+        Vec3 barrel_tip = gameObject->transform.position + (cam->front * 1.5f * scale.z);
 
         VortexModel *bullet = new VortexModel("assets/models/obj/cube.obj", gameObject->app);
         bullet->model_name = "Bullet";
         bullet->transform.position = barrel_tip;
-        bullet->transform.scale = glm::vec3(0.1f, 0.1f, 0.1f);
+        bullet->transform.scale = Vec3(0.1f, 0.1f, 0.1f);
         
         VortexMonoBehaviour *move_script = ScriptRegistry::get().create("PlayerBulletMover");
         bullet->add_behaviour("PlayerBulletMover", move_script);
@@ -224,6 +238,45 @@ public:
                 ammo->text_data = "AMMO: " + std::to_string(current_mag_bullets) + " / " + std::to_string(max_bullets);
             }
         }
+    }
+
+    void draw_crosshair(float deltaTime, bool is_aiming)
+    {
+        float target_base_spread = is_aiming ? ads_spread : hip_spread;        
+        float dynamic_spread = target_base_spread + (current_recoil * recoil_spread_mult);
+
+        current_spread = glm::mix(current_spread, dynamic_spread, deltaTime * 20.0f);
+
+        ImVec2 center = ImGui::GetMainViewport()->GetCenter();
+        ImDrawList* draw_list = ImGui::GetBackgroundDrawList();
+
+        float line_length = 12.0f;
+        float thickness = 2.0f;
+        
+        float alpha = is_aiming ? 0.3f : 1.0f; 
+        ImU32 color = IM_COL32(0, 255, 0, (int)(255 * alpha));
+
+        draw_list->AddLine(
+            ImVec2(center.x - current_spread - line_length, center.y), 
+            ImVec2(center.x - current_spread, center.y), 
+            color, thickness);
+            
+        draw_list->AddLine(
+            ImVec2(center.x + current_spread, center.y), 
+            ImVec2(center.x + current_spread + line_length, center.y), 
+            color, thickness);
+            
+        draw_list->AddLine(
+            ImVec2(center.x, center.y - current_spread - line_length), 
+            ImVec2(center.x, center.y - current_spread), 
+            color, thickness);
+            
+        draw_list->AddLine(
+            ImVec2(center.x, center.y + current_spread), 
+            ImVec2(center.x, center.y + current_spread + line_length), 
+            color, thickness);
+
+        draw_list->AddCircleFilled(center, 2.0f, color);
     }
 };
 

@@ -1,24 +1,13 @@
-#include "vortex_behaviour.hpp"
-#include "util/vortex_script_registry.hpp"
-#include "vortex_keyboard.hpp"
-#include "vortex_mouse.hpp"
-#include "vortex_physics.hpp"
-#include "vortex_objectmanager.hpp"
-#include "vortex_model.hpp"
-#include "vortex_hud.hpp"
-#include "vortex_audio.hpp"
-#include "vortex_rigidbody.hpp"
+#include "VortexEngine.hpp"
 
 #include "myTags.hpp"
-
-#include <cstdlib>
 
 class PlayerBulletMover : public VortexMonoBehaviour
 {
 private:
     float speed = 150.0f;
     float distance_traveled = 0.0f;
-    glm::vec3 fly_direction;
+    Vec3 fly_direction;
     float bullet_damage = 5.0f;
     VortexModel *player;
     VortexModel *gun;
@@ -30,14 +19,14 @@ public:
 
         VortexCamera* cam = gameObject->app->camera;
 
-        glm::vec3 crosshair_target = cam->position + (cam->front * 100.0f);
-
-        glm::vec3 base_direction = glm::normalize(crosshair_target - gameObject->transform.position);
+        Vec3 crosshair_target = cam->position + (cam->front * 100.0f);
+        
+        Vec3 base_direction = glm::normalize(crosshair_target - gameObject->transform.position);
 
         bool is_aiming = VortexMouse::get_button("RIGHT");
         float spread_factor = is_aiming ? 0.005f : 0.05f; 
 
-        glm::vec3 spread(
+        Vec3 spread(
             ((rand() / (float)RAND_MAX) - 0.5f) * spread_factor,
             ((rand() / (float)RAND_MAX) - 0.5f) * spread_factor,
             ((rand() / (float)RAND_MAX) - 0.5f) * spread_factor

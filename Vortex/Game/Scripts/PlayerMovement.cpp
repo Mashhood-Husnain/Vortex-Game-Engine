@@ -1,13 +1,4 @@
-#include "vortex_behaviour.hpp"
-#include "util/vortex_script_registry.hpp"
-#include "vortex_keyboard.hpp"
-#include "vortex_mouse.hpp"
-#include "vortex_physics.hpp"
-#include "vortex_objectmanager.hpp"
-#include "vortex_model.hpp"
-#include "vortex_hud.hpp"
-#include "vortex_audio.hpp"
-#include "vortex_rigidbody.hpp"
+#include "VortexEngine.hpp"
 
 class PlayerMovement : public VortexMonoBehaviour
 {
@@ -35,16 +26,14 @@ public:
 
     void on_update(float deltaTime) override
     {
-        draw_crosshair();
-
-        glm::vec3 cam_forward = gameObject->app->camera->front;
-        glm::vec3 cam_right = gameObject->app->camera->right;
+        Vec3 cam_forward = gameObject->app->camera->front;
+        Vec3 cam_right = gameObject->app->camera->right;
         cam_forward.y = 0.0f;
         cam_right.y = 0.0f;
         cam_forward = glm::normalize(cam_forward);
         cam_right = glm::normalize(cam_right);
 
-        glm::vec3 move_dir(0.0f);
+        Vec3 move_dir(0.0f);
         if (VortexKeyboard::get_key("W")) move_dir += cam_forward;
         if (VortexKeyboard::get_key("S")) move_dir -= cam_forward;
         if (VortexKeyboard::get_key("A")) move_dir -= cam_right;
@@ -54,8 +43,8 @@ public:
             move_dir = glm::normalize(move_dir) * movement_speed * deltaTime;
         }
 
-        move_and_collide(glm::vec3(move_dir.x, 0.0f, 0.0f));
-        move_and_collide(glm::vec3(0.0f, 0.0f, move_dir.z));
+        move_and_collide(Vec3(move_dir.x, 0.0f, 0.0f));
+        move_and_collide(Vec3(0.0f, 0.0f, move_dir.z));
 
         if (is_grounded && VortexKeyboard::get_key("SPACE"))
         {
@@ -85,7 +74,7 @@ public:
         }
     }
 
-    void move_and_collide(glm::vec3 move_amount)
+    void move_and_collide(Vec3 move_amount)
     {
         gameObject->transform.position += move_amount;
 
@@ -104,13 +93,6 @@ public:
                 break;
             }
         }
-    }
-
-    void draw_crosshair()
-    {
-        VortexHUD::Begin();
-        VortexHUD::Rect(ImVec2(crosshair.x / 2, crosshair.y / 2), ImVec2(10, 10), ImVec4(0, 1, 0, 1), 2.0f);
-        VortexHUD::End();
     }
 };
 

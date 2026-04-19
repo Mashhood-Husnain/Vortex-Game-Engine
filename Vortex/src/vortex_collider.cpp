@@ -53,7 +53,7 @@ void VortexBoxCollider::draw(VortexShader &collider_shader, VortexCamera &camera
     collider_shader.setMat4("view", camera.getViewMatrix());
     collider_shader.setMat4("projection", camera.getProjectionMatrix());
 
-    glm::mat4 collider_matrix = model->model_matrix;
+    glm::mat4 collider_matrix = model->get_model_matrix();
     collider_matrix = glm::scale(collider_matrix, model->collider_scale);
 
     collider_shader.setMat4("model", collider_matrix);

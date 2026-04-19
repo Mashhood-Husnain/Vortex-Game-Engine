@@ -1,6 +1,5 @@
 #pragma once
 
-#include "vortex_model.hpp"
 
 #include <string>
 #include <json.hpp>

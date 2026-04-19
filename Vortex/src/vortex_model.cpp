@@ -32,6 +32,35 @@ VortexModel::VortexModel(const std::string& path, VortexApplication *window)
     }
 }
 
+glm::mat4 VortexModel::get_model_matrix()
+{
+    if (transform.position != m_last_pos || 
+        transform.orientation != m_last_rot || 
+        transform.scale    != m_last_scale || 
+        m_is_dirty) 
+    {
+        m_cached_matrix = glm::mat4(1.0f);
+        m_cached_matrix = glm::translate(m_cached_matrix, transform.position);
+
+        m_cached_matrix *= glm::mat4_cast(transform.orientation);
+
+        m_cached_matrix = glm::scale(m_cached_matrix, transform.scale);
+
+        m_last_pos   = transform.position;
+        m_last_rot   = transform.orientation;
+        m_last_scale = transform.scale;
+        
+        m_is_dirty = false;
+    }
+
+    return m_cached_matrix;
+}
+
+void VortexModel::set_model_matrix(glm::mat4 matrix)
+{
+    model_matrix = matrix;
+}
+
 void VortexModel::draw(const VortexShader &shader, VortexCamera &camera, bool wireframe)
 {
     const VortexShader *active_shader = &shader;
@@ -94,24 +123,21 @@ void VortexModel::draw(const VortexShader &shader, VortexCamera &camera, bool wi
     }
 
     glBindVertexArray(shared_data->VAO);
+
+    glm::mat4 base_matrix = get_model_matrix();
     for (size_t i = 0; i < shared_data->objects.size(); i++)
     {
         if (!active_parts[i]) continue;
 
-        auto &obj = shared_data->objects[i];
+        VortexModel_Object &obj = shared_data->objects[i];
 
         if (obj.vertex_count == 0) continue;
 
-        model_matrix = glm::mat4(1.0f);
-        model_matrix = glm::translate(model_matrix, transform.position + obj.transform.position);
+        glm::mat4 local_model_matrix = glm::translate(base_matrix, obj.transform.position);
+        local_model_matrix *= glm::mat4_cast(obj.transform.orientation);        
+        local_model_matrix = glm::scale(local_model_matrix, obj.transform.scale);
 
-        glm::vec3 total_rot = transform.rotation + obj.transform.rotation;
-        model_matrix = glm::rotate(model_matrix, glm::radians(total_rot.x), glm::vec3(1, 0, 0));
-        model_matrix = glm::rotate(model_matrix, glm::radians(total_rot.y), glm::vec3(0, 1, 0));
-        model_matrix = glm::rotate(model_matrix, glm::radians(total_rot.z), glm::vec3(0, 0, 1));
-        model_matrix = glm::scale(model_matrix, glm::vec3(transform.scale * obj.transform.scale));
-
-        active_shader->setMat4("model", model_matrix);
+        active_shader->setMat4("model", local_model_matrix);
 
         glDrawArrays(GL_TRIANGLES, obj.vertex_offset, obj.vertex_count);
     }

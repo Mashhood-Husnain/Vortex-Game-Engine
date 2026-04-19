@@ -22,6 +22,7 @@ class ParticleSystem;
 class VortexProject;
 class ScriptRegistry;
 class VortexMonoBehaviour;
+class VortexEditor;
 
 namespace VortexGuiLambda
 {
@@ -98,6 +99,8 @@ class VortexGUI
     void gui_set_post_processor();
 
 public:
+    char save_project_name[128] = "MyProject";
+
     bool show_gui = true;
     bool show_debug_gui = true;
 
@@ -120,6 +123,8 @@ public:
 
     void post_process_options();
     void skybox_options();
+
+    void draw_exit_modal();
 
     void engine_stats();
 };

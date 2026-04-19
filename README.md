@@ -65,8 +65,13 @@ When you launch the engine, you will start in Editor Mode attached to the defaul
 | **W, A, S, D** | Move camera horizontally |
 | **Q, E** | Move camera up / down |
 | **M** | Release/Capture Mouse (Use this to interact with the Creator Tool or Inspector) |
-| **T** | Toggle Wireframe view for all models |
+| **Z** | Toggle Wireframe view for all models |
 | **F** | Toggle Fullscreen / Windowed mode |
 | **V** | Toggle XYZ Gizmo |
+| **R** | Toggle for Rotating object |
+| **T** | Toggle for Translating object |
+| **Y** | Toggle for Scaling object |
 | **TAB** | Toggle Engine Stats view in Play Mode (this binding only works in Play Mode)|
+| **LEFT CTRL** | Snap slected model to grid |
+| **LEFT ALT** | Snap selected model to the ground |
 | **Escape** | Exit Play Mode (if playing) OR Exit Engine (if in editor) |

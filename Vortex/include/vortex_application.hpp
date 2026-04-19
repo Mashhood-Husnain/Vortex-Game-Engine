@@ -38,6 +38,8 @@
 #include "util/vortex_save_load.hpp"
 #include "util/vortex_logs.hpp"
 
+class VortexEditor;
+
 enum class EngineState
 {
     EDITOR,
@@ -47,8 +49,6 @@ enum class EngineState
 class VortexApplication
 {
     GLFWwindow *window = nullptr;
-    int default_window_width;
-    int default_window_height;
     std::string window_name;
     bool is_fullscreen = false;
     int stored_window_x_pos;
@@ -77,11 +77,20 @@ class VortexApplication
     void setup_world_axis_buffers();
     void draw_world_axis();
     void draw_world_axis_gizmo();
+    static void window_close_callback(GLFWwindow* window);
 public:
+    int default_window_width;
+    int default_window_height;
+
     EngineState current_state = EngineState::EDITOR;
 
     VortexCamera *camera = nullptr;
     VortexCamera *editor_camera = nullptr;
+
+    VortexEditor *engine_editor = nullptr;
+
+    bool show_exit_modal = false;
+    bool has_unsaved_changes = false;
 
     float deltaTime = 0.0f;
     bool show_wireframe = false;
@@ -100,4 +109,5 @@ public:
     void set_skybox(VortexSkybox *skybox);
 
     void show_mouse(bool status);
+    void request_exit();
 };

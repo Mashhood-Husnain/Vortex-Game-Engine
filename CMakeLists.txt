@@ -49,6 +49,10 @@ add_library(imgui
 )
 target_include_directories(imgui PUBLIC vendor/imgui vendor/glfw/include)
 
+# ImGuizmo
+add_library(ImGuizmo vendor/ImGuizmo/ImGuizmo.cpp)
+target_include_directories(ImGuizmo PUBLIC vendor/ImGuizmo vendor/imgui)
+
 # NVML
 target_include_directories(imgui PUBLIC vendor/nvml)
 include_directories(vendor/nvml)
@@ -89,7 +93,11 @@ add_executable(engine
     Vortex/src/vortex_model.cpp
     Vortex/src/vortex_particlesystem.cpp
     Vortex/src/vortex_shadowmanager.cpp
-    Vortex/src/vortex_gui.cpp
+    Vortex/src/vortex_gui_core.cpp
+    Vortex/src/vortex_gui_creator.cpp
+    Vortex/src/vortex_gui_environment.cpp
+    Vortex/src/vortex_gui_inspector.cpp
+    Vortex/src/vortex_gui_overlays.cpp
     Vortex/src/vortex_postprocessor.cpp
     Vortex/src/vortex_skybox.cpp
     Vortex/src/vortex_grid.cpp
@@ -104,6 +112,7 @@ add_executable(engine
     Vortex/src/vortex_rigidbody.cpp
     Vortex/src/vortex_uimanager.cpp
     Vortex/src/vortex_canvas.cpp
+    Vortex/src/vortex_editor.cpp
 
     Vortex/src/util/vortex_save_load.cpp
     Vortex/src/util/vortex_nvml.cpp
@@ -124,6 +133,7 @@ target_include_directories(engine PUBLIC
     vendor/nvml
     vendor/nlohmann_json
     vendor/miniaudio
+    vendor/ImGuizmo
 )
 
 # ----------------------------
@@ -137,6 +147,7 @@ target_link_libraries(engine
     stb_image
     imgui
     miniaudio
+    ImGuizmo
     Threads::Threads
     m
     rt

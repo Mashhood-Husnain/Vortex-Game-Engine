@@ -20,7 +20,6 @@ using json = nlohmann::json;
 
 struct SaveScene_snapshot
 {
-
     std::string &project_name;
     std::vector<VortexModel*> &active_models;
     std::vector<ParticleSystem*> &active_systems;
@@ -35,4 +34,6 @@ public:
     static void save_project(SaveScene_snapshot *snapshot);
 
     static void load_project(SaveScene_snapshot *snapshot);
+
+    static bool check_save_state(SaveScene_snapshot *snapshot);
 };

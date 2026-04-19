@@ -7,6 +7,7 @@
  */
 
 #include "vortex_shadowmanager.hpp"
+#include "vortex_camera.hpp"
 
 ShadowManager::ShadowManager()
 {

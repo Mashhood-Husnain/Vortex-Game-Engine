@@ -14,8 +14,9 @@
 #include <functional>
 
 #include "vortex_shaders.hpp"
-#include "vortex_camera.hpp"
 #include "util/vortex_global_vars.hpp"
+
+class VortexCamera;
 
 class ShadowManager
 {

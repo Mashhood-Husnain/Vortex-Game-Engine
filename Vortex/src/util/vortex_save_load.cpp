@@ -18,7 +18,12 @@ void VortexProject::save_project(SaveScene_snapshot *scene_snapshot)
         j_model["path"] = model->file_path;
         j_model["name"] = model->model_name;
         j_model["position"] = {model->transform.position.x, model->transform.position.y, model->transform.position.z};
-        j_model["rotation"] = {model->transform.rotation.x, model->transform.rotation.y, model->transform.rotation.z};
+        j_model["orientation"] = {
+            model->transform.orientation.w,
+            model->transform.orientation.x, 
+            model->transform.orientation.y, 
+            model->transform.orientation.z
+        };
         j_model["scale"] = {model->transform.scale.x, model->transform.scale.y, model->transform.scale.z};
 
         j_model["show_collider"] = model->show_collider;
@@ -117,7 +122,16 @@ void VortexProject::load_project(SaveScene_snapshot *scene_snapshot)
         }
 
         new_model->transform.position = glm::vec3(j_model["position"][0], j_model["position"][1], j_model["position"][2]);
-        new_model->transform.rotation = glm::vec3(j_model["rotation"][0], j_model["rotation"][1], j_model["rotation"][2]);
+        if (j_model.contains("orientation"))
+        {
+            auto &q = j_model["orientation"];
+            new_model->transform.orientation = glm::quat(
+                q[0].get<float>(),
+                q[1].get<float>(),
+                q[2].get<float>(),
+                q[3].get<float>()
+            );
+        }
         new_model->transform.scale = glm::vec3(j_model["scale"][0], j_model["scale"][1], j_model["scale"][2]);
         new_model->model_name = j_model["name"];
 
@@ -184,4 +198,75 @@ void VortexProject::load_project(SaveScene_snapshot *scene_snapshot)
     }
 
     VORTEX_INFO("[PROJECT] Successfully loaded ", scene_snapshot->project_name);
+}
+
+bool VortexProject::check_save_state(SaveScene_snapshot *snapshot)
+{
+    std::string filepath = "saves/" + snapshot->project_name + ".vtx"; 
+    std::ifstream file(filepath);
+
+    if (!file.is_open())
+    {
+        return snapshot->active_models.empty() && snapshot->active_systems.empty();
+    }
+
+    json saved_data;
+    try
+    {
+        file >> saved_data;
+    } catch (...)
+    {
+        return false;
+    }
+
+    if (saved_data["m_selected_skybox_idx"] != snapshot->m_selected_skybox_idx) return false;
+    if (saved_data["m_selected_shader_idx"] != snapshot->m_selected_shader_idx) return false;
+
+    if (saved_data["models"].size() != snapshot->active_models.size()) return false;
+    if (saved_data["particle_systems"].size() != snapshot->active_systems.size()) return false;
+
+    auto float_equals = [](float a, float b) { return std::abs(a - b) < 0.001f; };
+
+    for (size_t i = 0; i < snapshot->active_models.size(); i++)
+    {
+        VortexModel* model = snapshot->active_models[i];
+        json& saved_model = saved_data["models"][i];
+
+        if (saved_model["name"] != model->model_name) return false;
+
+        if (!float_equals(saved_model["position"][0], model->transform.position.x) ||
+            !float_equals(saved_model["position"][1], model->transform.position.y) ||
+            !float_equals(saved_model["position"][2], model->transform.position.z)) return false;
+
+        if (!float_equals(saved_model["scale"][0], model->transform.scale.x) ||
+            !float_equals(saved_model["scale"][1], model->transform.scale.y) ||
+            !float_equals(saved_model["scale"][2], model->transform.scale.z)) return false;
+
+        if (!float_equals(saved_model["orientation"][0], model->transform.orientation.w) ||
+            !float_equals(saved_model["orientation"][1], model->transform.orientation.x) ||
+            !float_equals(saved_model["orientation"][2], model->transform.orientation.y) ||
+            !float_equals(saved_model["orientation"][3], model->transform.orientation.z)) return false;
+
+        if (saved_model.contains("show_collider") && saved_model["show_collider"] != model->show_collider) return false;
+        
+        if (saved_model.contains("collider_scale"))
+        {
+            if (!float_equals(saved_model["collider_scale"][0], model->collider_scale.x) ||
+                !float_equals(saved_model["collider_scale"][1], model->collider_scale.y) ||
+                !float_equals(saved_model["collider_scale"][2], model->collider_scale.z)) return false;
+        }
+
+        if (saved_model.contains("scripts") && saved_model["scripts"].size() != model->script_names.size()) return false;
+    }
+
+    for (size_t i = 0; i < snapshot->active_systems.size(); i++)
+    {
+        ParticleSystem* ps = snapshot->active_systems[i];
+        json& saved_ps = saved_data["particle_systems"][i];
+
+        if (saved_ps["name"] != ps->name) return false;
+        if (saved_ps["max_particles"] != ps->max_particles) return false;
+    }
+
+    return true; 
 }

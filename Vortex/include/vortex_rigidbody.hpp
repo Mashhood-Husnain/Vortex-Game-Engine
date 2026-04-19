@@ -1,6 +1,7 @@
 #pragma once
 
 #include "vortex_behaviour.hpp"
+#include <json.hpp>
 #include "vortex_physics.hpp"
 #include "vortex_objectmanager.hpp"
 #include "util/vortex_script_registry.hpp"
