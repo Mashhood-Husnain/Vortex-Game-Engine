@@ -9,6 +9,8 @@ private:
     Vec3 ads_offset = Vec3(0.00759287f, -0.0500511f, -0.207612f);
     Vec3 current_offset;
 
+    float recoil_up_movement = 0.25f;
+
     float current_recoil = 0.0f;
     float max_recoil = 0.2f;
     float recoil_recovery_speed = 5.0f;
@@ -28,11 +30,21 @@ private:
     float hip_spread = 25.0f;
     float ads_spread = 5.0f;
     float recoil_spread_mult = 150.0f;
+
+    VortexModel *target_player;
+    Vec3 follow_position = Vec3(0.0f);
 public:
+    GunBehaviour()
+    {
+        expose_float("recoil_up_movement", &recoil_up_movement, true);
+    }
+
     void on_start() override
     {
         current_offset = hip_offset;
         current_mag_bullets = max_mag_capacity;
+
+        target_player = VortexObjectManager::get_object_by_tag("Player");
         
         setup_hud();
         show_bullet_stats();
@@ -60,7 +72,7 @@ public:
 
         if (VortexMouse::get_button("LEFT") && fire_timer <= 0.0f)
         {
-            fire_weapon(cam);
+            fire_weapon(cam, deltaTime);
             fire_timer = fire_rate;
         }
 
@@ -91,7 +103,27 @@ public:
         Vec3 scale = gameObject->transform.scale;
         Vec3 scaled_offset = current_offset * scale;
 
-        Vec3 hand_pos = cam->position 
+        if (target_player)
+        {
+            VortexMonoBehaviour *cam_script = target_player->get_behaviour("PlayerCamera");
+            if (cam_script)
+            {
+                bool *is3rdperson = cam_script->search_variable_by_name<bool>("Start in 3rd Person", ScriptVarType::BOOL);
+                if (is3rdperson)
+                {
+                    if (*is3rdperson)
+                    {
+                        follow_position = target_player->transform.position;
+                    }
+                    else
+                    {
+                        follow_position = cam->position;
+                    }
+                }
+            }
+        }
+
+        Vec3 hand_pos = follow_position 
                         + (forward * scaled_offset.z) 
                         + (up * scaled_offset.y)
                         + (right * scaled_offset.x);
@@ -118,12 +150,25 @@ public:
         gameObject->transform.orientation = Quaternion(rot);
     }
 
-    void fire_weapon(VortexCamera* cam)
+    void fire_weapon(VortexCamera* cam, float deltaTime)
     {
         if (current_mag_bullets <= 0)
         {
             start_reload();
             return;
+        }
+
+        if (target_player)
+        {
+            VortexMonoBehaviour *cam_script = target_player->get_behaviour("PlayerCamera");
+            if (cam_script)
+            {
+                float *cam_pitch = cam_script->search_variable_by_name<float>("camera_pitch", ScriptVarType::FLOAT);
+                if (cam_pitch)
+                {
+                    *cam_pitch += recoil_up_movement;
+                }
+            }
         }
 
         current_mag_bullets -= 1;

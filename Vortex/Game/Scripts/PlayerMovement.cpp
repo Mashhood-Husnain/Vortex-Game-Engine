@@ -16,6 +16,11 @@ private:
     VortexModel *floor;
 public:
 
+    PlayerMovement()
+    {
+        expose_float("Gravity", &gravity, true);
+    }
+
     void on_start() override
     {
         crosshair = VortexHUD::GetScreenDimensions();
@@ -39,7 +44,8 @@ public:
         if (VortexKeyboard::get_key("A")) move_dir -= cam_right;
         if (VortexKeyboard::get_key("D")) move_dir += cam_right;
 
-        if (glm::length(move_dir) > 0.0f) {
+        if (glm::length(move_dir) > 0.0f)
+        {
             move_dir = glm::normalize(move_dir) * movement_speed * deltaTime;
         }
 

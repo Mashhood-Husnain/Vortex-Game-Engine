@@ -257,6 +257,26 @@ bool VortexProject::check_save_state(SaveScene_snapshot *snapshot)
         }
 
         if (saved_model.contains("scripts") && saved_model["scripts"].size() != model->script_names.size()) return false;
+    
+        if (saved_model.contains("script_data"))
+        {
+            for (size_t s = 0; s < model->script_names.size(); s++)
+            {
+                std::string s_name = model->script_names[s];
+                
+                json live_script_data = json::object();
+                model->behaviours[s]->serialize(live_script_data);
+                
+                if (saved_model["script_data"].contains(s_name))
+                {
+                    if (saved_model["script_data"][s_name] != live_script_data) return false;
+                }
+                else if (!live_script_data.empty())
+                {
+                    return false;
+                }
+            }
+        }
     }
 
     for (size_t i = 0; i < snapshot->active_systems.size(); i++)

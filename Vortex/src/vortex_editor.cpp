@@ -28,7 +28,6 @@ void VortexEditor::handle_picking(VortexCamera* camera)
         {
             selected_model = hit.hit_model;
             selected_model->is_selected = true;
-            VORTEX_INFO("Editor Selected: ", selected_model->model_name);
         }
         else
         {

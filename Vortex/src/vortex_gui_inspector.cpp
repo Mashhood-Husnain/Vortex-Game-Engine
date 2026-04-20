@@ -105,30 +105,63 @@ void VortexGUI::inspector_info(VortexModel* model, ParticleSystem *ps)
                 {
                     ImGui::PushID(static_cast<int>(i));
 
-                    ImGui::Bullet();
-                    ImGui::SameLine();
-                    ImGui::Text("%s", model->script_names[i].c_str());
+                    std::string script_name = model->script_names[i];
+                    VortexMonoBehaviour *script = model->behaviours[i];
 
-                    ImGui::SameLine(ImGui::GetContentRegionAvail().x - 60);
-
-                    if (ImGui::SmallButton("Remove"))
-                    {
-                        script_to_delete = static_cast<int>(i);
-                    }
-
-                    VortexRigidbody* rigid_body = dynamic_cast<VortexRigidbody*>(model->behaviours[i]);
-                    if (rigid_body)
+                    if (ImGui::CollapsingHeader(script_name.c_str(), ImGuiTreeNodeFlags_DefaultOpen))
                     {
                         ImGui::Indent();
-                        ImGui::Checkbox("Is Kinematic", &rigid_body->is_kinematic);
-                        ImGui::Checkbox("Gravity", &rigid_body->gravity);
-                        if (rigid_body->gravity)
+
+                        // VortexRigidbody* rigid_body = dynamic_cast<VortexRigidbody*>(model->behaviours[i]);
+                        VortexRigidbody* rigid_body = model->get_componant<VortexRigidbody>();
+                        if (rigid_body)
                         {
-                            ImGui::DragFloat("Gravity Value", &rigid_body->gravity_value, 0.1f);
+                            ImGui::Checkbox("Is Kinematic", &rigid_body->is_kinematic);
+                            ImGui::Checkbox("Gravity", &rigid_body->gravity);
+                            if (rigid_body->gravity)
+                            {
+                                ImGui::DragFloat("Gravity Value", &rigid_body->gravity_value, 0.1f);
+                            }
                         }
+
+                        for (auto &var : script->exposed_variables)
+                        {
+                            if (!var.show_in_editor) continue;
+
+                            if (var.type == ScriptVarType::INT)
+                            {
+                                ImGui::DragInt(var.name.c_str(), (int*)var.data_ptr);
+                            }
+                            if (var.type == ScriptVarType::FLOAT)
+                            {
+                                ImGui::DragFloat(var.name.c_str(), (float*)var.data_ptr, 0.1f);
+                            }
+                            if (var.type == ScriptVarType::BOOL)
+                            {
+                                ImGui::Checkbox(var.name.c_str(), (bool*)var.data_ptr);
+                            }
+                            if (var.type == ScriptVarType::VEC3)
+                            {
+                                ImGui::DragFloat3(var.name.c_str(), (float*)var.data_ptr, 0.1f);
+                            }
+                            if (var.type == ScriptVarType::STRING)
+                            {
+                                std::string *str_ptr = (std::string*)var.data_ptr;
+                                char buffer[256];
+                                strncpy(buffer, str_ptr->c_str(), sizeof(buffer));
+                                if (ImGui::InputText(var.name.c_str(), buffer, IM_ARRAYSIZE(buffer)))
+                                {
+                                    *str_ptr = std::string(buffer);
+                                }
+                            }
+                        }
+                        if (ImGui::Button("Remove"))
+                        {
+                            script_to_delete = static_cast<int>(i);
+                        }
+
                         ImGui::Unindent();
                     }
-
                     ImGui::PopID();
                 }
 
