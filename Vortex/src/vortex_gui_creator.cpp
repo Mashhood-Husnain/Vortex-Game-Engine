@@ -26,7 +26,47 @@ void VortexGUI::creator_window()
 
     ImGui::SeparatorText("File Management");
     
-    ImGui::InputText("Project Name", save_project_name, sizeof(save_project_name));
+    static std::vector<std::string> all_saves;
+    static bool loaded_once = false;
+
+    if (!loaded_once)
+    {
+        all_saves = VortexProject::search_save_files();
+        loaded_once = true;
+    }
+
+    std::vector<std::string> filtered_saves;
+    std::string current_input = std::string(save_project_name);
+
+    for (const auto &file : all_saves)
+    {
+        std::string name = std::filesystem::path(file).stem().string();
+
+        if (current_input.empty() || name.find(current_input) != std::string::npos)
+        {
+            filtered_saves.push_back(name);
+        }
+    }
+
+    if (ImGui::BeginCombo("Select Existing", "Choose save file"))
+    {
+        for (const auto &name : filtered_saves)
+        {
+            bool is_selected = (current_input == name);
+
+            if (ImGui::Selectable(name.c_str(), is_selected))
+            {
+                snprintf(save_project_name, sizeof(save_project_name), "%s", name.c_str());
+            }
+
+            if (is_selected)
+            {
+                ImGui::SetItemDefaultFocus();
+            }
+        }
+
+        ImGui::EndCombo();
+    }
 
     if (ImGui::Button("Save Project", ImVec2(160, 30)))
     {
@@ -61,6 +101,11 @@ void VortexGUI::creator_window()
 
         gui_set_skybox();
         gui_set_post_processor();
+    }
+
+    if (ImGui::Button("Refresh Saves"))
+    {
+        all_saves = VortexProject::search_save_files();
     }
 
     ImGui::Spacing();

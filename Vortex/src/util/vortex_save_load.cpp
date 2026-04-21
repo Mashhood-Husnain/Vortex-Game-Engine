@@ -87,6 +87,33 @@ void VortexProject::save_project(SaveScene_snapshot *scene_snapshot)
     VORTEX_INFO("[PROJECT] Successfully saved to ", file_path);
 }
 
+std::vector<std::string> VortexProject::search_save_files(const std::string &file_name)
+{
+    const std::string base_path = "saves/";
+
+    if (!file_name.empty())
+    {
+        std::string file_path = base_path + file_name + ".vtx";
+        if (!std::filesystem::exists(file_path)) return {};
+
+        return {file_path};
+    }
+
+    if (!std::filesystem::exists(base_path)) return {};
+
+    std::vector<std::string> save_files;
+
+    for (const auto &entry  : std::filesystem::directory_iterator(base_path))
+    {
+        if (entry.is_regular_file() && entry.path().extension() == ".vtx")
+        {
+            save_files.push_back(entry.path().string());
+        }
+    }
+
+    return save_files;
+}
+
 void VortexProject::load_project(SaveScene_snapshot *scene_snapshot)
 {
     std::string file_path = "saves/" + scene_snapshot->project_name + ".vtx";

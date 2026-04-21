@@ -99,7 +99,7 @@ class VortexGUI
     void gui_set_post_processor();
 
 public:
-    char save_project_name[128] = "MyProject";
+    char save_project_name[128] = "";
 
     bool show_gui = true;
     bool show_debug_gui = true;

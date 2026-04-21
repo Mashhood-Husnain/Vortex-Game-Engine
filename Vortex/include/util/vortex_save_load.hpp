@@ -29,11 +29,10 @@ struct SaveScene_snapshot
 };
 
 class VortexProject
-{
+{    
 public:
+    static std::vector<std::string> search_save_files(const std::string &file_name="");
     static void save_project(SaveScene_snapshot *snapshot);
-
     static void load_project(SaveScene_snapshot *snapshot);
-
     static bool check_save_state(SaveScene_snapshot *snapshot);
 };
