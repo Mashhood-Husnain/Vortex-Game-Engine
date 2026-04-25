@@ -7,6 +7,7 @@ Thumbs.db
 *.swp
 *~
 *.user
+saves/
 
 # --- 2. C++ Compilation Artifacts ---
 *.o

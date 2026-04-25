@@ -611,6 +611,16 @@ void VortexApplication::show_mouse(bool status)
 {
     show_mouse_cursor = status;
 
-    if (status) glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_NORMAL);
-    else glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
+    ImGuiIO &io = ImGui::GetIO();
+
+    if (show_mouse_cursor)
+    {
+        glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_NORMAL);
+        io.ConfigFlags &= ~ImGuiConfigFlags_NoMouse;
+    }
+    else
+    {
+        glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
+        io.ConfigFlags |= ImGuiConfigFlags_NoMouse;
+    }
 }
