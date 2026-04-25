@@ -16,6 +16,9 @@
 #include <string>
 #include <functional>
 #include <algorithm>
+#include <imgui.h>
+#include <imgui_internal.h>
+#include <stb_image.h>
 
 #include "vortex_camera.hpp"
 #include "vortex_shaders.hpp"
@@ -60,11 +63,17 @@ class VortexApplication
     bool first_mouse = true;
     float last_frame = 0.0f;
 
+    bool enable_splash_screen = true; 
+    bool is_playing_splash = true;
+    GLuint splash_texture = 0;
+    int splash_width = 0;
+    int splash_height = 0;
+    float splash_timer = 0.0f;
+
     VortexShader *worldaxis_shader = nullptr;
     unsigned int world_axisVAO;
     unsigned int world_axisVBO;
 
-    PostProcessor *post_processor = nullptr;
     VortexSkybox *skybox = nullptr;
 
     VortexGrid *environment_grid = nullptr;
@@ -78,6 +87,9 @@ class VortexApplication
     void draw_world_axis();
     void draw_world_axis_gizmo();
     static void window_close_callback(GLFWwindow* window);
+
+    void load_splash_screen();
+    void draw_splash_overlay(float dt);
 public:
     int default_window_width;
     int default_window_height;
@@ -87,19 +99,19 @@ public:
     VortexCamera *camera = nullptr;
     VortexCamera *editor_camera = nullptr;
 
-    VortexEditor *engine_editor = nullptr;
-
     bool show_exit_modal = false;
     bool has_unsaved_changes = false;
 
     float deltaTime = 0.0f;
     bool show_wireframe = false;
-    bool show_mouse_cursor = false;
+    bool show_mouse_cursor = true;
     bool view_world_axis = false;
     ShadowManager *shadow_manager = nullptr;
     VortexGUI gui;
 
-    VortexApplication(std::string window_name, int width, int height);
+    PostProcessor *post_processor = nullptr;
+
+    VortexApplication(std::string window_name);
     ~VortexApplication();
 
     void run(std::function<void()> draw_callback);

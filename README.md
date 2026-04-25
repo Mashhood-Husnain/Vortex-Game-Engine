@@ -7,46 +7,99 @@ While core features such as high-performance particle pooling and instanced rend
 (Note: I am building this from scratch to learn engine architecture, so expect rough edges as I figure out what I am doing!)
 
 ## Prerequisites
-Vortex Engine is currently built for Linux (Ubuntu/Debian). You will need git and cmake installed on your system.
+Vortex Engine is currently built for Linux (Ubuntu/Debian).
 
 ## Installation and Building
 
-1. Clone the repository
+The easiest way to get started is by running the included setup script. This script automatically fetches the required Linux headers and graphics libraries, compiles the engine, and sets up a desktop application shortcut so you can launch it directly from your app menu without using the terminal.
+
+### Method 1: Automated Setup (Recommended)
+
+1. **Clone the repository**
 
 ```bash
 git clone git@github.com:Mashhood-Husnain/Vortex-Game-Engine.git
 cd Vortex-Game-Engine
 ```
 
-2. Install dependencies
+2. **Run the setup script**
 
-The easiest way to get started is by running the included setup script, which will automatically fetch the required Linux headers and graphics libraries:
+Depending on your preferred shell, run either the Bash or Fish script. This handles all dependencies, compilation, and OS integration:
 
 ```bash
+# For Bash users
 chmod +x setup_linux.sh
 ./setup_linux.sh
+
+# For Fish users
+chmod +x setup_linux.fish
+./setup_linux.fish
 ```
 
-Troubleshooting: If the script fails, you can manually check for missing packages by running cmake -B build. CMake will output a list of any missing dependencies you need to install via your package manager.
+Once the script completes, you can simply open your Linux application menu, search for Vortex Engine, and launch it!
 
-3. Compile the engine
+### Method 2: Manual Setup (Fallback)
 
-Once your dependencies are installed, generate the build files and compile:
+If the setup script fails for some reason, or if you prefer to build the environment yourself, follow these manual steps.
+
+1. **Install dependencies**
+
+Troubleshooting: You can check for missing packages by generating the build files with cmake -B build. CMake will output a list of any missing dependencies (like Wayland, X11, or OpenGL headers) that you need to install via your package manager.
+
+2. **Compile the engine**
+
+Once your dependencies are installed, generate the build files and compile using all available CPU cores:
 
 ```bash
 mkdir -p build
-
 cd build
-
 cmake -DCMAKE_BUILD_TYPE=Release ..
-
 make -j$(proc)
 ```
 
-4. Run the engine
+3. Run the engine
 
 ```bash
 ./engine
+```
+
+4. **Manual Desktop Integration (Optional)**
+
+If you compiled manually but still want Vortex Engine to appear in your system's application launcher, you can create the app shortcut yourself.
+
+First, copy the icon to your system's icon folder:
+
+```bash
+mkdir -p ~/.local/share/icons
+cp ../Vortex/assets/branding/vortex_icon.png ~/.local/share/icons/vortex_icon.png
+```
+
+Next, create the .desktop file:
+
+```bash
+nano ~/.local/share/applications/vortex-engine.desktop
+```
+
+Paste the following configuration into the file. **Important**: Replace /path/to/Vortex-Game-Engine with the actual absolute path to your cloned repository:
+
+```bash
+[Desktop Entry]
+Version=1.0
+Type=Application
+Name=Vortex Engine
+Comment=Custom C++ 3D Game Engine
+Exec=env -C "/path/to/Vortex-Game-Engine/Vortex" "/path/to/Vortex-Game-Engine/build/engine"
+Icon=vortex_icon
+Terminal=false
+Categories=Development;3DGraphics;
+```
+
+Finally, make the shortcut executable and update the desktop database so your OS recognizes it:
+
+
+```bash
+chmod +x ~/.local/share/applications/vortex-engine.desktop
+update-desktop-database ~/.local/share/applications
 ```
 
 ## Using the engine

@@ -293,7 +293,7 @@ public:
         current_spread = glm::mix(current_spread, dynamic_spread, deltaTime * 20.0f);
 
         ImVec2 center = ImGui::GetMainViewport()->GetCenter();
-        ImDrawList* draw_list = ImGui::GetBackgroundDrawList();
+        ImDrawList* draw_list = ImGui::GetForegroundDrawList(ImGui::GetMainViewport());
 
         float line_length = 12.0f;
         float thickness = 2.0f;

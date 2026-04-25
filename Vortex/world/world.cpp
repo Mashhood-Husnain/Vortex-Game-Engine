@@ -9,7 +9,7 @@
 #include "vortex_application.hpp"
 
 int main() {
-    VortexApplication VortexEngineWindow("Vortex Engine", 900, 600);
+    VortexApplication VortexEngineWindow("Vortex Engine");
 
     VortexEngineWindow.run([&](){});
 

@@ -31,6 +31,8 @@ public:
 
     void on_update(float deltaTime) override
     {
+        if (deltaTime > 0.05f) deltaTime = 0.05f;
+
         Vec3 cam_forward = gameObject->app->camera->front;
         Vec3 cam_right = gameObject->app->camera->right;
         cam_forward.y = 0.0f;

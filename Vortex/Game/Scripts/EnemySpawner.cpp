@@ -37,7 +37,7 @@ public:
                 float spawn_x = player_pos.x + (cos(random_angle) * random_radius);
                 float spawn_z = player_pos.z + (sin(random_angle) * random_radius);
                 
-                enemy->transform.position = Vec3(spawn_x, 0.0f, spawn_z);
+                enemy->transform.position = Vec3(spawn_x, 5.0f, spawn_z);
                 enemy->transform.scale = Vec3(2.0f, 2.0f, 2.0f);
 
                 enemy->model_name = "Enemy";

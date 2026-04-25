@@ -1,5 +1,7 @@
 #pragma once
 
+#define GLM_ENABLE_EXPERIMENTAL
+
 #include <imgui.h>
 #include <imgui_impl_glfw.h>
 #include <imgui_impl_opengl3.h>
@@ -11,6 +13,9 @@
 #include <vector>
 #include <algorithm>
 #include <fstream>
+#include <glm/gtc/type_ptr.hpp>
+#include <glm/gtx/matrix_decompose.hpp>
+#include <ImGuizmo.hpp>
 
 #include "util/vortex_engine_stats.hpp"
 #include "util/vortex_logs.hpp"
@@ -92,13 +97,33 @@ class VortexGUI
     std::vector<std::string> m_available_model_paths;
     bool m_models_scanned = false;
 
+    unsigned int scene_fbo = 0;
+    unsigned int scene_rbo = 0;
+    unsigned int scene_texture = 0;
+
     void refresh_skybox_list();
     void gui_set_skybox();
 
     void refresh_shader_list();
     void gui_set_post_processor();
 
+    void handle_picking(VortexCamera *camera, ImVec2 image_pos);
+    void handle_shortcuts();
+    void snap_to_floor();
+
+    void setup_scene_fbo(int width, int height);
+
 public:
+    VortexModel *m_selected_model = nullptr;
+    ImGuizmo::OPERATION m_current_op = ImGuizmo::TRANSLATE;
+    bool m_is_using_gizmo = false;
+
+    int scene_width = 1920;
+    int scene_height = 1080;
+
+    int viewport_width = 1920;
+    int viewport_height = 1080;
+
     char save_project_name[128] = "";
 
     bool show_gui = true;
@@ -107,10 +132,18 @@ public:
     int m_selected_skybox_idx = 0;
     int m_selected_shader_idx = 0;
 
+    std::string _vendor_;
+    std::string _renderer_;
+
     VortexGUI();
     ~VortexGUI();
 
-    void init(VortexApplication* app);
+    void build_dockspace();
+    void draw_editor_viewport(float deltaTime, VortexCamera* camera);
+    void resize_scene_fbo(int width, int height);
+    void bind_framebuffer();
+
+    void init(VortexApplication* app, int width, int height);
     void update();
     void render();
 

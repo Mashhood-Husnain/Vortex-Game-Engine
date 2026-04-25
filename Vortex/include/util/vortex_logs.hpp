@@ -67,11 +67,11 @@ public:
     }
 };
 
-#ifdef VORTEX_RELEASE
-    #define VORTEX_INFO(...)  
-    #define VORTEX_WARN(...)  
-    #define VORTEX_ERROR(...) 
-    #define VORTEX_FATAL(...) 
+#ifdef NDEBUG
+    #define VORTEX_INFO(...)
+    #define VORTEX_WARN(...)
+    #define VORTEX_ERROR(...)
+    #define VORTEX_FATAL(...)
 #else
     #define VORTEX_INFO(...)  VortexLog::Log(LogLevel::INFO,    LOG_COLOR_GREEN, " [INFO]    ", __VA_ARGS__)
     #define VORTEX_WARN(...)  VortexLog::Log(LogLevel::WARNING, LOG_COLOR_WARN,  " [WARN]    ", __VA_ARGS__)

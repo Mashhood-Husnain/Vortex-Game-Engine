@@ -112,7 +112,8 @@ add_executable(engine
     Vortex/src/vortex_rigidbody.cpp
     Vortex/src/vortex_uimanager.cpp
     Vortex/src/vortex_canvas.cpp
-    Vortex/src/vortex_editor.cpp
+    Vortex/src/vortex_gui_editor.cpp
+    Vortex/src/vortex_gui_dockspace.cpp
 
     Vortex/src/util/vortex_save_load.cpp
     Vortex/src/util/vortex_nvml.cpp

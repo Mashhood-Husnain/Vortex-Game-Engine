@@ -1,59 +1,60 @@
-#!/bin/bash
+#!/usr/bin/env fish
 
 echo "[Vortex Setup] Detecting Operating System..."
 
-if [ -f /etc/os-release ]; then
-    . /etc/os-release
-    
-    if [[ "$ID" == "ubuntu" || "$ID" == "debian" || "$ID_LIKE" == *"ubuntu"* ]]; then
+if test -f /etc/os-release
+    set OS_ID (grep -E '^ID=' /etc/os-release | cut -d '=' -f 2 | tr -d '"')
+    set OS_ID_LIKE (grep -E '^ID_LIKE=' /etc/os-release | cut -d '=' -f 2 | tr -d '"')
+
+    if test "$OS_ID" = "ubuntu"; or test "$OS_ID" = "debian"; or string match -q '*ubuntu*' "$OS_ID_LIKE"
         echo "[Vortex Setup] Ubuntu/Debian detected. Installing dependencies..."
         sudo apt update
         sudo apt install -y build-essential git cmake pkg-config libx11-dev libxrandr-dev libxinerama-dev libxcursor-dev libxi-dev libxkbcommon-dev libwayland-dev wayland-protocols libgl1-mesa-dev
         echo "[Vortex Setup] Dependencies installed successfully!"
         
-    elif [[ "$ID" == "arch" || "$ID_LIKE" == *"arch"* ]]; then
+    else if test "$OS_ID" = "arch"; or string match -q '*arch*' "$OS_ID_LIKE"
         echo "[Vortex Setup] Arch Linux detected. Installing dependencies..."
         sudo pacman -Syu --noconfirm base-devel git cmake pkgconf libx11 libxrandr libxinerama libxcursor libxi libxkbcommon wayland wayland-protocols mesa
         echo "[Vortex Setup] Dependencies installed successfully!"
         
     else
-        echo "[Vortex Setup] Unsupported Linux distribution: $ID"
+        echo "[Vortex Setup] Unsupported Linux distribution: $OS_ID"
         echo "Please install X11, Wayland, and OpenGL development headers manually."
-    fi
+    end
 else
     echo "[Vortex Setup] Cannot determine OS. Are you on Linux?"
-fi
+end
 
-CURRENT_DIR=$(pwd)
+set CURRENT_DIR (pwd)
 
 echo "[Vortex Setup] Building Vortex Engine..."
 
 mkdir -p build
-cd build || exit
+cd build; or exit
 
 cmake -DCMAKE_BUILD_TYPE=Release ..
-make -j$(nproc)
+make -j(nproc)
 
-if [ ! -f "engine" ]; then
+if not test -f "engine"
     echo "[Vortex Setup] Build failed! Please check the terminal output for errors."
     exit 1
-fi
+end
 
-cd "$CURRENT_DIR" || exit
+cd "$CURRENT_DIR"; or exit
 
 echo "[Vortex Setup] Integrating Vortex Engine into application launcher..."
 
-APPS_DIR="$HOME/.local/share/applications"
-ICONS_DIR="$HOME/.local/share/icons"
+set APPS_DIR "$HOME/.local/share/applications"
+set ICONS_DIR "$HOME/.local/share/icons"
 
 mkdir -p "$APPS_DIR"
 mkdir -p "$ICONS_DIR"
 
-if [ -f "$CURRENT_DIR/Vortex/assets/branding/vortex_icon.png" ]; then
+if test -f "$CURRENT_DIR/Vortex/assets/branding/vortex_icon.png"
     cp "$CURRENT_DIR/Vortex/assets/branding/vortex_icon.png" "$ICONS_DIR/"
 else
     echo "[Vortex Setup] Warning: vortex_icon.png not found. Please verify the path!"
-fi
+end
 
 printf "[Desktop Entry]\n\
 Version=1.0\n\

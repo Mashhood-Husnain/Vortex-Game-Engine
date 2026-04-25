@@ -2,11 +2,11 @@
 .DS_Store
 Thumbs.db
 .vscode/
+.cache/
 .idea/
 *.swp
 *~
 *.user
-*.fish
 
 # --- 2. C++ Compilation Artifacts ---
 *.o
@@ -29,6 +29,7 @@ cmake_install.cmake
 Makefile
 CTestTestfile.cmake
 compile_commands.json
+initialize_engine.fish
 
 # --- 5. Executables ---
 # Ignore all executables by default

@@ -7,7 +7,83 @@
  */
 
 #include "vortex_application.hpp"
-#include "vortex_editor.hpp"
+
+void VortexApplication::load_splash_screen()
+{
+    if (!enable_splash_screen) 
+    {
+        is_playing_splash = false;
+        return;
+    }
+
+    int channels;
+    unsigned char* data = stbi_load("assets/branding/vortex_logo.png", &splash_width, &splash_height, &channels, 4);
+    
+    if (!data)
+    {
+        VORTEX_ERROR("Splash screen logo not found!");
+        is_playing_splash = false;
+        return;
+    }
+
+    glGenTextures(1, &splash_texture);
+    glBindTexture(GL_TEXTURE_2D, splash_texture);
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, splash_width, splash_height, 0, GL_RGBA, GL_UNSIGNED_BYTE, data);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+    stbi_image_free(data);
+}
+
+void VortexApplication::draw_splash_overlay(float dt)
+{
+    if (!is_playing_splash) return;
+
+    splash_timer += dt;
+    float total_duration = 4.5f;
+    float fade_duration = 2.0f;
+
+    if (splash_timer >= total_duration) 
+    {
+        is_playing_splash = false;
+        glDeleteTextures(1, &splash_texture);
+        return;
+    }
+
+    float logo_alpha = 1.0f;
+    if (splash_timer < fade_duration) logo_alpha = splash_timer / fade_duration;
+    else if (splash_timer > total_duration - fade_duration) logo_alpha = (total_duration - splash_timer) / fade_duration;
+
+    float bg_alpha = 1.0f;
+    if (splash_timer > total_duration - fade_duration) bg_alpha = (total_duration - splash_timer) / fade_duration;
+
+    ImGuiViewport* viewport = ImGui::GetMainViewport();
+    ImDrawList* draw_list = ImGui::GetForegroundDrawList(viewport);
+
+    ImU32 bg_color = IM_COL32(15, 15, 18, (int)(bg_alpha * 255.0f));
+    draw_list->AddRectFilled(ImVec2(-5000.0f, -5000.0f), ImVec2(10000.0f, 10000.0f), bg_color);
+
+    float scaleX = viewport->Size.x / (float)splash_width;
+    float scaleY = viewport->Size.y / (float)splash_height;
+    float scale = std::max(scaleX, scaleY); 
+    
+    float display_width = splash_width * scale;
+    float display_height = splash_height * scale;
+
+    ImVec2 center = ImVec2(
+        viewport->Pos.x + (viewport->Size.x - display_width) * 0.5f, 
+        viewport->Pos.y + (viewport->Size.y - display_height) * 0.5f
+    );
+    
+    ImU32 tint_color = IM_COL32(255, 255, 255, (int)(logo_alpha * 255.0f));
+    
+    draw_list->AddImage(
+        (ImTextureID)(intptr_t)splash_texture, 
+        center, 
+        ImVec2(center.x + display_width, center.y + display_height), 
+        ImVec2(0.0f, 0.0f), ImVec2(1.0f, 1.0f), 
+        tint_color
+    );
+}
 
 GLFWmonitor* VortexApplication::get_current_monitor(GLFWwindow* window)
 {
@@ -46,13 +122,10 @@ GLFWmonitor* VortexApplication::get_current_monitor(GLFWwindow* window)
 void VortexApplication::framebuffer_size_callback(GLFWwindow* window, int width, int height)
 {
     auto* app = static_cast<VortexApplication*>(glfwGetWindowUserPointer(window));
-
-    if (app)
+    if (app && width > 0 && height > 0)
     {
-        glViewport(0, 0, width, height);
         app->default_window_width = width;
         app->default_window_height = height;
-        app->camera->aspect_ratio = static_cast<float>(width) / height;
     }
 }
 
@@ -85,6 +158,8 @@ void VortexApplication::window_close_callback(GLFWwindow* window)
 
 void VortexApplication::check_key_press()
 {
+    if (is_playing_splash) return;
+
     if (current_state == EngineState::EDITOR)
     {
         if (VortexKeyboard::get_key_down("F"))
@@ -117,6 +192,8 @@ void VortexApplication::check_key_press()
 
             camera = editor_camera;
 
+            VortexUIManager::cleanup();
+
             std::string project_name = "temp_playmode_backup";
             SaveScene_snapshot scene_snapshot = {
                 project_name,
@@ -144,11 +221,9 @@ void VortexApplication::setup_world_axis_buffers()
     glBindBuffer(GL_ARRAY_BUFFER, world_axisVBO);
     glBufferData(GL_ARRAY_BUFFER, sizeof(GLOBAL::DEFAULT_VERTICES::WORLD_AXES_VERTICES), GLOBAL::DEFAULT_VERTICES::WORLD_AXES_VERTICES, GL_STATIC_DRAW);
 
-    // position location
     glEnableVertexAttribArray(0);
     glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(float), (void*)0);
 
-    // color location
     glEnableVertexAttribArray(1);
     glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(float), (void*)(3 * sizeof(float)));
 }
@@ -177,6 +252,7 @@ void VortexApplication::draw_world_axis_gizmo()
 
     GLint viewport[4];
     glGetIntegerv(GL_VIEWPORT, viewport);
+    
     glViewport(10, 10, 100, 100);
 
     worldaxis_shader->setMat4("view", camera->getViewMatrix());
@@ -191,28 +267,33 @@ void VortexApplication::draw_world_axis_gizmo()
     glEnable(GL_DEPTH_TEST);
 }
 
-VortexApplication::VortexApplication(std::string window_name, int width, int height)
+VortexApplication::VortexApplication(std::string window_name)
 {
-    // Initialize GLFW;
     if (!glfwInit())
     {
         VORTEX_ERROR("Failed to initialize GLFW");
         exit(EXIT_FAILURE);
     }
 
-    //Configure GLFW (Version 3.3 Core)
+    GLFWmonitor* primary_monitor = glfwGetPrimaryMonitor();
+    int work_x, work_y, work_width, work_height;
+    glfwGetMonitorWorkarea(primary_monitor, &work_x, &work_y, &work_width, &work_height);
+
+    default_window_width = work_width;
+    default_window_height = work_height;
+    
+    stored_window_width = default_window_width;
+    stored_window_height = default_window_height;
+    
+    stored_window_x_pos = work_x;
+    stored_window_y_pos = work_y;
+
     glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
     glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
     glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
     glfwWindowHint(GLFW_AUTO_ICONIFY, GLFW_FALSE);
+    glfwWindowHint(GLFW_MAXIMIZED, GLFW_TRUE);
 
-    // Create Window
-    default_window_width = width;
-    default_window_height = height;
-    stored_window_width = width;
-    stored_window_height = height;
-    stored_window_x_pos = 100;
-    stored_window_y_pos = 100;
     this->window_name = window_name + " - " + GLOBAL::VORTEX_VERSION;
 
     editor_camera = new VortexCamera(glm::vec3(15.0f, 2.0f, 1.0f));
@@ -228,27 +309,27 @@ VortexApplication::VortexApplication(std::string window_name, int width, int hei
         glfwTerminate();
         exit(EXIT_FAILURE);
     }
-    // initialize window
+    
     glfwMakeContextCurrent(window);
     glfwSetWindowUserPointer(window, this);
     glfwSetFramebufferSizeCallback(window, framebuffer_size_callback);
-    glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
+    glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_NORMAL);
     glfwSetCursorPosCallback(window, mouse_callback);
     glfwSetWindowCloseCallback(window, window_close_callback);
 
-
-    // Initialize GLAD
     if (!gladLoadGLLoader((GLADloadproc)glfwGetProcAddress))
     {
         VORTEX_ERROR("Failed to initialize GLAD");
         exit(EXIT_FAILURE);
     }
 
+    int start_width, start_height;
+    glfwGetFramebufferSize(window, &start_width, &start_height);
+
     worldaxis_shader = new VortexShader("shaders/world_axis.vert", "shaders/world_axis.frag");
     setup_world_axis_buffers();
 
     shadow_manager = new ShadowManager();
-
     environment_grid = new VortexGrid();
 
     VortexObjectManager::init();
@@ -256,35 +337,23 @@ VortexApplication::VortexApplication(std::string window_name, int width, int hei
     VortexMouse::init(window);
     VortexAudio::init();
 
-    engine_editor = new VortexEditor();
-
-    // V-sync
     glfwSwapInterval(1);
 
-    // enable depth
     glEnable(GL_DEPTH_TEST);
     glDepthFunc(GL_LESS);
-
-    // enable culling of back faces
     glEnable(GL_CULL_FACE);
     glCullFace(GL_BACK);
     glFrontFace(GL_CCW);
 
     change_window_size();
-
     srand(static_cast<unsigned int>(time(0)));
-
-    int start_width, start_height;
-    glfwGetFramebufferSize(window, &start_width, &start_height);
-
-    glViewport(0, 0, start_width, start_height);
 
     if (this->camera)
     {
         this->camera->aspect_ratio = static_cast<float>(start_width) / static_cast<float>(start_height);
     }
 
-    gui.init(this);
+    gui.init(this, start_width, start_height);
 }
 
 VortexApplication::~VortexApplication()
@@ -294,21 +363,13 @@ VortexApplication::~VortexApplication()
     delete skybox;
     delete environment_grid;
     delete editor_camera;
-    delete engine_editor;
 
     VortexAssetManager::clean_up();
     VortexObjectManager::clean_up();
     VortexAudio::clean_up();
 
-    if (window)
-    {
-        glfwDestroyWindow(window);
-    }
-
-    if (post_processor)
-    {
-        delete post_processor;
-    }
+    if (window) glfwDestroyWindow(window);
+    if (post_processor) delete post_processor;
 
     worldaxis_shader = nullptr;
     shadow_manager = nullptr;
@@ -318,16 +379,8 @@ VortexApplication::~VortexApplication()
     post_processor = nullptr;
     skybox = nullptr;
     environment_grid = nullptr;
-    engine_editor = nullptr;
-
-    if (window)
-    {
-        glfwDestroyWindow(window);
-        window = nullptr;
-    }
 
     glfwTerminate();
-
     VORTEX_INFO("[ENGINE] Successfully Closed Application!");
 }
 
@@ -366,11 +419,6 @@ void VortexApplication::change_window_size()
         default_window_height = stored_window_height;
     }
 
-    if (post_processor)
-    {
-        post_processor->resize(default_window_width, default_window_height);
-    }
-
     glfwFocusWindow(window);
     glfwSwapInterval(1);
     first_mouse = true;
@@ -403,7 +451,6 @@ void VortexApplication::mouse_callback(GLFWwindow* window, double xposIn, double
             {
                 app->editor_camera->processMouseMovement(xoffset, yoffset);
             }
-
             else if (app->current_state == EngineState::PLAY && app->camera)
             {
                 app->camera->processMouseMovement(xoffset, yoffset);
@@ -418,7 +465,17 @@ void VortexApplication::run(std::function<void()> draw_callback)
     VORTEX_INFO("VENDOR:   ", glGetString(GL_VENDOR));
     VORTEX_INFO("RENDERER: ", glGetString(GL_RENDERER));
 
+    const GLubyte *vendor_ptr = glGetString(GL_VENDOR);
+    const GLubyte *renderer_ptr = glGetString(GL_RENDERER);
+
+    gui._vendor_ = vendor_ptr ? reinterpret_cast<const char*>(vendor_ptr) : "Unknown Vendor";
+    gui._renderer_  = renderer_ptr ? reinterpret_cast<const char*>(renderer_ptr) : "Unknown Renderer";
+
     glfwShowWindow(window);
+
+    load_splash_screen();
+
+    last_frame = static_cast<float>(glfwGetTime());
 
     while(!glfwWindowShouldClose(window))
     {
@@ -429,70 +486,58 @@ void VortexApplication::run(std::function<void()> draw_callback)
         deltaTime = currentFrame - last_frame;
         last_frame = currentFrame;
 
+        gui.update();
+
         if (!show_mouse_cursor && current_state == EngineState::EDITOR)
         {
             editor_camera->check_camera_movement(deltaTime);
         }
 
-        // draw shadow map
-        // shadow_manager->draw_shadow_map(draw_callback, editor_camera);
-        
+        if (gui.scene_height > 0) 
+        {
+            float target_aspect = static_cast<float>(gui.scene_width) / static_cast<float>(gui.scene_height);
+            if (camera) camera->aspect_ratio = target_aspect;
+            if (editor_camera) editor_camera->aspect_ratio = target_aspect;
+        }
+
+        if (gui.viewport_width > 0 && gui.viewport_height > 0 && 
+           (gui.viewport_height != gui.scene_height || gui.viewport_width != gui.scene_width))
+        {
+            gui.resize_scene_fbo(gui.viewport_width, gui.viewport_height);
+            if (post_processor) post_processor->resize(gui.scene_width, gui.scene_height);
+        }
+
         if (post_processor)
         {
             post_processor->begin();
-            glViewport(0, 0, default_window_width, default_window_height);
         }
         else
         {
-            glBindFramebuffer(GL_FRAMEBUFFER, 0);
-            glViewport(0, 0, default_window_width, default_window_height);
+            gui.bind_framebuffer();
         }
+
+        glViewport(0, 0, gui.scene_width, gui.scene_height);
         
-        // rendering
-        if (!skybox)
-        {
-            glClearColor(0.1f, 0.1f, 0.15f, 1.0f);
-        }
+        if (!skybox) glClearColor(0.1f, 0.1f, 0.15f, 1.0f);
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-        gui.update();
-        gui.engine_stats();
-        gui.camera_info(camera);
-        gui.post_process_options();
-        gui.skybox_options();
-        gui.creator_window();
-        gui.begin_scene_inspector();
+        if (skybox) skybox->draw(camera);
 
-        if (skybox)
-        {
-            skybox->draw(camera);
-        }
-
-        if (current_state == EngineState::PLAY)
-        {
-            VortexObjectManager::update(deltaTime);
-        }
+        if (current_state == EngineState::PLAY) VortexObjectManager::update(deltaTime);
 
         draw_callback();
 
         VortexObjectManager::draw(*camera, show_wireframe);
         VortexObjectManager::check_object_status();
 
-        if (current_state == EngineState::EDITOR)
-        {
-            engine_editor->update(deltaTime, camera, this);
-        }
-
-        gui.end_scene_inspector();
-
         environment_grid->draw(*camera);
 
-        if (post_processor) {
+        if (post_processor)
+        {
             post_processor->end();
-
-            glViewport(0, 0, default_window_width, default_window_height);
+            gui.bind_framebuffer();
+            glViewport(0, 0, gui.scene_width, gui.scene_height);
             glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-
             post_processor->draw(currentFrame);
         }
         
@@ -504,9 +549,38 @@ void VortexApplication::run(std::function<void()> draw_callback)
 
         VortexUIManager::render_ui();
 
+        glBindFramebuffer(GL_FRAMEBUFFER, 0);
+        glViewport(0, 0, default_window_width, default_window_height);
+        
+        glClearColor(0.06f, 0.06f, 0.07f, 1.0f);
+        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
+        glDisable(GL_DEPTH_TEST);
+        glDisable(GL_CULL_FACE);
+        
+        gui.build_dockspace();
+
+        gui.engine_stats();
+        gui.camera_info(camera);
+        gui.post_process_options();
+        gui.skybox_options();
+        gui.creator_window();
+        gui.begin_scene_inspector();
+        gui.end_scene_inspector();
         gui.draw_exit_modal();
+        
+        gui.draw_editor_viewport(deltaTime, camera);
+
+        if (is_playing_splash)
+        {
+            draw_splash_overlay(deltaTime);
+        }
 
         gui.render();
+
+        glEnable(GL_DEPTH_TEST);
+        glEnable(GL_CULL_FACE);
+        
         VortexKeyboard::update();
         VortexMouse::update();
         VortexAudio::update();
@@ -521,17 +595,10 @@ GLFWwindow* VortexApplication::get_window_ptr()
 
 void VortexApplication::set_post_processor(PostProcessor *post_processor)
 {
-    if (this->post_processor)
-    {
-        delete this->post_processor;
-    }
-
+    if (this->post_processor) delete this->post_processor;
+    
     this->post_processor = post_processor;
-
-    if (this->post_processor)
-    {
-        this->post_processor->resize(default_window_width, default_window_height);
-    }
+    if (this->post_processor) this->post_processor->resize(gui.scene_width, gui.scene_height);
 }
 
 void VortexApplication::set_skybox(VortexSkybox *skybox)
@@ -544,12 +611,6 @@ void VortexApplication::show_mouse(bool status)
 {
     show_mouse_cursor = status;
 
-    if (status)
-    {
-        glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_NORMAL);
-    }
-    else
-    {
-        glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
-    }
+    if (status) glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_NORMAL);
+    else glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
 }

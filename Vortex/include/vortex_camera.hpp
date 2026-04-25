@@ -21,7 +21,7 @@ class VortexApplication;
 class VortexCamera
 {
     float near_plane = 0.1f;
-    float far_plane = 100.0f;
+    float far_plane = 1000.0f;
 public:
     glm::vec3 position;
     glm::vec3 front;
