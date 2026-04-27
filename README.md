@@ -1,5 +1,13 @@
 # Vortex Engine
 
+<p align="center">
+  <img src="screenshots/vortex_logo.png" width="800" alt="Vortex Engine Editor Interface">
+</p>
+
+<p align="center">
+  <img src="screenshots/vortex_engine_screenshot_2.png" width="800" alt="Vortex Engine Editor Interface">
+</p>
+
 Vortex Engine is a personal project currently in its early development stages. It serves as a foundational bridge between basic rendering and a complete game engine, focusing heavily on low-level systems like memory management and pipeline optimization.
 
 While core features such as high-performance particle pooling and instanced rendering are functional, the engine is actively evolving. Many standard features, including complex lighting and a scene hierarchy, are on the roadmap. This project follows a bottom-up approach to ensure a fast, efficient, and highly optimized base for future implementations.
@@ -131,10 +139,6 @@ When you launch the engine, you will start in Editor Mode attached to the defaul
 
 <p align="center">
   <img src="screenshots/vortex_engine_screenshot_1.png" width="800" alt="Vortex Engine Editor Interface">
-</p>
-
-<p align="center">
-  <img src="screenshots/vortex_engine_screenshot_2.png" width="800" alt="Vortex Engine Editor Interface">
 </p>
 
 <p align="center">
