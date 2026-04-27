@@ -1,5 +1,5 @@
 # Vortex Engine
-**(Note: I am building this from scratch to learn engine architecture, so expect rough edges as I figure out what I am doing!)**
+**(Note: I am building this from to learn engine architecture, openGL and in the future Vulkan, so expect rough edges as I figure out what I am doing!)**
 
 <p align="center">
   <img src="screenshots/vortex_logo.png" width="800" alt="Vortex Engine Editor Interface">
