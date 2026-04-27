@@ -1,5 +1,5 @@
 # Vortex Engine
-**(Note: I am building this from to learn engine architecture, openGL and in the future Vulkan, so expect rough edges as I figure out what I am doing!)**
+**(Note: I am building this to learn engine architecture, openGL and in the future Vulkan, so expect rough edges as I figure out what I am doing!)**
 
 <p align="center">
   <img src="screenshots/vortex_logo.png" width="800" alt="Vortex Engine Editor Interface">
@@ -11,7 +11,7 @@
 
 Vortex Engine is a personal project currently in its early development stages. It serves as a foundational bridge between basic rendering and a complete game engine, focusing heavily on low-level systems like memory management and pipeline optimization.
 
-While core features such as high-performance particle pooling and instanced rendering are functional, the engine is actively evolving. Many standard features, including complex lighting and a scene hierarchy, are on the roadmap. This project follows a bottom-up approach to ensure a fast, efficient, and highly optimized base for future implementations.
+While many core features are working, yhe engine is actively evolving. Many standard features, including complex lighting and a scene hierarchy and script hot loading are on the roadmap. This project follows a bottom-up approach to ensure a fast, efficient, and highly optimized base for future implementations.
 
 ## Prerequisites
 Vortex Engine is currently built for Linux (Ubuntu/Debian).
