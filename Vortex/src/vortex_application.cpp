@@ -132,7 +132,7 @@ void VortexApplication::framebuffer_size_callback(GLFWwindow* window, int width,
 void VortexApplication::request_exit()
 {
     std::string project_name = std::string(gui.save_project_name);
-    SaveScene_snapshot snapshot = {
+    Snapshot snapshot = {
         project_name,
         VortexObjectManager::active_models,
         VortexObjectManager::active_particlesystems,
@@ -194,17 +194,7 @@ void VortexApplication::check_key_press()
 
             VortexUIManager::cleanup();
 
-            std::string project_name = "temp_playmode_backup";
-            SaveScene_snapshot scene_snapshot = {
-                project_name,
-                VortexObjectManager::active_models,
-                VortexObjectManager::active_particlesystems,
-                gui.m_selected_skybox_idx,
-                gui.m_selected_shader_idx,
-                this
-            };
-
-            VortexProject::load_project(&scene_snapshot);
+            VortexProject::take_snapshot(SnapshotState::LOAD, this, "temp_playmode_backup");
         }
         else
         {

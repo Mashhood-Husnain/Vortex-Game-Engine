@@ -18,7 +18,13 @@
 
 using json = nlohmann::json;
 
-struct SaveScene_snapshot
+enum class SnapshotState
+{
+    SAVE,
+    LOAD
+};
+
+struct Snapshot
 {
     std::string &project_name;
     std::vector<VortexModel*> &active_models;
@@ -32,7 +38,8 @@ class VortexProject
 {    
 public:
     static std::vector<std::string> search_save_files(const std::string &file_name="");
-    static void save_project(SaveScene_snapshot *snapshot);
-    static void load_project(SaveScene_snapshot *snapshot);
-    static bool check_save_state(SaveScene_snapshot *snapshot);
+    static void save_project(Snapshot *snapshot);
+    static void load_project(Snapshot *snapshot);
+    static bool check_save_state(Snapshot *snapshot);
+    static void take_snapshot(SnapshotState state, VortexApplication *window, std::string project_name="");
 };

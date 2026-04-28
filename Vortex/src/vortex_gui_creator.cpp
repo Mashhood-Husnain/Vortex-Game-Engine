@@ -48,7 +48,10 @@ void VortexGUI::creator_window()
                 snprintf(save_project_name, sizeof(save_project_name), "%s", name.c_str());
             }
 
-            if (is_selected) ImGui::SetItemDefaultFocus();
+            if (is_selected)
+            {
+                ImGui::SetItemDefaultFocus();
+            }
         }
         ImGui::EndCombo();
     }
@@ -58,15 +61,7 @@ void VortexGUI::creator_window()
 
     ImGui::Spacing();
 
-    if (ImGui::Button("Save Project", ImVec2(-1, 32)))
-    {
-        std::string project_name = std::string(save_project_name);
-        SaveScene_snapshot snapshot = {
-            project_name, VortexObjectManager::active_models, VortexObjectManager::active_particlesystems,
-            m_selected_skybox_idx, m_selected_shader_idx, app
-        };
-        VortexProject::save_project(&snapshot);
-    }
+    if (ImGui::Button("Save Project", ImVec2(-1, 32))) VortexProject::take_snapshot(SnapshotState::SAVE, app);
     
     ImGui::PushStyleColor(ImGuiCol_Button, ImVec4(0.2f, 0.2f, 0.22f, 1.0f));
     ImGui::PushStyleColor(ImGuiCol_ButtonHovered, ImVec4(0.25f, 0.25f, 0.27f, 1.0f));
@@ -74,12 +69,7 @@ void VortexGUI::creator_window()
     
     if (ImGui::Button("Load Project", ImVec2(-1, 32)))
     {
-        std::string project_name = std::string(save_project_name);
-        SaveScene_snapshot snapshot = {
-            project_name, VortexObjectManager::active_models, VortexObjectManager::active_particlesystems,
-            m_selected_skybox_idx, m_selected_shader_idx, app
-        };
-        VortexProject::load_project(&snapshot);
+        VortexProject::take_snapshot(SnapshotState::LOAD, app);
 
         if (!m_skybox_loaded) refresh_skybox_list();
         if (!m_shaders_loaded) refresh_shader_list();

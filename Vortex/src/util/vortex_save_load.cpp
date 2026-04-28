@@ -1,7 +1,7 @@
 #include "util/vortex_save_load.hpp"
 #include "util/vortex_logs.hpp"
 
-void VortexProject::save_project(SaveScene_snapshot *scene_snapshot)
+void VortexProject::save_project(Snapshot *snapshot)
 {
     if (!std::filesystem::exists("saves"))
     {
@@ -9,10 +9,10 @@ void VortexProject::save_project(SaveScene_snapshot *scene_snapshot)
     }
 
     json save_data;
-    save_data["project_name"] = scene_snapshot->project_name;
+    save_data["project_name"] = snapshot->project_name;
 
     save_data["models"] = json::array();
-    for (VortexModel *model : scene_snapshot->active_models)
+    for (VortexModel *model : snapshot->active_models)
     {
         json j_model;
         j_model["path"] = model->file_path;
@@ -48,7 +48,7 @@ void VortexProject::save_project(SaveScene_snapshot *scene_snapshot)
     }
 
     save_data["particle_systems"] = json::array();
-    for (ParticleSystem *ps : scene_snapshot->active_systems)
+    for (ParticleSystem *ps : snapshot->active_systems)
     {
         json j_ps;
         j_ps["name"] = ps->name;
@@ -63,22 +63,22 @@ void VortexProject::save_project(SaveScene_snapshot *scene_snapshot)
         save_data["particle_systems"].push_back(j_ps);
     }
 
-    save_data["m_selected_skybox_idx"] = scene_snapshot->m_selected_skybox_idx;
-    save_data["m_selected_shader_idx"] = scene_snapshot->m_selected_shader_idx;
+    save_data["m_selected_skybox_idx"] = snapshot->m_selected_skybox_idx;
+    save_data["m_selected_shader_idx"] = snapshot->m_selected_shader_idx;
 
-    if (scene_snapshot->window->editor_camera)
+    if (snapshot->window->editor_camera)
     {
         save_data["camera"] = json::object();
         save_data["camera"]["position"] = {
-            scene_snapshot->window->editor_camera->position.x,
-            scene_snapshot->window->editor_camera->position.y,
-            scene_snapshot->window->editor_camera->position.z
+            snapshot->window->editor_camera->position.x,
+            snapshot->window->editor_camera->position.y,
+            snapshot->window->editor_camera->position.z
         };
-        save_data["camera"]["yaw"] = scene_snapshot->window->editor_camera->yaw;
-        save_data["camera"]["pitch"] = scene_snapshot->window->editor_camera->pitch;
+        save_data["camera"]["yaw"] = snapshot->window->editor_camera->yaw;
+        save_data["camera"]["pitch"] = snapshot->window->editor_camera->pitch;
     }
 
-    std::string file_path = "saves/" + scene_snapshot->project_name + ".vtx";
+    std::string file_path = "saves/" + snapshot->project_name + ".vtx";
     std::ofstream file(file_path);
 
     file << save_data.dump(4);
@@ -114,9 +114,9 @@ std::vector<std::string> VortexProject::search_save_files(const std::string &fil
     return save_files;
 }
 
-void VortexProject::load_project(SaveScene_snapshot *scene_snapshot)
+void VortexProject::load_project(Snapshot *snapshot)
 {
-    std::string file_path = "saves/" + scene_snapshot->project_name + ".vtx";
+    std::string file_path = "saves/" + snapshot->project_name + ".vtx";
 
     if (!std::filesystem::exists(file_path))
     {
@@ -130,15 +130,15 @@ void VortexProject::load_project(SaveScene_snapshot *scene_snapshot)
     file >> save_data;
     file.close();
 
-    for (VortexModel *model : scene_snapshot->active_models) model->should_destroy = true;
-    for (ParticleSystem *ps : scene_snapshot->active_systems) ps->should_destroy = true;
+    for (VortexModel *model : snapshot->active_models) model->should_destroy = true;
+    for (ParticleSystem *ps : snapshot->active_systems) ps->should_destroy = true;
 
-    scene_snapshot->active_models.clear();
-    scene_snapshot->active_systems.clear();
+    snapshot->active_models.clear();
+    snapshot->active_systems.clear();
 
     for (const auto &j_model : save_data["models"])
     {
-        VortexModel *new_model = new VortexModel(j_model["path"], scene_snapshot->window);
+        VortexModel *new_model = new VortexModel(j_model["path"], snapshot->window);
 
         if (new_model->shared_data)
         {
@@ -191,12 +191,12 @@ void VortexProject::load_project(SaveScene_snapshot *scene_snapshot)
             }
         }
 
-        scene_snapshot->active_models.push_back(new_model);
+        snapshot->active_models.push_back(new_model);
     }
 
     for (const auto &j_ps : save_data["particle_systems"])
     {
-        ParticleSystem *new_ps = new ParticleSystem(j_ps["max_particles"], scene_snapshot->window, j_ps["name"]);
+        ParticleSystem *new_ps = new ParticleSystem(j_ps["max_particles"], snapshot->window, j_ps["name"]);
 
         auto &emitter = new_ps->get_emitter("Default_Emitter");
         if (j_ps.contains("emitter_pos"))
@@ -204,30 +204,30 @@ void VortexProject::load_project(SaveScene_snapshot *scene_snapshot)
             emitter.position = glm::vec3(j_ps["emitter_pos"][0], j_ps["emitter_pos"][1], j_ps["emitter_pos"][2]);
         }
 
-        scene_snapshot->active_systems.push_back(new_ps);
+        snapshot->active_systems.push_back(new_ps);
     }
 
-    scene_snapshot->m_selected_skybox_idx = save_data["m_selected_skybox_idx"];
-    scene_snapshot->m_selected_shader_idx = save_data["m_selected_shader_idx"];
+    snapshot->m_selected_skybox_idx = save_data["m_selected_skybox_idx"];
+    snapshot->m_selected_shader_idx = save_data["m_selected_shader_idx"];
 
-    if (save_data.contains("camera") && scene_snapshot->window->editor_camera)
+    if (save_data.contains("camera") && snapshot->window->editor_camera)
     {
-        scene_snapshot->window->editor_camera->position = glm::vec3(
+        snapshot->window->editor_camera->position = glm::vec3(
             save_data["camera"]["position"][0],
             save_data["camera"]["position"][1],
             save_data["camera"]["position"][2]
         );
 
-        scene_snapshot->window->editor_camera->yaw = save_data["camera"]["yaw"];
-        scene_snapshot->window->editor_camera->pitch = save_data["camera"]["pitch"];
+        snapshot->window->editor_camera->yaw = save_data["camera"]["yaw"];
+        snapshot->window->editor_camera->pitch = save_data["camera"]["pitch"];
 
-        scene_snapshot->window->editor_camera->update_camera_vectors();
+        snapshot->window->editor_camera->update_camera_vectors();
     }
 
-    VORTEX_INFO("[PROJECT] Successfully loaded ", scene_snapshot->project_name);
+    VORTEX_INFO("[PROJECT] Successfully loaded ", snapshot->project_name);
 }
 
-bool VortexProject::check_save_state(SaveScene_snapshot *snapshot)
+bool VortexProject::check_save_state(Snapshot *snapshot)
 {
     std::string filepath = "saves/" + snapshot->project_name + ".vtx"; 
     std::ifstream file(filepath);
@@ -316,4 +316,21 @@ bool VortexProject::check_save_state(SaveScene_snapshot *snapshot)
     }
 
     return true; 
+}
+
+void VortexProject::take_snapshot(SnapshotState state, VortexApplication *window, std::string project_name)
+{
+    if (project_name.empty()) project_name = std::string(VortexGUI::save_project_name);
+
+    Snapshot snapshot = {
+        project_name,
+        VortexObjectManager::active_models,
+        VortexObjectManager::active_particlesystems,
+        VortexGUI::m_selected_skybox_idx,
+        VortexGUI::m_selected_shader_idx,
+        window
+    };
+
+    if (state == SnapshotState::SAVE) VortexProject::save_project(&snapshot);
+    else if (state == SnapshotState::LOAD) VortexProject::load_project(&snapshot);
 }

@@ -11,7 +11,7 @@
 
 Vortex Engine is a personal project currently in its early development stages. It serves as a foundational bridge between basic rendering and a complete game engine, focusing heavily on low-level systems like memory management and pipeline optimization.
 
-While many core features are working, yhe engine is actively evolving. Many standard features, including complex lighting and a scene hierarchy and script hot loading are on the roadmap. This project follows a bottom-up approach to ensure a fast, efficient, and highly optimized base for future implementations.
+While many core features are working, the engine is actively evolving. Many standard features, including complex lighting and a scene hierarchy and script hot loading are on the roadmap. This project follows a bottom-up approach to ensure a fast, efficient, and highly optimized base for future implementations.
 
 ## Prerequisites
 Vortex Engine is currently built for Linux (Ubuntu/Debian).
@@ -132,7 +132,7 @@ When you launch the engine, you will start in Editor Mode attached to the defaul
 | **T** | Toggle for Translating object |
 | **Y** | Toggle for Scaling object |
 | **TAB** | Toggle Engine Stats view in Play Mode (this binding only works in Play Mode)|
-| **LEFT CTRL** | Snap slected model to grid |
+| **LEFT CTRL** | Snap selected model to grid |
 | **LEFT ALT** | Snap selected model to the ground |
 | **Escape** | Exit Play Mode (if playing) OR Exit Engine (if in editor) |
 

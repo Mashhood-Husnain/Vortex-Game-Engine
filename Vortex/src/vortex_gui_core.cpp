@@ -3,6 +3,10 @@
 #include "util/vortex_save_load.hpp"
 #include "vortex_application.hpp"
 
+int VortexGUI::m_selected_shader_idx = 0;
+int VortexGUI::m_selected_skybox_idx = 0;
+char VortexGUI::save_project_name[128] = "";
+
 VortexGUI::VortexGUI()
 {
     
@@ -95,17 +99,7 @@ void VortexGUI::render()
         {
             VORTEX_INFO("[ENGINE] Entering Play Mode...");
 
-            std::string project_name = "temp_playmode_backup";
-            SaveScene_snapshot snapshot = {
-                project_name,
-                VortexObjectManager::active_models,
-                VortexObjectManager::active_particlesystems,
-                m_selected_skybox_idx,
-                m_selected_shader_idx,
-                app
-            };
-
-            VortexProject::save_project(&snapshot);
+            VortexProject::take_snapshot(SnapshotState::SAVE, app, "temp_playmode_backup");
 
             app->current_state = EngineState::PLAY;
             app->show_mouse(false);
@@ -166,18 +160,7 @@ void VortexGUI::draw_exit_modal()
 
             if (ImGui::Button("Save & Exit", ImVec2(120, 30)))
             {
-                std::string project_name(save_project_name);
-
-                SaveScene_snapshot snapshot = {
-                    project_name,
-                    VortexObjectManager::active_models,
-                    VortexObjectManager::active_particlesystems,
-                    m_selected_skybox_idx,
-                    m_selected_shader_idx,
-                    app
-                };
-
-                VortexProject::save_project(&snapshot);
+                VortexProject::take_snapshot(SnapshotState::SAVE, app);
 
                 ImGui::CloseCurrentPopup();
                 glfwSetWindowShouldClose(app->get_window_ptr(), GLFW_TRUE);

@@ -29,6 +29,8 @@ class ScriptRegistry;
 class VortexMonoBehaviour;
 class VortexEditor;
 
+enum class SnapshotState;
+
 namespace VortexGuiLambda
 {
     inline auto ClampedInputFloat = [](const char* label, float *v, float step, float step_fast, float v_min, float v_max, const char *format="%.2f")
@@ -112,7 +114,6 @@ class VortexGUI
     void snap_to_floor();
 
     void setup_scene_fbo(int width, int height);
-
 public:
     VortexModel *m_selected_model = nullptr;
     ImGuizmo::OPERATION m_current_op = ImGuizmo::TRANSLATE;
@@ -124,13 +125,13 @@ public:
     int viewport_width = 1920;
     int viewport_height = 1080;
 
-    char save_project_name[128] = "";
+    static char save_project_name[128];
 
     bool show_gui = true;
     bool show_debug_gui = true;
 
-    int m_selected_skybox_idx = 0;
-    int m_selected_shader_idx = 0;
+    static int m_selected_skybox_idx;
+    static int m_selected_shader_idx;
 
     std::string _vendor_;
     std::string _renderer_;
@@ -160,4 +161,5 @@ public:
     void draw_exit_modal();
 
     void engine_stats();
+
 };
