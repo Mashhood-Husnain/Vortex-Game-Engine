@@ -53,29 +53,26 @@ void VortexGUI::post_process_options()
 
     ImGui::Begin("Post-Processing");
 
-    ImGui::Spacing();
-    ImGui::TextDisabled("Active Screen Effect");
-    
-    ImGui::SetNextItemWidth(-FLT_MIN);
-    if (ImGui::Combo("##Effect", &m_selected_shader_idx, VortexGuiLambda::DataGetter, static_cast<void*>(&m_display_names), static_cast<int>(m_display_names.size())))
+    if (ImGui::CollapsingHeader("Screen Effects", ImGuiTreeNodeFlags_DefaultOpen))
     {
-        gui_set_post_processor();
-    }
+        ImGui::Spacing();
+        ImGui::TextDisabled("Active Screen Effect");
+        
+        ImGui::SetNextItemWidth(-FLT_MIN);
+        if (ImGui::Combo("##Effect", &m_selected_shader_idx, VortexGuiLambda::DataGetter, static_cast<void*>(&m_display_names), static_cast<int>(m_display_names.size())))
+        {
+            gui_set_post_processor();
+        }
 
-    ImGui::Spacing();
-    ImGui::Spacing();
+        ImGui::Spacing();
 
-    ImGui::PushStyleColor(ImGuiCol_Button, ImVec4(0.2f, 0.2f, 0.22f, 1.0f));
-    ImGui::PushStyleColor(ImGuiCol_ButtonHovered, ImVec4(0.25f, 0.25f, 0.27f, 1.0f));
-    ImGui::PushStyleColor(ImGuiCol_ButtonActive, ImVec4(0.3f, 0.3f, 0.32f, 1.0f));
-    
-    if (ImGui::Button("Refresh Shaders", ImVec2(-1, 28))) 
-    {
-        m_shaders_loaded = false;
+        if (ImGui::Button("Refresh Shaders", ImVec2(-1, 28))) 
+        {
+            m_shaders_loaded = false;
+        }
+        
+        ImGui::Spacing();
     }
-    
-    ImGui::PopStyleColor(3);
-    ImGui::Spacing();
 
     ImGui::End();
 }
@@ -132,37 +129,34 @@ void VortexGUI::skybox_options()
 
     ImGui::Begin("SkyBox");
 
-    ImGui::Spacing();
+    if (ImGui::CollapsingHeader("Environment Maps", ImGuiTreeNodeFlags_DefaultOpen))
+    {
+        ImGui::Spacing();
 
-    if (m_skybox_display_names.size() <= 1)
-    {
-        ImGui::TextColored(ImVec4(0.9f, 0.3f, 0.3f, 1.0f), "No skyboxes found in assets/");
-    }
-    else
-    {
-        ImGui::TextDisabled("Active Environment");
-        
-        ImGui::SetNextItemWidth(-FLT_MIN);
-        if (ImGui::Combo("##Environment", &m_selected_skybox_idx, VortexGuiLambda::DataGetter, static_cast<void*>(&m_skybox_display_names), static_cast<int>(m_skybox_display_names.size())))
+        if (m_skybox_display_names.size() <= 1)
         {
-            gui_set_skybox();
+            ImGui::TextColored(ImVec4(0.9f, 0.3f, 0.3f, 1.0f), "No skyboxes found in assets/");
         }
-    }
+        else
+        {
+            ImGui::TextDisabled("Active Environment");
+            
+            ImGui::SetNextItemWidth(-FLT_MIN);
+            if (ImGui::Combo("##Environment", &m_selected_skybox_idx, VortexGuiLambda::DataGetter, static_cast<void*>(&m_skybox_display_names), static_cast<int>(m_skybox_display_names.size())))
+            {
+                gui_set_skybox();
+            }
+        }
 
-    ImGui::Spacing();
-    ImGui::Spacing();
+        ImGui::Spacing();
 
-    ImGui::PushStyleColor(ImGuiCol_Button, ImVec4(0.2f, 0.2f, 0.22f, 1.0f));
-    ImGui::PushStyleColor(ImGuiCol_ButtonHovered, ImVec4(0.25f, 0.25f, 0.27f, 1.0f));
-    ImGui::PushStyleColor(ImGuiCol_ButtonActive, ImVec4(0.3f, 0.3f, 0.32f, 1.0f));
-    
-    if (ImGui::Button("Refresh Skyboxes", ImVec2(-1, 28))) 
-    {
-        m_skybox_loaded = false;
+        if (ImGui::Button("Refresh Skyboxes", ImVec2(-1, 28))) 
+        {
+            m_skybox_loaded = false;
+        }
+        
+        ImGui::Spacing();
     }
-    
-    ImGui::PopStyleColor(3);
-    ImGui::Spacing();
 
     ImGui::End();
 }
