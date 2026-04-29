@@ -10,6 +10,8 @@
 #include "vortex_physics.hpp"
 #include "vortex_audio.hpp"
 #include "vortex_uimanager.hpp"
+#include "vortex_application.hpp"
+#include "vortex_camera.hpp"
 
 #include <glm/glm.hpp>
 #include <cstdlib>

@@ -15,8 +15,11 @@
 #include <string>
 
 #include "vortex_keyboard.hpp"
+#include "vortex_physics.hpp"
 
 class VortexApplication;
+
+struct Frustum;
 
 class VortexCamera
 {
@@ -39,12 +42,19 @@ public:
     bool anchored;
 
     VortexCamera(glm::vec3 position=glm::vec3(0.0f, 5.0f, 8.0f), glm::vec3 up=glm::vec3(0.0f, 1.0f, 0.0f), float yaw=-90.0f, float pitch=0.0f);
+
     glm::mat4 getViewMatrix();
+    glm::mat4 getProjectionMatrix();
+
+    glm::vec3 get_ray_from_mouse(glm::vec2 mouse_pos, VortexApplication *app);
+
     void processKeyboard(const std::string& direction, float deltaTime);
     void processMouseMovement(float xoffset, float yoffset);
-    void check_camera_movement(float deltaTime);
-    glm::mat4 getProjectionMatrix();
+
     void look_at(glm::vec3 target);
+
     void update_camera_vectors();
-    glm::vec3 get_ray_from_mouse(glm::vec2 mouse_pos, VortexApplication *app);
+    void check_camera_movement(float deltaTime);
+
+    Frustum get_frustum();
 };

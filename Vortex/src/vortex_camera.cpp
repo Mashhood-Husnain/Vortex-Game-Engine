@@ -109,3 +109,48 @@ glm::vec3 VortexCamera::get_ray_from_mouse(glm::vec2 mouse_pos, VortexApplicatio
     
     return glm::normalize(ray_world);
 }
+
+Frustum VortexCamera::get_frustum()
+{
+    Frustum frustum;
+
+    glm::mat4 view_proj = getProjectionMatrix() * getViewMatrix();
+
+    frustum.leftFace.normal.x = view_proj[0][3] + view_proj[0][0];
+    frustum.leftFace.normal.y = view_proj[1][3] + view_proj[1][0];
+    frustum.leftFace.normal.z = view_proj[2][3] + view_proj[2][0];
+    frustum.leftFace.distance = view_proj[3][3] + view_proj[3][0];
+    frustum.leftFace.normalize();
+
+    frustum.rightFace.normal.x = view_proj[0][3] - view_proj[0][0];
+    frustum.rightFace.normal.y = view_proj[1][3] - view_proj[1][0];
+    frustum.rightFace.normal.z = view_proj[2][3] - view_proj[2][0];
+    frustum.rightFace.distance = view_proj[3][3] - view_proj[3][0];
+    frustum.rightFace.normalize();
+
+    frustum.bottomFace.normal.x = view_proj[0][3] + view_proj[0][0];
+    frustum.bottomFace.normal.y = view_proj[1][3] + view_proj[1][0];
+    frustum.bottomFace.normal.z = view_proj[2][3] + view_proj[2][0];
+    frustum.bottomFace.distance = view_proj[3][3] + view_proj[3][0];
+    frustum.bottomFace.normalize();
+
+    frustum.topFace.normal.x = view_proj[0][3] - view_proj[0][0];
+    frustum.topFace.normal.y = view_proj[1][3] - view_proj[1][0];
+    frustum.topFace.normal.z = view_proj[2][3] - view_proj[2][0];
+    frustum.topFace.distance = view_proj[3][3] - view_proj[3][0];
+    frustum.topFace.normalize();
+
+    frustum.nearFace.normal.x = view_proj[0][3] + view_proj[0][0];
+    frustum.nearFace.normal.y = view_proj[1][3] + view_proj[1][0];
+    frustum.nearFace.normal.z = view_proj[2][3] + view_proj[2][0];
+    frustum.nearFace.distance = view_proj[3][3] + view_proj[3][0];
+    frustum.nearFace.normalize();
+
+    frustum.farFace.normal.x = view_proj[0][3] - view_proj[0][0];
+    frustum.farFace.normal.y = view_proj[1][3] - view_proj[1][0];
+    frustum.farFace.normal.z = view_proj[2][3] - view_proj[2][0];
+    frustum.farFace.distance = view_proj[3][3] - view_proj[3][0];
+    frustum.farFace.normalize();
+
+    return frustum;
+}

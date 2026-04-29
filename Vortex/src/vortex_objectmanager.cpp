@@ -1,4 +1,5 @@
 #include "vortex_objectmanager.hpp"
+#include "vortex_particlesystem.hpp"
 
 VortexShader *VortexObjectManager::model_shader = nullptr;
 VortexShader *VortexObjectManager::collider_shader = nullptr;
@@ -76,12 +77,21 @@ void VortexObjectManager::update(float deltaTime)
 
 void VortexObjectManager::draw(VortexCamera &camera, bool show_wireframe)
 {
+    Frustum cam_frustum = camera.get_frustum();
+
     for (VortexModel *model : active_models)
     {
         if (model->is_active)
         {
+            std::vector<glm::vec3> min_max = model->get_world_bounds_min_max();
+
+            if (!VortexPhysics::aabb_in_frustum(min_max[0], min_max[1], cam_frustum))
+            {
+                continue;
+            }
+
             model->draw(*model_shader, camera, show_wireframe);
-            
+
             if (model->show_collider)
             {
                 model->shared_data->collider.draw(*collider_shader, camera, model);

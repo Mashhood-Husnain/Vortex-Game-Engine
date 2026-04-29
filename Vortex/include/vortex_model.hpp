@@ -18,9 +18,6 @@
 #include <glm/gtc/type_ptr.hpp>
 #include <filesystem>
 
-#include "vortex_shaders.hpp"
-#include "vortex_camera.hpp"
-#include "vortex_application.hpp"
 #include "vortex_assetmanager.hpp"
 #include "vortex_behaviour.hpp"
 #include "util/vortex_global_vars.hpp"
@@ -28,6 +25,11 @@
 #include "vortex_collider.hpp"
 
 #include "stb_image.h"
+
+class VortexApplication;
+class VortexCamera;
+class VortexShader;
+class VortexBoxcollider;
 
 struct SharedMesh;
 
@@ -123,6 +125,10 @@ public:
     void late_update(float deltaTime);
     glm::mat4 get_model_matrix();
     void set_model_matrix(glm::mat4 matrix);
+
+    glm::vec3 get_world_bounds_min();
+    glm::vec3 get_world_bounds_max();
+    std::vector<glm::vec3> get_world_bounds_min_max();
     
     ~VortexModel();
 

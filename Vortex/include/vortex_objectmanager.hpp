@@ -1,11 +1,13 @@
 #pragma once
 
 #include "vortex_model.hpp"
-#include "vortex_particlesystem.hpp"
 #include "vortex_shaders.hpp"
 #include "vortex_camera.hpp"
+#include "vortex_physics.hpp"
 
 #include <string>
+
+class ParticleSystem;
 
 class VortexObjectManager
 {

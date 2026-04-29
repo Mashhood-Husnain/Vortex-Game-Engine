@@ -1,5 +1,7 @@
 #include "vortex_collider.hpp"
 #include "vortex_model.hpp"
+#include "vortex_camera.hpp"
+#include "vortex_shaders.hpp"
 
 VortexBoxCollider::VortexBoxCollider()
 {

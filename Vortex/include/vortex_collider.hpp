@@ -4,9 +4,8 @@
 #include "glm/glm.hpp"
 #include <vector>
 
-#include "vortex_shaders.hpp"
-#include "vortex_camera.hpp"
-
+class VortexCamera;
+class VortexShader;
 class VortexModel;
 
 class VortexBoxCollider

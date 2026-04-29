@@ -20,6 +20,10 @@
 #include "util/vortex_global_vars.hpp"
 #include "vortex_application.hpp"
 
+class VortexApplication;
+class VortexCamera;
+class VortexShader;
+
 enum class ParticleBehaviour
 {
     GROW,

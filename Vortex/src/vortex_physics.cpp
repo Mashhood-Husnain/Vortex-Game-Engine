@@ -268,3 +268,28 @@ RaycastHit VortexPhysics::editor_raycast(glm::vec3 origin, glm::vec3 direction, 
     
     return closest_hit;
 }
+
+bool VortexPhysics::aabb_in_frustum(const glm::vec3 &min, const glm::vec3 &max, const Frustum &frustum)
+{
+    glm::vec3 center = (min + max) * 0.5f;
+    glm::vec3 extents = max - center;
+
+    const Plane *planes[6] = {
+        &frustum.leftFace, &frustum.rightFace,
+        &frustum.bottomFace, &frustum.topFace,
+        &frustum.nearFace, &frustum.farFace
+    };
+
+    for (int i = 0; i < 6; i++)
+    {
+        float radius = extents.x * std::abs(planes[i]->normal.x) +
+                       extents.y * std::abs(planes[i]->normal.y) +
+                       extents.z * std::abs(planes[i]->normal.z);
+        
+        float distance = glm::dot(center, planes[i]->normal) + planes[i]->distance;
+
+        if (distance < -radius) return false;
+    }
+
+    return true;
+}

@@ -8,6 +8,9 @@
 
 
 #include "vortex_model.hpp"
+#include "vortex_camera.hpp"
+#include "vortex_application.hpp"
+#include "vortex_shaders.hpp"
 
 VortexModel::VortexModel(const std::string& path, VortexApplication *window)
 {
@@ -209,4 +212,96 @@ void VortexModel::send_message(const std::string &message, void *data)
     {
         script->on_message(message, data);
     }
+}
+
+glm::vec3 VortexModel::get_world_bounds_min()
+{
+    glm::vec3 local_min = shared_data->collider.min * collider_scale;
+    glm::vec3 local_max = shared_data->collider.max * collider_scale;
+
+    glm::mat4 model_matrix = get_model_matrix();
+
+    glm::vec3 corners[8] = {
+        glm::vec3(local_min.x, local_min.y, local_min.z),
+        glm::vec3(local_max.x, local_min.y, local_min.z),
+        glm::vec3(local_min.x, local_max.y, local_min.z),
+        glm::vec3(local_max.x, local_max.y, local_min.z),
+        glm::vec3(local_min.x, local_min.y, local_max.z),
+        glm::vec3(local_max.x, local_min.y, local_max.z),
+        glm::vec3(local_min.x, local_max.y, local_max.z),
+        glm::vec3(local_max.x, local_max.y, local_max.z)
+    };
+
+    glm::vec3 world_min = glm::vec3(1e10f);
+
+    for (int i = 0; i < 8; i++)
+    {
+        glm::vec3 transformed = glm::vec3(model_matrix * glm::vec4(corners[i], 1.0f));
+        world_min = glm::min(world_min, transformed);
+    }
+
+    return world_min;
+}
+
+glm::vec3 VortexModel::get_world_bounds_max()
+{
+    glm::vec3 local_min = shared_data->collider.min * collider_scale;
+    glm::vec3 local_max = shared_data->collider.max * collider_scale;
+    glm::mat4 model_matrix = get_model_matrix();
+
+    glm::vec3 corners[8] = {
+        glm::vec3(local_min.x, local_min.y, local_min.z),
+        glm::vec3(local_max.x, local_min.y, local_min.z),
+        glm::vec3(local_min.x, local_max.y, local_min.z),
+        glm::vec3(local_max.x, local_max.y, local_min.z),
+        glm::vec3(local_min.x, local_min.y, local_max.z),
+        glm::vec3(local_max.x, local_min.y, local_max.z),
+        glm::vec3(local_min.x, local_max.y, local_max.z),
+        glm::vec3(local_max.x, local_max.y, local_max.z)
+    };
+
+    glm::vec3 world_max = glm::vec3(-1e10f);
+    
+    for (int i = 0; i < 8; ++i)
+    {
+        glm::vec3 transformed = glm::vec3(model_matrix * glm::vec4(corners[i], 1.0f));
+        world_max = glm::max(world_max, transformed);
+    }
+
+    return world_max;
+}
+
+std::vector<glm::vec3> VortexModel::get_world_bounds_min_max()
+{
+    glm::vec3 local_min = shared_data->collider.min * collider_scale;
+    glm::vec3 local_max = shared_data->collider.max * collider_scale;
+    glm::mat4 matrix = get_model_matrix();
+
+    glm::vec3 corners[8] = {
+        glm::vec3(local_min.x, local_min.y, local_min.z),
+        glm::vec3(local_max.x, local_min.y, local_min.z),
+        glm::vec3(local_min.x, local_max.y, local_min.z),
+        glm::vec3(local_max.x, local_max.y, local_min.z),
+        glm::vec3(local_min.x, local_min.y, local_max.z),
+        glm::vec3(local_max.x, local_min.y, local_max.z),
+        glm::vec3(local_min.x, local_max.y, local_max.z),
+        glm::vec3(local_max.x, local_max.y, local_max.z)
+    };
+
+    glm::vec3 world_min = glm::vec3(1e10f);
+    glm::vec3 world_max = glm::vec3(-1e10f);
+
+    for (int i = 0; i < 8; i++)
+    {
+        glm::vec3 transformed = glm::vec3(model_matrix * glm::vec4(corners[i], 1.0f));
+        world_min = glm::min(world_min, transformed);
+        world_max = glm::max(world_max, transformed);
+    }
+
+    std::vector<glm::vec3> min_max = {
+        world_min,
+        world_max
+    };
+
+    return min_max;
 }

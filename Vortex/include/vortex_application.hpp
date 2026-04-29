@@ -41,7 +41,8 @@
 #include "util/vortex_save_load.hpp"
 #include "util/vortex_logs.hpp"
 
-class VortexEditor;
+class VortexSkybox;
+class VortexGrid;
 
 enum class EngineState
 {

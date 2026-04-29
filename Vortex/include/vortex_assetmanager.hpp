@@ -17,6 +17,8 @@
 struct VortexModel_Object;
 struct VortexModel_Vertex;
 
+class VortexBoxCollider;
+
 struct SharedMesh
 {
     unsigned int VAO = 0;
