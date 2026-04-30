@@ -89,7 +89,7 @@ void VortexGUI::update()
 
 void VortexGUI::render()
 {
-    if (app->current_state == EngineState::EDITOR)
+    if (app->get_state() == EngineState::EDITOR)
     {
         ImGuiWindowFlags toolbar_flags = ImGuiWindowFlags_AlwaysAutoResize;
 
@@ -105,10 +105,10 @@ void VortexGUI::render()
 
             VortexProject::take_snapshot(SnapshotState::SAVE, app, "temp_playmode_backup");
 
-            app->current_state = EngineState::PLAY;
+            app->set_state(EngineState::PLAY);
             app->show_mouse(false);
-            app->show_wireframe = false;
-            app->view_world_axis = false;
+            app->toggle_wireframe(false);
+            app->toggle_world_axis(false);
             show_gui = false;
             show_debug_gui = false;
 
@@ -132,7 +132,7 @@ void VortexGUI::render()
 
 void VortexGUI::draw_exit_modal()
 {
-    if (!app->show_exit_modal) return;
+    if (!app->is_exit_modal_open()) return;
 
     ImGui::PushStyleColor(ImGuiCol_PopupBg, ImVec4(0.12f, 0.12f, 0.14f, 1.00f));
     ImGui::OpenPopup("Exit Vortex Engine");
@@ -146,7 +146,7 @@ void VortexGUI::draw_exit_modal()
     {
         ImGui::Spacing();
 
-        if (app->has_unsaved_changes)
+        if (app->has_unsaved())
         {
             ImGui::TextColored(ImVec4(1.0f, 0.3f, 0.3f, 1.0f), "Warning: You have unsaved changes!");
             ImGui::Text("Are you sure you want to exit? Unsaved progress will be lost.");
@@ -183,7 +183,7 @@ void VortexGUI::draw_exit_modal()
             if (ImGui::Button("Cancel", ImVec2(100, 30)))
             {
                 ImGui::CloseCurrentPopup();
-                app->show_exit_modal = false;
+                app->toggle_exit_modal(false);
             }
         }
         else
@@ -206,7 +206,7 @@ void VortexGUI::draw_exit_modal()
             if (ImGui::Button("Cancel", ImVec2(120, 30)))
             {
                 ImGui::CloseCurrentPopup();
-                app->show_exit_modal = false;
+                app->toggle_exit_modal(false);
             }
         }
         

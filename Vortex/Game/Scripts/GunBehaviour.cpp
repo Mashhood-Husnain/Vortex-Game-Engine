@@ -52,7 +52,7 @@ public:
 
     void late_update(float deltaTime) override
     {
-        VortexCamera* cam = gameObject->app->camera;
+        VortexCamera* cam = engine().get_camera();
         if (!cam) return;
 
         if (is_reloading)
@@ -96,11 +96,11 @@ public:
         }
 
         Vec3 world_up = Vec3(0.0f, 1.0f, 0.0f);
-        Vec3 forward = glm::normalize(cam->front);
+        Vec3 forward = glm::normalize(cam->get_front());
         Vec3 right   = glm::normalize(glm::cross(forward, world_up));
         Vec3 up      = glm::normalize(glm::cross(right, forward));
 
-        Vec3 scale = gameObject->transform.scale;
+        Vec3 scale = transform().scale;
         Vec3 scaled_offset = current_offset * scale;
 
         if (target_player)
@@ -117,7 +117,7 @@ public:
                     }
                     else
                     {
-                        follow_position = cam->position;
+                        follow_position = cam->get_position();
                     }
                 }
             }
@@ -134,7 +134,7 @@ public:
                             + (forward * 0.6f * scale.z)
                             + (up * -0.1f * scale.y);
 
-        gameObject->transform.position = gun_center_pos;
+        transform().position = gun_center_pos;
 
         Mat4 rot = Mat4(1.0f);
 
@@ -147,7 +147,7 @@ public:
             rot = rot * glm::rotate(Mat4(1.0f), glm::radians(model_yaw_offset), Vec3(0, 1, 0));
         }
 
-        gameObject->transform.orientation = Quaternion(rot);
+        transform().orientation = Quaternion(rot);
     }
 
     void fire_weapon(VortexCamera* cam, float deltaTime)
@@ -177,10 +177,10 @@ public:
         current_recoil = max_recoil;
         VortexAudio::play_sound("assets/audio/gunshot.wav", 0.25f);
 
-        Vec3 scale = gameObject->transform.scale;
-        Vec3 barrel_tip = gameObject->transform.position + (cam->front * 1.5f * scale.z);
+        Vec3 scale = transform().scale;
+        Vec3 barrel_tip = transform().position + (cam->get_front() * 1.5f * scale.z);
 
-        VortexModel *bullet = new VortexModel("assets/models/obj/cube.obj", gameObject->app);
+        VortexModel *bullet = new VortexModel("assets/models/obj/cube.obj", &engine());
         bullet->model_name = "Bullet";
         bullet->transform.position = barrel_tip;
         bullet->transform.scale = Vec3(0.1f, 0.1f, 0.1f);

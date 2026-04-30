@@ -52,17 +52,25 @@ enum class EngineState
 
 class VortexApplication
 {
+private:
     GLFWwindow *window = nullptr;
     std::string window_name;
+
+    int default_window_width;
+    int default_window_height;
     bool is_fullscreen = false;
-    int stored_window_x_pos;
-    int stored_window_y_pos;
-    int stored_window_width;
-    int stored_window_height;
-    float mouse_last_x = default_window_width / 2;
-    float mouse_last_y = default_window_height / 2;
+
+    int stored_window_x_pos  = 0.0f;
+    int stored_window_y_pos  = 0.0f;
+    int stored_window_width  = 0.0f;
+    int stored_window_height = 0.0f;
+
+    float mouse_last_x = 0.0f;
+    float mouse_last_y = 0.0f;
     bool first_mouse = true;
     float last_frame = 0.0f;
+    float deltaTime = 0.0f;
+
 
     bool enable_splash_screen = true; 
     bool is_playing_splash = true;
@@ -71,56 +79,74 @@ class VortexApplication
     int splash_height = 0;
     float splash_timer = 0.0f;
 
+    EngineState current_state = EngineState::EDITOR;
+    bool show_exit_modal = false;
+    bool has_unsaved_changes = false;
+    bool show_wireframe = false;
+    bool show_mouse_cursor = true;
+    bool view_world_axis = false;
+
+    VortexCamera *camera = nullptr;
+    VortexCamera *editor_camera = nullptr;
+    PostProcessor *post_processor = nullptr;
+    VortexSkybox *skybox = nullptr;
+    VortexGrid *environment_grid = nullptr;
+    ShadowManager *shadow_manager = nullptr;
+
     VortexShader *worldaxis_shader = nullptr;
     unsigned int world_axisVAO;
     unsigned int world_axisVBO;
 
-    VortexSkybox *skybox = nullptr;
-
-    VortexGrid *environment_grid = nullptr;
+    VortexGUI gui;
 
     GLFWmonitor* get_current_monitor(GLFWwindow* window);
     static void framebuffer_size_callback(GLFWwindow* window, int width, int height);
-    void check_key_press();
     static void mouse_callback(GLFWwindow* window, double xposIn, double yposIn);
+    static void window_close_callback(GLFWwindow* window);
+    void check_key_press();
     void change_window_size();
     void setup_world_axis_buffers();
     void draw_world_axis();
     void draw_world_axis_gizmo();
-    static void window_close_callback(GLFWwindow* window);
-
     void load_splash_screen();
     void draw_splash_overlay(float dt);
+
 public:
-    int default_window_width;
-    int default_window_height;
-
-    EngineState current_state = EngineState::EDITOR;
-
-    VortexCamera *camera = nullptr;
-    VortexCamera *editor_camera = nullptr;
-
-    bool show_exit_modal = false;
-    bool has_unsaved_changes = false;
-
-    float deltaTime = 0.0f;
-    bool show_wireframe = false;
-    bool show_mouse_cursor = true;
-    bool view_world_axis = false;
-    ShadowManager *shadow_manager = nullptr;
-    VortexGUI gui;
-
-    PostProcessor *post_processor = nullptr;
-
     VortexApplication(std::string window_name);
     ~VortexApplication();
 
     void run(std::function<void()> draw_callback);
-    GLFWwindow* get_window_ptr();
 
     void set_post_processor(PostProcessor *post_processor);
     void set_skybox(VortexSkybox *skybox);
-
     void show_mouse(bool status);
     void request_exit();
+
+    GLFWwindow* get_window_ptr() const;
+    float get_delta_time() const;
+    int get_width() const;
+    int get_height() const;
+
+    EngineState get_state() const;
+    bool is_wireframe_enabled() const;
+    bool is_world_axis_visible() const;
+    bool is_exit_modal_open() const;
+    bool has_unsaved() const;
+
+    VortexCamera *get_camera() const;
+    VortexCamera *get_editor_camera() const;
+    ShadowManager *get_shadow_manager() const;
+
+    VortexGUI &get_gui();
+
+    void set_camera(VortexCamera *camera);
+
+    void set_state(EngineState state);
+    void toggle_wireframe(bool enable);
+    void toggle_world_axis(bool enable);
+    void toggle_exit_modal(bool show);
+
+    void mark_unsaved_changes();
+    void clear_unsaved_changes();
+
 };

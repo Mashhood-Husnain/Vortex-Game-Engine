@@ -16,22 +16,22 @@ public:
     void on_update(float deltaTime) override
     {
         if (!target_player || target_player->should_destroy) return; 
-        if (gameObject->transform.position.y >= 0.25f)
+        if (transform().position.y >= 0.25f)
         {
-            gameObject->should_destroy = true;
+            object().should_destroy = true;
             return;
         }
 
         if (health <= 0.0f)
         {
-            gameObject->should_destroy = true;
+            object().should_destroy = true;
             return;
         }
 
         Vec3 player_pos = target_player->transform.position;
         player_pos.y = 0.0f;
 
-        Vec3 my_pos = gameObject->transform.position;
+        Vec3 my_pos = transform().position;
         my_pos.y = 0.0f;
 
         Vec3 direction = player_pos - my_pos;
@@ -39,13 +39,13 @@ public:
         if (glm::length(direction) > 0.1f) 
         {
             direction = glm::normalize(direction);
-            gameObject->transform.position += direction * speed * deltaTime;
+            transform().position += direction * speed * deltaTime;
 
             float angle = atan2(direction.x, direction.z);
-            gameObject->transform.orientation.y = glm::degrees(angle);
+            transform().orientation.y = glm::degrees(angle);
         }
 
-        if (VortexPhysics::check_collision(gameObject, target_player))
+        if (VortexPhysics::check_collision(&object(), target_player))
         {
             target_player->send_message("TAKE_DAMAGE", &enemy_damage);
         }
@@ -62,7 +62,7 @@ public:
 
             if (health <= 0.0f)
             {
-                gameObject->should_destroy = true;
+                object().should_destroy = true;
                 if (target_player)
                 {
                     float points_to_add = 1.0f;
@@ -76,11 +76,11 @@ public:
     {
         VortexHUD::Begin();
 
-        Vec3 label_pos = gameObject->transform.position + Vec3(0, 2.5f, 0);
-        VortexHUD::WorldLabel("HEALTH", label_pos, gameObject->app->camera, ImVec4(1, 1, 1, 1));
+        Vec3 label_pos = transform().position + Vec3(0, 2.5f, 0);
+        VortexHUD::WorldLabel("HEALTH", label_pos, engine().get_camera(), ImVec4(1, 1, 1, 1));
 
-        Vec3 bar_pos = gameObject->transform.position + Vec3(0, 2.2f, 0);
-        VortexHUD::WorldBar(health, 20.0f, bar_pos, gameObject->app->camera, ImVec2(80, 8), ImVec4(1, 0, 0, 1));
+        Vec3 bar_pos = transform().position + Vec3(0, 2.2f, 0);
+        VortexHUD::WorldBar(health, 20.0f, bar_pos, engine().get_camera(), ImVec2(80, 8), ImVec4(1, 0, 0, 1));
 
         VortexHUD::End();
     }

@@ -340,7 +340,8 @@ VortexApplication::VortexApplication(std::string window_name)
 
     if (this->camera)
     {
-        this->camera->aspect_ratio = static_cast<float>(start_width) / static_cast<float>(start_height);
+        float aspect_ratio = static_cast<float>(start_width) / static_cast<float>(start_height);
+        this->camera->set_aspect_ratio(aspect_ratio);
     }
 
     gui.init(this, start_width, start_height);
@@ -486,8 +487,8 @@ void VortexApplication::run(std::function<void()> draw_callback)
         if (gui.scene_height > 0) 
         {
             float target_aspect = static_cast<float>(gui.scene_width) / static_cast<float>(gui.scene_height);
-            if (camera) camera->aspect_ratio = target_aspect;
-            if (editor_camera) editor_camera->aspect_ratio = target_aspect;
+            if (camera) camera->set_aspect_ratio(target_aspect);
+            if (editor_camera) editor_camera->set_aspect_ratio(target_aspect);
         }
 
         if (gui.viewport_width > 0 && gui.viewport_height > 0 && 
@@ -578,11 +579,6 @@ void VortexApplication::run(std::function<void()> draw_callback)
     }
 }
 
-GLFWwindow* VortexApplication::get_window_ptr()
-{
-    return window;
-}
-
 void VortexApplication::set_post_processor(PostProcessor *post_processor)
 {
     if (this->post_processor) delete this->post_processor;
@@ -614,3 +610,30 @@ void VortexApplication::show_mouse(bool status)
         io.ConfigFlags |= ImGuiConfigFlags_NoMouse;
     }
 }
+
+GLFWwindow* VortexApplication::get_window_ptr() const { return window; }
+float VortexApplication::get_delta_time() const { return deltaTime; }
+int VortexApplication::get_width() const { return default_window_width; }
+int VortexApplication::get_height() const { return default_window_height; }
+
+EngineState VortexApplication::get_state() const { return current_state; }
+bool VortexApplication::is_wireframe_enabled() const { return show_wireframe; }
+bool VortexApplication::is_world_axis_visible() const { return view_world_axis; }
+bool VortexApplication::is_exit_modal_open() const { return show_exit_modal; }
+bool VortexApplication::has_unsaved() const { return has_unsaved_changes; }
+
+VortexCamera *VortexApplication::get_camera() const { return camera; }
+VortexCamera *VortexApplication::get_editor_camera() const { return editor_camera; }
+ShadowManager *VortexApplication::get_shadow_manager() const { return shadow_manager; }
+
+VortexGUI &VortexApplication::get_gui() { return gui; }
+
+void VortexApplication::set_camera(VortexCamera *camera) { this->camera = camera; }
+
+void VortexApplication::set_state(EngineState state) { current_state = state; }
+void VortexApplication::toggle_wireframe(bool enable) { show_wireframe = enable; }
+void VortexApplication::toggle_world_axis(bool enable) { view_world_axis = enable; }
+void VortexApplication::toggle_exit_modal(bool show) { show_exit_modal = show; }
+
+void VortexApplication::mark_unsaved_changes() { has_unsaved_changes = true; }
+void VortexApplication::clear_unsaved_changes() {has_unsaved_changes = false; }

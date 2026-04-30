@@ -33,8 +33,8 @@ public:
     {
         if (deltaTime > 0.05f) deltaTime = 0.05f;
 
-        Vec3 cam_forward = gameObject->app->camera->front;
-        Vec3 cam_right = gameObject->app->camera->right;
+        Vec3 cam_forward = engine().get_camera()->get_front();
+        Vec3 cam_right = engine().get_camera()->get_right();
         cam_forward.y = 0.0f;
         cam_right.y = 0.0f;
         cam_forward = glm::normalize(cam_forward);
@@ -61,19 +61,19 @@ public:
         }
 
         velocity_y -= gravity * deltaTime;
-        gameObject->transform.position.y += velocity_y * deltaTime;
+        transform().position.y += velocity_y * deltaTime;
         
         is_grounded = false;
         
         for (VortexModel* other : VortexObjectManager::active_models)
         {
-            if (other == gameObject || !other->is_active) continue;
+            if (other == &object() || !other->is_active) continue;
             if (other == bullet || other == gun) continue;
             if (other->get_behaviour("EnemyMovement")) continue;
             
-            if (VortexPhysics::check_collision(gameObject, other))
+            if (VortexPhysics::check_collision(&object(), other))
             {
-                gameObject->transform.position.y -= velocity_y * deltaTime;
+                transform().position.y -= velocity_y * deltaTime;
 
                 if (velocity_y < 0.0f) is_grounded = true; 
                 velocity_y = 0.0f;
@@ -84,20 +84,20 @@ public:
 
     void move_and_collide(Vec3 move_amount)
     {
-        gameObject->transform.position += move_amount;
+        transform().position += move_amount;
 
         for (VortexModel* other : VortexObjectManager::active_models)
         {
-            if (other == gameObject || !other->is_active) continue;
+            if (other == &object() || !other->is_active) continue;
             if (other == bullet || other == gun || other == floor) continue;
 
             if (other->get_behaviour("EnemyMovement")) continue;
 
-            CollisionHit hit = VortexPhysics::check_collision_detailed(gameObject, other);
+            CollisionHit hit = VortexPhysics::check_collision_detailed(&object(), other);
             
             if (hit.has_hit)
             {
-                gameObject->transform.position -= move_amount;
+                transform().position -= move_amount;
                 break;
             }
         }

@@ -68,16 +68,16 @@ void VortexModel::draw(const VortexShader &shader, VortexCamera &camera, bool wi
 {
     const VortexShader *active_shader = &shader;
 
-    if (app->shadow_manager->is_active)
+    if (app->get_shadow_manager()->is_active)
     {
-        active_shader = app->shadow_manager->shadow_shader;
+        active_shader = app->get_shadow_manager()->shadow_shader;
     }
 
     active_shader->use();
 
-    if (app->shadow_manager->is_active)
+    if (app->get_shadow_manager()->is_active)
     {
-        active_shader->setMat4("lightSpaceMatrix", app->shadow_manager->light_space_matrix);
+        active_shader->setMat4("lightSpaceMatrix", app->get_shadow_manager()->light_space_matrix);
     }
     else
     {
@@ -85,7 +85,7 @@ void VortexModel::draw(const VortexShader &shader, VortexCamera &camera, bool wi
         active_shader->setMat4("projection", camera.getProjectionMatrix());
 
         active_shader->setVec3("lightPos", GLOBAL::LIGHTPOS);
-        active_shader->setVec3("viewPos", camera.position);
+        active_shader->setVec3("viewPos", camera.get_position());
 
         // textures (multi-sampling)
         active_shader->setInt("u_hasTexture", shared_data->texture_id!= 0);
@@ -108,9 +108,9 @@ void VortexModel::draw(const VortexShader &shader, VortexCamera &camera, bool wi
         active_shader->setInt("u_metallicMap", 2);
 
         glActiveTexture(GL_TEXTURE3);
-        glBindTexture(GL_TEXTURE_2D, app->shadow_manager->shadow_map);
+        glBindTexture(GL_TEXTURE_2D, app->get_shadow_manager()->shadow_map);
         active_shader->setInt("shadowMap", 3);
-        active_shader->setMat4("lightSpaceMatrix", app->shadow_manager->light_space_matrix);
+        active_shader->setMat4("lightSpaceMatrix", app->get_shadow_manager()->light_space_matrix);
     }
 
     // rendering wireframe
@@ -165,7 +165,9 @@ VortexModel::~VortexModel()
 
 void VortexModel::add_behaviour(const std::string &script_name, VortexMonoBehaviour *script)
 {
-    script->gameObject = this;
+    script->vortexGameObject = this;
+    script->vortexEngine = app;
+    script->vortexTransform = &transform;
     behaviours.push_back(script);
     script_names.push_back(script_name);
 }

@@ -49,9 +49,9 @@ void ShadowManager::draw_shadow_map(std::function<void()> draw_callback, VortexC
 
     float worldUnitsPerTexel = (size * 2.0f) / 4096.0f;
     glm::vec3 position;
-    position.x = floor(camera->position.x / worldUnitsPerTexel) * worldUnitsPerTexel;
-    position.y = floor(camera->position.y / worldUnitsPerTexel) * worldUnitsPerTexel;
-    position.z = floor(camera->position.z / worldUnitsPerTexel) * worldUnitsPerTexel;
+    position.x = floor(camera->get_position().x / worldUnitsPerTexel) * worldUnitsPerTexel;
+    position.y = floor(camera->get_position().y / worldUnitsPerTexel) * worldUnitsPerTexel;
+    position.z = floor(camera->get_position().z / worldUnitsPerTexel) * worldUnitsPerTexel;
 
     glm::mat4 light_projection = glm::ortho(-size, size, -size, size, near_plane, far_plane);
 

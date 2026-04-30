@@ -129,21 +129,7 @@ void VortexGUI::camera_info(VortexCamera *camera)
         ImGui::Spacing();
 
         ImGui::TextDisabled("Position");
-        ImGui::Text("X: %.1f  Y: %.1f  Z: %.1f", camera->position.x, camera->position.y, camera->position.z);
-        
-        ImGui::Spacing();
-        
-        ImGui::TextDisabled("Status:"); 
-        ImGui::SameLine(60.0f);
-        
-        if (camera->anchored) 
-        {
-            ImGui::TextColored(ImVec4(0.65f, 0.45f, 0.30f, 1.0f), "[ Anchored ]");
-        }
-        else 
-        {
-            ImGui::TextColored(ImVec4(0.4f, 0.7f, 0.5f, 1.0f), "[ Free Roam ]");
-        }
+        ImGui::Text("X: %.1f  Y: %.1f  Z: %.1f", camera->get_position().x, camera->get_position().y, camera->get_position().z);
 
         ImGui::Spacing();
         ImGui::Unindent(10.0f);
@@ -158,7 +144,9 @@ void VortexGUI::camera_info(VortexCamera *camera)
         
         ImGui::TextDisabled("Fly Speed");
         ImGui::SetNextItemWidth(-FLT_MIN);
-        VortexGuiLambda::ClampedInputFloat("##Speed", &camera->movement_speed, 0.5f, 1.0f, 0.0f, 100.0f);
+        float camera_movement_speed = camera->get_movement_speed();
+        VortexGuiLambda::ClampedInputFloat("##Speed", &camera_movement_speed, 0.5f, 1.0f, 0.0f, 100.0f);
+        camera->set_movement_speed(camera_movement_speed);
 
         ImGui::Spacing();
         ImGui::Unindent(10.0f);

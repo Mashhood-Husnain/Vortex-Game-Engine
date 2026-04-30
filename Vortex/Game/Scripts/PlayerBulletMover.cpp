@@ -17,11 +17,11 @@ public:
         player = VortexObjectManager::get_object_by_tag("Player");
         gun = VortexObjectManager::get_object_by_tag("Gun");
 
-        VortexCamera* cam = gameObject->app->camera;
+        VortexCamera* cam = engine().get_camera();
 
-        Vec3 crosshair_target = cam->position + (cam->front * 100.0f);
+        Vec3 crosshair_target = cam->get_position() + (cam->get_front() * 100.0f);
         
-        Vec3 base_direction = glm::normalize(crosshair_target - gameObject->transform.position);
+        Vec3 base_direction = glm::normalize(crosshair_target - transform().position);
 
         bool is_aiming = VortexMouse::get_button("RIGHT");
         float spread_factor = is_aiming ? 0.005f : 0.05f; 
@@ -39,11 +39,11 @@ public:
     {
         float move_dist = speed * deltaTime;
 
-        RaycastHit hit = VortexPhysics::raycast(gameObject->transform.position, fly_direction, move_dist, {gameObject, player, gun});
+        RaycastHit hit = VortexPhysics::raycast(transform().position, fly_direction, move_dist, {&object(), player, gun});
 
         if (hit.has_hit)
         {
-            gameObject->transform.position = hit.hit_point;
+            transform().position = hit.hit_point;
 
             if (hit.hit_model->get_componant<DestructibleTag>() && hit.hit_sub_object_index != -1)
             {
@@ -57,16 +57,16 @@ public:
                 hit.hit_model->send_message("TAKE_DAMAGE", &bullet_damage);
             }
 
-            gameObject->should_destroy = true;
+            object().should_destroy = true;
             return;
         }
 
-        gameObject->transform.position += fly_direction * move_dist;
+        transform().position += fly_direction * move_dist;
         distance_traveled += move_dist;
 
         if (distance_traveled >= 200.0f)
         {
-            gameObject->should_destroy = true;
+            object().should_destroy = true;
         }
     }
 };

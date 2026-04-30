@@ -31,7 +31,6 @@ VortexCamera::VortexCamera(glm::vec3 position, glm::vec3 up, float yaw, float pi
     front = glm::vec3(0.0f, 0.0f, -1.0f);
 
     update_camera_vectors();
-    anchored = false;
 }
 
 glm::mat4 VortexCamera::getViewMatrix()
@@ -68,8 +67,6 @@ void VortexCamera::processMouseMovement(float xoffset, float yoffset)
 
 void VortexCamera::check_camera_movement(float deltaTime)
 {
-    if (anchored) return;
-
     if (VortexKeyboard::get_key("W")) processKeyboard("FORWARD", deltaTime);
     if (VortexKeyboard::get_key("S")) processKeyboard("BACKWARD", deltaTime);
     if (VortexKeyboard::get_key("A")) processKeyboard("LEFT", deltaTime);
@@ -95,8 +92,8 @@ void VortexCamera::look_at(glm::vec3 target)
 
 glm::vec3 VortexCamera::get_ray_from_mouse(glm::vec2 mouse_pos, VortexApplication *app)
 {
-    float x = (2.0f * mouse_pos.x) / app->default_window_width - 1.0f;
-    float y = 1.0f - (2.0f * mouse_pos.y) / app->default_window_height;
+    float x = (2.0f * mouse_pos.x) / app->get_width() - 1.0f;
+    float y = 1.0f - (2.0f * mouse_pos.y) / app->get_height();
     
     glm::vec4 ray_clip = glm::vec4(x, y, -1.0f, 1.0f);
     
@@ -153,4 +150,30 @@ Frustum VortexCamera::get_frustum()
     frustum.farFace.normalize();
 
     return frustum;
+}
+
+glm::vec3 VortexCamera::get_position() const { return position; }
+glm::vec3 VortexCamera::get_front() const { return front; }
+glm::vec3 VortexCamera::get_up() const { return up; }
+glm::vec3 VortexCamera::get_right() const { return right; }
+
+float VortexCamera::get_yaw() const { return yaw; }
+float VortexCamera::get_pitch() const { return pitch; }
+float VortexCamera::get_fov() const { return fov; }
+float VortexCamera::get_aspect_ratio() const { return aspect_ratio; }
+float VortexCamera::get_movement_speed() const { return movement_speed; }
+
+void VortexCamera::set_position(const glm::vec3 &new_position) { position = new_position; }
+
+void VortexCamera::set_movement_speed(float speed) { movement_speed = speed; };
+void VortexCamera::set_mouse_sensitivity(float sensitivity) { movement_speed = sensitivity; }
+void VortexCamera::set_aspect_ratio(float ratio) { aspect_ratio = ratio; }
+void VortexCamera::set_fov(float new_fov) { fov = new_fov; }
+
+void VortexCamera::set_rotation(float new_yaw, float new_pitch)
+{
+    yaw = new_yaw;
+    pitch = new_pitch;
+
+    update_camera_vectors();
 }

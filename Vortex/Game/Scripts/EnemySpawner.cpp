@@ -27,13 +27,13 @@ public:
             
             for (int i = 0; i < enemies_per_wave; i++) 
             {
-                VortexModel *enemy = new VortexModel("assets/models/obj/capsule.obj", gameObject->app);
+                VortexModel *enemy = new VortexModel("assets/models/obj/capsule.obj", &engine());
                 
                 float random_angle = static_cast<float>(rand()) / RAND_MAX * (2.0f * 3.14159f);
                 
                 float random_radius = min_radius + static_cast<float>(rand()) / RAND_MAX * (max_radius - min_radius);
                 
-                Vec3 player_pos = gameObject->transform.position;
+                Vec3 player_pos = transform().position;
                 float spawn_x = player_pos.x + (cos(random_angle) * random_radius);
                 float spawn_z = player_pos.z + (sin(random_angle) * random_radius);
                 

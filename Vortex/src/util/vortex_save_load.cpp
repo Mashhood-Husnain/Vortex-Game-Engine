@@ -66,16 +66,16 @@ void VortexProject::save_project(Snapshot *snapshot)
     save_data["m_selected_skybox_idx"] = snapshot->m_selected_skybox_idx;
     save_data["m_selected_shader_idx"] = snapshot->m_selected_shader_idx;
 
-    if (snapshot->window->editor_camera)
+    if (snapshot->window->get_editor_camera())
     {
         save_data["camera"] = json::object();
         save_data["camera"]["position"] = {
-            snapshot->window->editor_camera->position.x,
-            snapshot->window->editor_camera->position.y,
-            snapshot->window->editor_camera->position.z
+            snapshot->window->get_editor_camera()->get_position().x,
+            snapshot->window->get_editor_camera()->get_position().y,
+            snapshot->window->get_editor_camera()->get_position().z
         };
-        save_data["camera"]["yaw"] = snapshot->window->editor_camera->yaw;
-        save_data["camera"]["pitch"] = snapshot->window->editor_camera->pitch;
+        save_data["camera"]["yaw"] = snapshot->window->get_editor_camera()->get_yaw();
+        save_data["camera"]["pitch"] = snapshot->window->get_editor_camera()->get_pitch();
     }
 
     std::string file_path = "saves/" + snapshot->project_name + ".vtx";
@@ -210,18 +210,25 @@ void VortexProject::load_project(Snapshot *snapshot)
     snapshot->m_selected_skybox_idx = save_data["m_selected_skybox_idx"];
     snapshot->m_selected_shader_idx = save_data["m_selected_shader_idx"];
 
-    if (save_data.contains("camera") && snapshot->window->editor_camera)
+    if (save_data.contains("camera") && snapshot->window->get_editor_camera())
     {
-        snapshot->window->editor_camera->position = glm::vec3(
-            save_data["camera"]["position"][0],
-            save_data["camera"]["position"][1],
-            save_data["camera"]["position"][2]
-        );
+        VortexCamera * editor_cam = snapshot->window->get_editor_camera();
+        if (editor_cam)
+        {
+            glm::vec3 cam_pos = glm::vec3(
+                save_data["camera"]["position"][0],
+                save_data["camera"]["position"][1],
+                save_data["camera"]["position"][2]
+            );
 
-        snapshot->window->editor_camera->yaw = save_data["camera"]["yaw"];
-        snapshot->window->editor_camera->pitch = save_data["camera"]["pitch"];
+            editor_cam->set_rotation(save_data["camera"]["yaw"], save_data["camera"]["pitch"]);
 
-        snapshot->window->editor_camera->update_camera_vectors();
+            editor_cam->set_position(cam_pos);
+        }
+        else
+        {
+            VORTEX_ERROR("[LOAD ERROR] Failed to load camera data: Editor camera is null!");
+        }
     }
 
     VORTEX_INFO("[PROJECT] Successfully loaded ", snapshot->project_name);

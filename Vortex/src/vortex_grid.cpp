@@ -31,7 +31,7 @@ void VortexGrid::draw(VortexCamera& camera) {
     shader->use();
     shader->setMat4("view", camera.getViewMatrix());
     shader->setMat4("projection", camera.getProjectionMatrix());
-    shader->setVec3("cameraPos", camera.position);
+    shader->setVec3("cameraPos", camera.get_position());
 
     glEnable(GL_POLYGON_OFFSET_FILL);
     glPolygonOffset(-1.0f, -1.0f);

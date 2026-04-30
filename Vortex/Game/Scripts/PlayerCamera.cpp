@@ -28,12 +28,12 @@ public:
     void on_start() override
     {
         my_camera = new VortexCamera();
-        my_camera->aspect_ratio = gameObject->app->editor_camera->aspect_ratio;
+        my_camera->set_aspect_ratio(engine().get_camera()->get_aspect_ratio());
 
         current_offset = is_third_person ? third_person_offset : first_person_offset;
 
-        gameObject->app->camera = my_camera;
-        safe_camera_pitch = my_camera->pitch;
+        engine().set_camera(my_camera);
+        safe_camera_pitch = my_camera->get_pitch();
     }
 
     void late_update(float deltaTime) override
@@ -53,26 +53,28 @@ public:
 
         current_offset = glm::mix(current_offset, target_offset, deltaTime * 12.0f);
 
-        my_camera->pitch += safe_camera_pitch;
+        float new_cam_pitch = my_camera->get_pitch() + safe_camera_pitch;
 
         safe_camera_pitch = 0.0f;
-        if (my_camera->pitch > 80.0f) my_camera->pitch = 80.0f;
-        if (my_camera->pitch < -80.0f) my_camera->pitch = -80.0f;
+        if (new_cam_pitch > 80.0f) new_cam_pitch = 80.0f;
+        if (new_cam_pitch < -80.0f) new_cam_pitch = -80.0f;
 
-        my_camera->update_camera_vectors();
+        my_camera->set_rotation(my_camera->get_yaw(), new_cam_pitch);
 
-        Vec3 scale = gameObject->transform.scale;
+        Vec3 scale = transform().scale;
         Vec3 scaled_offset = current_offset * scale;
 
-        Vec3 pivot_pos = gameObject->transform.position;
+        Vec3 pivot_pos = transform().position;
         
-        my_camera->position = pivot_pos 
-                            - (my_camera->front * scaled_offset.z) 
+        Vec3 new_cam_position = pivot_pos 
+                            - (my_camera->get_front() * scaled_offset.z) 
                             + (Vec3(0.0f, 1.0f, 0.0f) * scaled_offset.y) 
-                            + (my_camera->right * scaled_offset.x);
+                            + (my_camera->get_right() * scaled_offset.x);
+        
+        my_camera->set_position(new_cam_position);
 
-        float player_yaw = -(my_camera->yaw + 90.0f);
-        gameObject->transform.set_euler(Vec3(0.0f, player_yaw, 0.0f));
+        float player_yaw = -(my_camera->get_yaw() + 90.0f);
+        transform().set_euler(Vec3(0.0f, player_yaw, 0.0f));
     }
 };
 

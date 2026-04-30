@@ -15,7 +15,7 @@ void VortexGUI::draw_editor_viewport(float deltaTime, VortexCamera* camera)
 
     ImGui::Image((void*)(intptr_t)scene_texture, ImVec2(scene_width, scene_height), ImVec2(0, 1), ImVec2(1, 0));
 
-    if (app->current_state == EngineState::EDITOR)
+    if (app->get_state() == EngineState::EDITOR)
     {
         handle_shortcuts();
         handle_picking(camera, image_render_pos);
@@ -109,7 +109,7 @@ void VortexGUI::handle_picking(VortexCamera* camera, ImVec2 image_pos)
             ray_eye = glm::vec4(ray_eye.x, ray_eye.y, -1.0f, 0.0f);
             glm::vec3 ray_direction = glm::normalize(glm::vec3(invView * ray_eye));
 
-            RaycastHit hit = VortexPhysics::editor_raycast(camera->position, ray_direction, 1000.0f);
+            RaycastHit hit = VortexPhysics::editor_raycast(camera->get_position(), ray_direction, 1000.0f);
 
             if (hit.has_hit)
             {

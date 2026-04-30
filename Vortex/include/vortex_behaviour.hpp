@@ -4,7 +4,9 @@
 #include <json.hpp>
 #include <glm/glm.hpp>
 
+class VortexApplication;
 class VortexModel;
+struct Transform;
 
 using json = nlohmann::json;
 
@@ -19,8 +21,27 @@ struct ScriptVariable {
 
 class VortexMonoBehaviour
 {
+    friend class VortexModel;
+
+    Transform *vortexTransform = nullptr;
+    VortexApplication *vortexEngine = nullptr;
+    VortexModel *vortexGameObject = nullptr;
 public:
-    VortexModel *gameObject=nullptr;
+
+    Transform &transform()
+    {
+        return *vortexTransform;
+    }
+
+    VortexApplication &engine()
+    {
+        return *vortexEngine;
+    }
+
+    VortexModel &object()
+    {
+        return *vortexGameObject;
+    }
 
     std::vector<ScriptVariable> exposed_variables;
 
