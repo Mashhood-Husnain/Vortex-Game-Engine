@@ -359,6 +359,13 @@ VortexApplication::~VortexApplication()
     VortexObjectManager::clean_up();
     VortexAudio::clean_up();
 
+    if (game_code)
+    {
+        game_code->unload();
+        delete game_code;
+        game_code = nullptr;
+    }
+
     if (window) glfwDestroyWindow(window);
     if (post_processor) delete post_processor;
 
@@ -452,6 +459,8 @@ void VortexApplication::mouse_callback(GLFWwindow* window, double xposIn, double
 
 void VortexApplication::run(std::function<void()> draw_callback)
 {
+    init_game_code();
+
     VORTEX_INFO("VORTEX ENGINE RUNNING ON:");
     VORTEX_INFO("VENDOR:   ", glGetString(GL_VENDOR));
     VORTEX_INFO("RENDERER: ", glGetString(GL_RENDERER));
@@ -470,6 +479,13 @@ void VortexApplication::run(std::function<void()> draw_callback)
 
     while(!glfwWindowShouldClose(window))
     {
+        check_for_hot_reload();
+
+        if (game_code->is_valid)
+        {
+            game_code->Update(&game_memory, this, deltaTime);
+        }
+
         glfwPollEvents();
         check_key_press();
 
@@ -608,6 +624,109 @@ void VortexApplication::show_mouse(bool status)
     {
         glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
         io.ConfigFlags |= ImGuiConfigFlags_NoMouse;
+    }
+}
+
+void VortexApplication::init_game_code()
+{
+    game_memory = {};
+    game_memory.is_initialized = false;
+    game_memory.registry_context = &ScriptRegistry::get();
+
+    #ifdef _WIN32
+        std::string game_code_name = "VortexGame.dll";
+    #else
+        std::string game_code_name = "./libVortexGame.so";
+    #endif
+
+    game_code = new GameCode(game_code_name);
+    game_code->load();
+
+    if (game_code->is_valid && !game_memory.is_initialized)
+    {
+        game_code->Init(&game_memory, this);
+    }
+}
+
+void VortexApplication::check_for_hot_reload()
+{
+    if (!game_code || !game_code->need_reload()) return;
+
+    VORTEX_INFO("[ENGINE] Recompilation detected! Preparing hot reload...");
+    std::error_code ec;
+
+    #ifdef _WIN32
+        std::string game_code_name = "VortexGame.dll";
+        std::string test_temp_path = "VortexGame_test.dll";
+    #else
+        std::string game_code_name = "./libVortexGame.so";
+        std::string test_temp_path = "./libVortexGame_test.so";
+    #endif
+
+    std::filesystem::copy_file(game_code_name, test_temp_path, std::filesystem::copy_options::overwrite_existing, ec);
+    
+    int retries = 0;
+    while (retries < 10)
+    {
+        std::filesystem::copy_file(game_code_name, test_temp_path, std::filesystem::copy_options::overwrite_existing, ec);
+        if (!ec) break;
+        std::this_thread::sleep_for(std::chrono::milliseconds(100));
+        retries++;
+    }
+
+    if (ec)
+    {
+        VORTEX_WARN("[ENGINE] Compiler is still writing. Waiting...");
+        return;
+    }
+    std::filesystem::remove(test_temp_path, ec);
+
+    for (VortexModel* model : VortexObjectManager::active_models)
+    {
+        for (VortexMonoBehaviour* script : model->behaviours)
+        {
+            delete script;
+        }
+        model->behaviours.clear(); 
+    }
+
+    ScriptRegistry::get().clear();
+
+    game_code->unload();
+    game_code->load();
+
+    if (game_code->is_valid)
+    {
+        game_code->Init(&game_memory, this);
+
+        for (VortexModel* model : VortexObjectManager::active_models)
+        {
+            std::vector<VortexMonoBehaviour*> restored_behaviours;
+            std::vector<std::string> restored_names;
+
+            for (const std::string& script_name : model->script_names)
+            {
+                VortexMonoBehaviour* fresh_script = ScriptRegistry::get().create(script_name);
+                
+                if (fresh_script)
+                {
+                    fresh_script->vortexGameObject = model;
+                    fresh_script->vortexEngine = this;
+                    fresh_script->vortexTransform = &model->transform;
+                    
+                    restored_behaviours.push_back(fresh_script);
+                    restored_names.push_back(script_name);
+                }
+                else
+                {
+                    VORTEX_WARN("[ENGINE] Script '", script_name, "' is missing from the DLL. Removing from model.");
+                }
+            }
+            
+            model->behaviours = restored_behaviours;
+            model->script_names = restored_names;
+        }
+        VORTEX_INFO("[ENGINE] Hot Reload Complete! All pointers safely restored.");
     }
 }
 

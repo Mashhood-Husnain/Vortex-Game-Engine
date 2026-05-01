@@ -3,11 +3,11 @@
 class PlayerMovement : public VortexMonoBehaviour
 {
 private:
-    float jump_force = 15.0f;
+    float jump_force = 30.0f;
     float velocity_y = 0.0f;
     float gravity = 25.0f;
     bool is_grounded = false;
-    float movement_speed = 15.0f;
+    float movement_speed = 2.0f;
 
     glm::vec2 crosshair;
 

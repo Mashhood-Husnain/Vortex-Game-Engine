@@ -3,6 +3,9 @@
 #include "util/vortex_save_load.hpp"
 #include "vortex_application.hpp"
 
+#include <thread>
+#include <cstdlib>
+
 int VortexGUI::m_selected_shader_idx = 0;
 int VortexGUI::m_selected_skybox_idx = 0;
 char VortexGUI::save_project_name[128] = "";
@@ -122,7 +125,32 @@ void VortexGUI::render()
         }
         
         ImGui::PopStyleColor(3);
+
+        ImGui::PushStyleColor(ImGuiCol_Button, ImVec4(0.2f, 0.6f, 0.3f, 1.0f));
+        ImGui::PushStyleColor(ImGuiCol_ButtonHovered, ImVec4(0.3f, 0.7f, 0.4f, 1.0f));
+        ImGui::PushStyleColor(ImGuiCol_ButtonActive, ImVec4(0.1f, 0.5f, 0.2f, 1.0f));
         
+        if (ImGui::Button("Compile Scripts"))
+        {
+            VORTEX_INFO("[ENGINE] Spawning background compiler thread...");
+            
+            std::thread([]() 
+            {
+                int result = std::system("make VortexGame");
+                
+                if (result == 0)
+                {
+                    VORTEX_INFO("[COMPILER] Build Successful! Awaiting hot reload...");
+                }
+                else
+                {
+                    VORTEX_ERROR("[COMPILER] Build Failed! Check syntax in terminal.");
+                }
+            }).detach();
+        }
+
+        ImGui::PopStyleColor(3);
+
         ImGui::End();
     }
 

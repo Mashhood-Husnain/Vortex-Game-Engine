@@ -1,7 +1,6 @@
 #pragma once
 
 #include "vortex_behaviour.hpp"
-#include "util/vortex_script_registry.hpp"
 #include "vortex_keyboard.hpp"
 #include "vortex_mouse.hpp"
 #include "vortex_objectmanager.hpp"
@@ -13,6 +12,11 @@
 #include "vortex_application.hpp"
 #include "vortex_camera.hpp"
 
+#include "util/vortex_script_registry.hpp"
+#include "util/vortex_game_api.hpp"
+#include "util/vortex_game_reloader.hpp"
+
+#include <iostream>
 #include <glm/glm.hpp>
 #include <cstdlib>
 #include <cmath>

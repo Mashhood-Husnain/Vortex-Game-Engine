@@ -115,7 +115,6 @@ void VortexGUI::handle_picking(VortexCamera* camera, ImVec2 image_pos)
             {
                 m_selected_model = hit.hit_model;
                 m_selected_model->is_selected = true;
-                VORTEX_INFO("[EDITOR] Selected: ", m_selected_model->model_name);
             }
             else
             {

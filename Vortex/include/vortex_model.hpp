@@ -23,6 +23,7 @@
 #include "util/vortex_global_vars.hpp"
 #include "util/vortex_logs.hpp"
 #include "vortex_collider.hpp"
+#include "vortex_rigidbody.hpp"
 
 #include "stb_image.h"
 
@@ -30,6 +31,7 @@ class VortexApplication;
 class VortexCamera;
 class VortexShader;
 class VortexBoxcollider;
+class VortexRigidbody;
 
 struct SharedMesh;
 
@@ -88,6 +90,8 @@ class VortexModel
 
     bool m_is_dirty = true;
 public:
+    VortexRigidbody *rigidbody = nullptr;
+
     VortexApplication *app;
     std::string model_name;
     
@@ -139,6 +143,8 @@ public:
     template <typename T>
     T* get_componant()
     {
+        if constexpr (std::is_same_v<T, VortexRigidbody>) return rigidbody;
+
         for (VortexMonoBehaviour *script : behaviours)
         {
             T *target = dynamic_cast<T*>(script);

@@ -22,11 +22,11 @@ struct ScriptVariable {
 class VortexMonoBehaviour
 {
     friend class VortexModel;
+public:
 
     Transform *vortexTransform = nullptr;
     VortexApplication *vortexEngine = nullptr;
     VortexModel *vortexGameObject = nullptr;
-public:
 
     Transform &transform()
     {

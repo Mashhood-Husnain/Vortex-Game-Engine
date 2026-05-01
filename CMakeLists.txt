@@ -4,6 +4,8 @@ project(VortexEngine)
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
+set(CMAKE_WINDOWS_EXPORT_ALL_SYMBOLS ON)
+set(CMAKE_POSITION_INDEPENDENT_CODE ON)
 
 # ----------------------------
 # OS-Specific Definitions
@@ -77,11 +79,6 @@ foreach(MODEL ${MODEL_FILES})
 endforeach()
 
 # ----------------------------
-# Get user's custom scripts
-# ----------------------------
-file(GLOB_RECURSE USER_SCRIPTS CONFIGURE_DEPENDS "Vortex/Game/Scripts/*.cpp")
-
-# ----------------------------
 # EXECUTABLE
 # ----------------------------
 add_executable(engine 
@@ -117,8 +114,25 @@ add_executable(engine
 
     Vortex/src/util/vortex_save_load.cpp
     Vortex/src/util/vortex_nvml.cpp
-    
+)
+
+# ----------------------------
+# Get user's custom scripts
+# ----------------------------
+file(GLOB_RECURSE USER_SCRIPTS CONFIGURE_DEPENDS "Vortex/Game/Scripts/*.cpp")
+
+set_target_properties(engine PROPERTIES ENABLE_EXPORTS TRUE)
+
+add_library(VortexGame SHARED
+    Vortex/src/VortexEngine.cpp
     ${USER_SCRIPTS}
+)
+
+target_link_libraries(VortexGame engine)
+
+set_target_properties(VortexGame PROPERTIES 
+    LIBRARY_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}"
+    RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}"
 )
 
 # ----------------------------

@@ -109,14 +109,56 @@ void VortexGUI::inspector_info(VortexModel* model, ParticleSystem *ps)
             ImGui::Spacing();
             
             // Added the |__ prefix for the tree visual
-            if (ImGui::TreeNodeEx("|__ Attached Scripts", sub_header_flags))
+            // Renamed slightly to reflect the new architecture
+            if (ImGui::TreeNodeEx("|__ Components & Scripts", sub_header_flags))
             {
                 ImGui::Indent(10.0f);
                 ImGui::Spacing();
 
-                if (model->script_names.empty())
+                // ==========================================
+                // 1. DRAW NATIVE COMPONENTS (Rigidbody)
+                // ==========================================
+                if (model->rigidbody)
                 {
-                    ImGui::TextDisabled("No scripts attached.");
+                    ImGui::PushStyleColor(ImGuiCol_Header, ImVec4(0.15f, 0.22f, 0.15f, 1.0f)); // Subtle Green
+                    bool rb_open = ImGui::TreeNodeEx("Vortex Rigidbody", sub_header_flags);
+                    ImGui::PopStyleColor();
+
+                    if (rb_open)
+                    {
+                        ImGui::Indent(10.0f);
+                        ImGui::Spacing();
+
+                        ImGui::Checkbox("Is Kinematic", &model->rigidbody->is_kinematic);
+                        ImGui::Checkbox("Gravity", &model->rigidbody->gravity);
+                        if (model->rigidbody->gravity)
+                        {
+                            ImGui::DragFloat("Gravity Value", &model->rigidbody->gravity_value, 0.1f);
+                        }
+                        
+                        ImGui::Spacing();
+                        ImGui::SetCursorPosX(ImGui::GetWindowContentRegionMax().x - 70.0f);
+                        
+                        ImGui::PushStyleColor(ImGuiCol_Button, ImVec4(0.4f, 0.15f, 0.15f, 0.8f));
+                        ImGui::PushStyleColor(ImGuiCol_ButtonHovered, ImVec4(0.6f, 0.2f, 0.2f, 1.0f));
+                        if (ImGui::Button("Remove##RB", ImVec2(70, 0)))
+                        {
+                            delete model->rigidbody;
+                            model->rigidbody = nullptr;
+                        }
+                        ImGui::PopStyleColor(2);
+                        
+                        ImGui::Spacing();
+                        ImGui::Unindent(10.0f);
+                    }
+                }
+
+                // ==========================================
+                // 2. DRAW GAME SCRIPTS (Hot-Reloadable)
+                // ==========================================
+                if (model->script_names.empty() && !model->rigidbody)
+                {
+                    ImGui::TextDisabled("No components attached.");
                 }
                 else
                 {
@@ -138,38 +180,15 @@ void VortexGUI::inspector_info(VortexModel* model, ParticleSystem *ps)
                             ImGui::Indent(10.0f);
                             ImGui::Spacing();
 
-                            VortexRigidbody* rigid_body = model->get_componant<VortexRigidbody>();
-                            if (rigid_body)
-                            {
-                                ImGui::Checkbox("Is Kinematic", &rigid_body->is_kinematic);
-                                ImGui::Checkbox("Gravity", &rigid_body->gravity);
-                                if (rigid_body->gravity)
-                                {
-                                    ImGui::DragFloat("Gravity Value", &rigid_body->gravity_value, 0.1f);
-                                }
-                                ImGui::Spacing();
-                            }
-
+                            // Render exposed variables
                             for (auto &var : script->exposed_variables)
                             {
                                 if (!var.show_in_editor) continue;
 
-                                if (var.type == ScriptVarType::INT)
-                                {
-                                    ImGui::DragInt(var.name.c_str(), (int*)var.data_ptr);
-                                }
-                                else if (var.type == ScriptVarType::FLOAT)
-                                {
-                                    ImGui::DragFloat(var.name.c_str(), (float*)var.data_ptr, 0.1f);
-                                }
-                                else if (var.type == ScriptVarType::BOOL)
-                                {
-                                    ImGui::Checkbox(var.name.c_str(), (bool*)var.data_ptr);
-                                }
-                                else if (var.type == ScriptVarType::VEC3)
-                                {
-                                    ImGui::DragFloat3(var.name.c_str(), (float*)var.data_ptr, 0.1f);
-                                }
+                                if (var.type == ScriptVarType::INT) ImGui::DragInt(var.name.c_str(), (int*)var.data_ptr);
+                                else if (var.type == ScriptVarType::FLOAT) ImGui::DragFloat(var.name.c_str(), (float*)var.data_ptr, 0.1f);
+                                else if (var.type == ScriptVarType::BOOL) ImGui::Checkbox(var.name.c_str(), (bool*)var.data_ptr);
+                                else if (var.type == ScriptVarType::VEC3) ImGui::DragFloat3(var.name.c_str(), (float*)var.data_ptr, 0.1f);
                                 else if (var.type == ScriptVarType::STRING)
                                 {
                                     std::string *str_ptr = (std::string*)var.data_ptr;
@@ -187,10 +206,7 @@ void VortexGUI::inspector_info(VortexModel* model, ParticleSystem *ps)
                             
                             ImGui::PushStyleColor(ImGuiCol_Button, ImVec4(0.4f, 0.15f, 0.15f, 0.8f));
                             ImGui::PushStyleColor(ImGuiCol_ButtonHovered, ImVec4(0.6f, 0.2f, 0.2f, 1.0f));
-                            if (ImGui::Button("Remove", ImVec2(70, 0)))
-                            {
-                                script_to_delete = static_cast<int>(i);
-                            }
+                            if (ImGui::Button("Remove", ImVec2(70, 0))) script_to_delete = static_cast<int>(i);
                             ImGui::PopStyleColor(2);
                             
                             ImGui::Spacing();
@@ -208,11 +224,34 @@ void VortexGUI::inspector_info(VortexModel* model, ParticleSystem *ps)
                 }
 
                 ImGui::Spacing();
-                std::vector<std::string> available_scripts = ScriptRegistry::get().get_avaialble_scripts();
-                
+                std::vector<std::string> available_scripts = ScriptRegistry::get().get_available_scripts();
+
+                // ==========================================
+                // 3. THE ADD COMPONENT DROPDOWN
+                // ==========================================
                 ImGui::SetNextItemWidth(-FLT_MIN);
-                if (ImGui::BeginCombo("##Add Script", "Add Component..."))
+                if (ImGui::BeginCombo("##AddComponent", "Add Component..."))
                 {
+                    ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(0.5f, 0.9f, 0.5f, 1.0f));
+                    ImGui::Selectable("Native Components", false, ImGuiSelectableFlags_Disabled);
+                    ImGui::PopStyleColor();
+
+                    if (model->get_componant<VortexRigidbody>() == nullptr)
+                    {
+                        if (ImGui::Selectable("Vortex Rigidbody"))
+                        {
+                            model->rigidbody = new VortexRigidbody();
+                            model->rigidbody->vortexGameObject = model;
+                            model->rigidbody->vortexTransform = &model->transform; 
+                        }
+                    }
+
+                    ImGui::Separator();
+
+                    ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(0.5f, 0.7f, 1.0f, 1.0f));
+                    ImGui::Selectable("Game Scripts (Hot-Reloadable)", false, ImGuiSelectableFlags_Disabled);
+                    ImGui::PopStyleColor();
+
                     for (const std::string &script_name : available_scripts)
                     {
                         if (ImGui::Selectable(script_name.c_str()))
@@ -220,6 +259,9 @@ void VortexGUI::inspector_info(VortexModel* model, ParticleSystem *ps)
                             VortexMonoBehaviour *new_script = ScriptRegistry::get().create(script_name);
                             if (new_script)
                             {
+                                new_script->vortexGameObject = model;
+                                new_script->vortexEngine = app;
+                                new_script->vortexTransform = &model->transform;
                                 model->add_behaviour(script_name, new_script);
                             }
                         }

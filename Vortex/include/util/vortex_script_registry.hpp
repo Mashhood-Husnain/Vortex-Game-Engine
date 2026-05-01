@@ -9,11 +9,19 @@
 
 class ScriptRegistry
 {
+    inline static ScriptRegistry* s_Instance = nullptr;
 public:
-    static ScriptRegistry &get()
+    static ScriptRegistry& get()
     {
-        static ScriptRegistry instance;
-        return instance;
+        if (s_Instance == nullptr) {
+            s_Instance = new ScriptRegistry();
+        }
+        return *s_Instance;
+    }
+
+    static void set_instance(ScriptRegistry* instance)
+    {
+        s_Instance = instance;
     }
 
     std::unordered_map<std::string, std::function<VortexMonoBehaviour*()>> factories;
@@ -32,25 +40,39 @@ public:
         return nullptr;
     }
 
-    std::vector<std::string> get_avaialble_scripts()
+    std::vector<std::string> get_available_scripts()
     {
         std::vector<std::string> names;
         for (const auto &pair : factories)
         {
             names.push_back(pair.first);
         }
-
         return names;
+    }
+
+    void clear()
+    {
+        factories.clear();
     }
 };
 
+struct PendingScript
+{
+    std::string name;
+    std::function<VortexMonoBehaviour*()> factory;
+};
 
-// some macro that links the scripts, fuck me if i know how it works
+inline std::vector<PendingScript> &get_pending_scripts()
+{
+    static std::vector<PendingScript> pending;
+    return pending;
+}
+
 #define VORTEX_REGISTER_SCRIPT(className) \
     class className##_Registrar { \
     public: \
         className##_Registrar() { \
-            ScriptRegistry::get().register_script(#className, []() { return new className(); });\
+            get_pending_scripts().push_back({#className, []() -> VortexMonoBehaviour* { return new className(); }}); \
         } \
-    };\
+    }; \
     static className##_Registrar global_##className##_registrar;

@@ -178,6 +178,11 @@ void VortexModel::update(float deltaTime)
     {
         script->on_update(deltaTime);
     }
+
+    if (rigidbody)
+    {
+        rigidbody->on_update(deltaTime);
+    }
 }
 
 void VortexModel::late_update(float deltaTime)

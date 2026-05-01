@@ -31,6 +31,7 @@ void VortexProject::save_project(Snapshot *snapshot)
 
         j_model["scripts"] = json::array();
         j_model["script_data"] = json::object();
+
         for (size_t i = 0; i < model->script_names.size(); i++)
         {
             std::string s_name = model->script_names[i];
@@ -42,6 +43,13 @@ void VortexProject::save_project(Snapshot *snapshot)
             {
                 j_model["script_data"][s_name] = script_json;
             }
+        }
+
+        if (model->rigidbody)
+        {
+            json rb_data;
+            model->rigidbody->serialize(rb_data);
+            j_model["rigidbody"] = rb_data;
         }
 
         save_data["models"].push_back(j_model);
@@ -189,6 +197,17 @@ void VortexProject::load_project(Snapshot *snapshot)
                     new_model->add_behaviour(name, new_script);
                 }
             }
+        }
+
+        if (j_model.contains("rigidbody"))
+        {
+            new_model->rigidbody = new VortexRigidbody();
+            new_model->rigidbody->vortexGameObject = new_model;
+            
+            // THE FIX: Must also link the transform when loading from a save file!
+            new_model->rigidbody->vortexTransform = &new_model->transform; 
+            
+            new_model->rigidbody->deserialize(j_model["rigidbody"]);
         }
 
         snapshot->active_models.push_back(new_model);

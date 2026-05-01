@@ -40,6 +40,9 @@
 #include "util/vortex_gpu_pre_init.hpp"
 #include "util/vortex_save_load.hpp"
 #include "util/vortex_logs.hpp"
+#include "util/vortex_game_api.hpp"
+#include "util/vortex_game_reloader.hpp"
+#include "util/vortex_script_registry.hpp"
 
 class VortexSkybox;
 class VortexGrid;
@@ -99,6 +102,9 @@ private:
 
     VortexGUI gui;
 
+    GameMemory game_memory;
+    GameCode *game_code = nullptr;
+
     GLFWmonitor* get_current_monitor(GLFWwindow* window);
     static void framebuffer_size_callback(GLFWwindow* window, int width, int height);
     static void mouse_callback(GLFWwindow* window, double xposIn, double yposIn);
@@ -110,7 +116,8 @@ private:
     void draw_world_axis_gizmo();
     void load_splash_screen();
     void draw_splash_overlay(float dt);
-
+    void init_game_code();
+    void check_for_hot_reload();
 public:
     VortexApplication(std::string window_name);
     ~VortexApplication();

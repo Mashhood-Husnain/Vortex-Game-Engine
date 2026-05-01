@@ -65,5 +65,3 @@ void VortexRigidbody::deserialize(const json& j)
         gravity = j["gravity"];
     }
 }
-
-VORTEX_REGISTER_SCRIPT(VortexRigidbody);
