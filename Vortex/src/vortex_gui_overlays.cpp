@@ -154,3 +154,44 @@ void VortexGUI::camera_info(VortexCamera *camera)
 
     ImGui::End();
 }
+
+void VortexGUI::draw_compiler_modal()
+{
+    if (CompilerState::is_compiling.load())
+    {
+        if (!ImGui::IsPopupOpen("Compiling Scripts"))
+        {
+            ImGui::OpenPopup("Compiling Scripts");
+        }
+    }
+
+    ImVec2 center = ImGui::GetMainViewport()->GetCenter();
+    ImGui::SetNextWindowPos(center, ImGuiCond_Appearing, ImVec2(0.5f, 0.5f));
+
+    ImGuiWindowFlags flags = ImGuiWindowFlags_AlwaysAutoResize | ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoSavedSettings;
+    
+    if (ImGui::BeginPopupModal("Compiling Scripts", NULL, flags))
+    {
+        ImGui::Text("Compiling Game Code...");
+        ImGui::Spacing();
+        
+        float progress = CompilerState::progress.load();
+        ImGui::ProgressBar(progress, ImVec2(400, 24));
+        
+        ImGui::Spacing();
+
+        {
+            std::lock_guard<std::mutex> lock(CompilerState::status_mutex);
+            std::string display_text = CompilerState::status_text;
+            if (display_text.length() > 60) display_text = display_text.substr(0, 57) + "...";
+            ImGui::TextDisabled("%s", display_text.c_str());
+        }
+
+        if (!CompilerState::is_compiling.load())
+        {
+            ImGui::CloseCurrentPopup();
+        }
+
+        ImGui::EndPopup();
+    }
+}

@@ -12,7 +12,6 @@ struct VortexCanvas_UIElement
     std::string id;
     VortexCanvas_UIType type;
     
-    // Absolute or anchored screen coordinates for dragging
     ImVec2 position = ImVec2(0.0f, 0.0f);
     ImVec2 size = ImVec2(100.0f, 20.0f);
     

@@ -6,6 +6,8 @@
 #include <ctime>
 #include <iomanip>
 #include <sstream>
+#include <mutex>
+#include <vector>
 
 #define LOG_RESET       "\033[0m"
 #define LOG_BOLD        "\033[1m"
@@ -23,6 +25,13 @@ enum class LogLevel
     FATAL
 };
 
+struct LogEntry
+{
+    LogLevel level;
+    std::string time;
+    std::string message;
+};
+
 class VortexLog
 {
     static std::string CurrentTime()
@@ -36,6 +45,9 @@ class VortexLog
         return ss.str();
     }
 public:
+    inline static std::vector<LogEntry> s_LogBuffer;
+    inline static std::mutex s_LogMutex;
+
     static void print()
     {
         std::cout << LOG_RESET << std::endl;
@@ -51,8 +63,20 @@ public:
     template<typename... Args>
     static void Log(LogLevel level, const char* color, const char* prefix, Args&&... args) 
     {
-        std::cout << LOG_DIM << CurrentTime() << LOG_RESET << " ";
-        
+        std::string timeStr = CurrentTime();
+
+        std::ostringstream oss;
+        int dummy[] = {0, ((void)(oss << std::forward<Args>(args)), 0) ...};
+        (void) dummy;
+
+        std::string messageStr = oss.str();
+
+        {
+            std::lock_guard<std::mutex> lock(s_LogMutex);
+            s_LogBuffer.push_back({level, timeStr, prefix + messageStr});
+        }
+
+        std::cout << LOG_DIM << CurrentTime() << LOG_RESET << " ";        
         std::cout << color << LOG_BOLD << prefix << LOG_RESET;
 
         if (level == LogLevel::WARNING || level == LogLevel::ERROR || level == LogLevel::FATAL) 
@@ -60,21 +84,11 @@ public:
             std::cout << color;
         }
 
-        int dummy[] = { 0, ( (void)(std::cout << std::forward<Args>(args)), 0 ) ... };
-        (void)dummy;
-
-        std::cout << LOG_RESET << std::endl;
+        std::cout << messageStr << LOG_RESET << std::endl;
     }
 };
 
-#ifdef NDEBUG
-    #define VORTEX_INFO(...)
-    #define VORTEX_WARN(...)
-    #define VORTEX_ERROR(...)
-    #define VORTEX_FATAL(...)
-#else
-    #define VORTEX_INFO(...)  VortexLog::Log(LogLevel::INFO,    LOG_COLOR_GREEN, " [INFO]    ", __VA_ARGS__)
-    #define VORTEX_WARN(...)  VortexLog::Log(LogLevel::WARNING, LOG_COLOR_WARN,  " [WARN]    ", __VA_ARGS__)
-    #define VORTEX_ERROR(...) VortexLog::Log(LogLevel::ERROR,   LOG_COLOR_RED,   " [ERROR]   ", __VA_ARGS__)
-    #define VORTEX_FATAL(...) VortexLog::Log(LogLevel::FATAL,   LOG_COLOR_CYAN,  " [FATAL]   ", __FILE__, ":", __LINE__, " - ", __VA_ARGS__)
-#endif
+#define VORTEX_INFO(...)  VortexLog::Log(LogLevel::INFO,    LOG_COLOR_GREEN, " [INFO]    ", __VA_ARGS__)
+#define VORTEX_WARN(...)  VortexLog::Log(LogLevel::WARNING, LOG_COLOR_WARN,  " [WARN]    ", __VA_ARGS__)
+#define VORTEX_ERROR(...) VortexLog::Log(LogLevel::ERROR,   LOG_COLOR_RED,   " [ERROR]   ", __VA_ARGS__)
+#define VORTEX_FATAL(...) VortexLog::Log(LogLevel::FATAL,   LOG_COLOR_CYAN,  " [FATAL]   ", __FILE__, ":", __LINE__, " - ", __VA_ARGS__)

@@ -171,6 +171,11 @@ void VortexApplication::check_key_press()
         if (VortexKeyboard::get_key_down("Z")) show_wireframe = !show_wireframe;
         if (VortexKeyboard::get_key_down("V")) view_world_axis = !view_world_axis;
         if (VortexKeyboard::get_key_down("M")) show_mouse(!show_mouse_cursor);
+
+        if (VortexKeyboard::get_key("LEFTCONTROL") && VortexKeyboard::get_key_down("P"))
+        {
+            gui.show_terminal = !gui.show_terminal;
+        }
     }
 
     if (VortexKeyboard::get_key_down("TAB") && current_state == EngineState::PLAY)
@@ -187,6 +192,7 @@ void VortexApplication::check_key_press()
             current_state = EngineState::EDITOR;
             gui.show_gui = true;
             gui.show_debug_gui = true;
+            gui.show_terminal = true;
 
             show_mouse(true);
 
@@ -575,6 +581,8 @@ void VortexApplication::run(std::function<void()> draw_callback)
         gui.begin_scene_inspector();
         gui.end_scene_inspector();
         gui.draw_exit_modal();
+        gui.draw_terminal();
+        gui.draw_compiler_modal();
         
         gui.draw_editor_viewport(deltaTime, camera);
 

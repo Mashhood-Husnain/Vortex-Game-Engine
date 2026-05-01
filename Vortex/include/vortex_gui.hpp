@@ -16,6 +16,9 @@
 #include <glm/gtc/type_ptr.hpp>
 #include <glm/gtx/matrix_decompose.hpp>
 #include <ImGuizmo.hpp>
+#include <mutex>
+#include <atomic>
+#include <cstdio>
 
 #include "util/vortex_engine_stats.hpp"
 #include "util/vortex_logs.hpp"
@@ -30,6 +33,14 @@ class VortexMonoBehaviour;
 class VortexEditor;
 
 enum class SnapshotState;
+
+struct CompilerState
+{
+    inline static std::atomic<bool> is_compiling{false};
+    inline static std::atomic<float> progress{0.0f};
+    inline static std::mutex status_mutex;
+    inline static std::string status_text = "Initializing compiler...";
+};
 
 namespace VortexGuiLambda
 {
@@ -136,6 +147,8 @@ public:
     std::string _vendor_;
     std::string _renderer_;
 
+    bool show_terminal = false;
+
     VortexGUI();
     ~VortexGUI();
 
@@ -162,4 +175,6 @@ public:
 
     void engine_stats();
 
+    void draw_terminal();
+    void draw_compiler_modal();
 };

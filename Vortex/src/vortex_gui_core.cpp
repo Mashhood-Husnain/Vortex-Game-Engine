@@ -114,6 +114,7 @@ void VortexGUI::render()
             app->toggle_world_axis(false);
             show_gui = false;
             show_debug_gui = false;
+            show_terminal = false;
 
             for (VortexModel *model : VortexObjectManager::active_models)
             {
@@ -130,23 +131,81 @@ void VortexGUI::render()
         ImGui::PushStyleColor(ImGuiCol_ButtonHovered, ImVec4(0.3f, 0.7f, 0.4f, 1.0f));
         ImGui::PushStyleColor(ImGuiCol_ButtonActive, ImVec4(0.1f, 0.5f, 0.2f, 1.0f));
         
-        if (ImGui::Button("Compile Scripts"))
+        bool is_currently_compiling = CompilerState::is_compiling.load();
+
+        if (is_currently_compiling)
         {
-            VORTEX_INFO("[ENGINE] Spawning background compiler thread...");
+            ImGui::BeginDisabled();
+        }
+
+        if (ImGui::Button("Compile Script"))
+        {
+            CompilerState::progress.store(0.0f);
+            CompilerState::is_compiling.store(true);
             
+            {
+                std::lock_guard<std::mutex> lock(CompilerState::status_mutex);
+                CompilerState::status_text = "Starting CMake Build...";
+            }
+
             std::thread([]() 
             {
-                int result = std::system("make VortexGame");
+                #ifdef _WIN32
+                    #define POPEN _popen
+                    #define PCLOSE _pclose
+                #else
+                    #define POPEN popen
+                    #define PCLOSE pclose
+                #endif
+
+                FILE* pipe = POPEN("make VortexGame 2>&1", "r");
                 
-                if (result == 0)
+                if (pipe) 
                 {
-                    VORTEX_INFO("[COMPILER] Build Successful! Awaiting hot reload...");
+                    char buffer[256];
+                    while (fgets(buffer, sizeof(buffer), pipe) != nullptr) 
+                    {
+                        std::string line = buffer;
+
+                        if (!line.empty() && line.back() == '\n') line.pop_back();
+
+                        {
+                            std::lock_guard<std::mutex> lock(CompilerState::status_mutex);
+                            CompilerState::status_text = line;
+                        }
+
+                        size_t bracket_open = line.find('[');
+                        size_t percent_sign = line.find('%');
+                        
+                        if (bracket_open != std::string::npos && percent_sign != std::string::npos && percent_sign > bracket_open)
+                        {
+                            std::string num_str = line.substr(bracket_open + 1, percent_sign - bracket_open - 1);
+                            try {
+                                float percent = std::stof(num_str) / 100.0f;
+                                CompilerState::progress.store(percent);
+                            } catch (...) {}
+                        }
+                    }
+                    PCLOSE(pipe);
                 }
-                else
+
+                CompilerState::progress.store(1.0f);
+                
                 {
-                    VORTEX_ERROR("[COMPILER] Build Failed! Check syntax in terminal.");
+                    std::lock_guard<std::mutex> lock(CompilerState::status_mutex);
+                    CompilerState::status_text = "Build Complete! Triggering Hot Reload...";
                 }
+
+                std::this_thread::sleep_for(std::chrono::milliseconds(500));
+                
+                CompilerState::is_compiling.store(false);
+
             }).detach();
+        }
+
+        if (is_currently_compiling)
+        {
+            ImGui::EndDisabled();
         }
 
         ImGui::PopStyleColor(3);

@@ -95,6 +95,9 @@ add_executable(engine
     Vortex/src/vortex_gui_environment.cpp
     Vortex/src/vortex_gui_inspector.cpp
     Vortex/src/vortex_gui_overlays.cpp
+    Vortex/src/vortex_gui_editor.cpp
+    Vortex/src/vortex_gui_dockspace.cpp
+    Vortex/src/vortex_gui_terminal.cpp
     Vortex/src/vortex_postprocessor.cpp
     Vortex/src/vortex_skybox.cpp
     Vortex/src/vortex_grid.cpp
@@ -109,8 +112,6 @@ add_executable(engine
     Vortex/src/vortex_rigidbody.cpp
     Vortex/src/vortex_uimanager.cpp
     Vortex/src/vortex_canvas.cpp
-    Vortex/src/vortex_gui_editor.cpp
-    Vortex/src/vortex_gui_dockspace.cpp
 
     Vortex/src/util/vortex_save_load.cpp
     Vortex/src/util/vortex_nvml.cpp

@@ -79,7 +79,6 @@ void VortexGUI::inspector_info(VortexModel* model, ParticleSystem *ps)
             ImGui::Indent(12.0f);
             ImGui::Spacing();
 
-            // Added the |__ prefix for the tree visual
             if (ImGui::TreeNodeEx("|__ Model Info", sub_header_flags))
             {
                 ImGui::Indent(10.0f);
@@ -108,19 +107,14 @@ void VortexGUI::inspector_info(VortexModel* model, ParticleSystem *ps)
 
             ImGui::Spacing();
             
-            // Added the |__ prefix for the tree visual
-            // Renamed slightly to reflect the new architecture
             if (ImGui::TreeNodeEx("|__ Components & Scripts", sub_header_flags))
             {
                 ImGui::Indent(10.0f);
                 ImGui::Spacing();
 
-                // ==========================================
-                // 1. DRAW NATIVE COMPONENTS (Rigidbody)
-                // ==========================================
                 if (model->rigidbody)
                 {
-                    ImGui::PushStyleColor(ImGuiCol_Header, ImVec4(0.15f, 0.22f, 0.15f, 1.0f)); // Subtle Green
+                    ImGui::PushStyleColor(ImGuiCol_Header, ImVec4(0.15f, 0.22f, 0.15f, 1.0f));
                     bool rb_open = ImGui::TreeNodeEx("Vortex Rigidbody", sub_header_flags);
                     ImGui::PopStyleColor();
 
@@ -153,9 +147,6 @@ void VortexGUI::inspector_info(VortexModel* model, ParticleSystem *ps)
                     }
                 }
 
-                // ==========================================
-                // 2. DRAW GAME SCRIPTS (Hot-Reloadable)
-                // ==========================================
                 if (model->script_names.empty() && !model->rigidbody)
                 {
                     ImGui::TextDisabled("No components attached.");
@@ -180,7 +171,6 @@ void VortexGUI::inspector_info(VortexModel* model, ParticleSystem *ps)
                             ImGui::Indent(10.0f);
                             ImGui::Spacing();
 
-                            // Render exposed variables
                             for (auto &var : script->exposed_variables)
                             {
                                 if (!var.show_in_editor) continue;
@@ -226,9 +216,6 @@ void VortexGUI::inspector_info(VortexModel* model, ParticleSystem *ps)
                 ImGui::Spacing();
                 std::vector<std::string> available_scripts = ScriptRegistry::get().get_available_scripts();
 
-                // ==========================================
-                // 3. THE ADD COMPONENT DROPDOWN
-                // ==========================================
                 ImGui::SetNextItemWidth(-FLT_MIN);
                 if (ImGui::BeginCombo("##AddComponent", "Add Component..."))
                 {
@@ -275,7 +262,6 @@ void VortexGUI::inspector_info(VortexModel* model, ParticleSystem *ps)
 
             ImGui::Spacing();
             
-            // Added the |__ prefix for the tree visual
             if (ImGui::TreeNodeEx("|__ Physics & Transform", sub_header_flags))
             {
                 ImGui::Indent(10.0f);
@@ -400,7 +386,6 @@ void VortexGUI::inspector_info(VortexModel* model, ParticleSystem *ps)
             ImGui::Indent(12.0f);
             ImGui::Spacing();
             
-            // Added the |__ prefix for the tree visual
             if (ImGui::TreeNodeEx("|__ Emitters", sub_header_flags))
             {
                 ImGui::Indent(10.0f);
@@ -465,7 +450,6 @@ void VortexGUI::inspector_info(VortexModel* model, ParticleSystem *ps)
 
             ImGui::Spacing();
             
-            // Added the |__ prefix for the tree visual
             if (ImGui::TreeNodeEx("|__ Stats", sub_header_flags))
             {
                 ImGui::Indent(10.0f);

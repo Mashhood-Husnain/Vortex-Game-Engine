@@ -11,7 +11,7 @@
 
 Vortex Engine is a personal project currently in its early development stages. It serves as a foundational bridge between basic rendering and a complete game engine, focusing heavily on low-level systems like memory management and pipeline optimization.
 
-While many core features are working, the engine is actively evolving. Many standard features, including complex lighting and a scene hierarchy and script hot loading are on the roadmap. This project follows a bottom-up approach to ensure a fast, efficient, and highly optimized base for future implementations.
+While many core features are working, the engine is actively evolving. Many standard features, including complex lighting and a scene hierarchy are on the roadmap. This project follows a bottom-up approach to ensure a fast, efficient, and highly optimized base for future implementations.
 
 ## Prerequisites
 Vortex Engine is currently built for Linux (Ubuntu/Debian).
@@ -115,8 +115,6 @@ All gameplay scripts are stored in the Vortex/Game/Scripts directory.
   - You can create new scripts directly through the engine's Creator Tool window.
   - Simply specify the name of the file, click create, and then open the file in your preferred IDE to write your C++ code.
 
-Future Roadmap: Currently, you must close and recompile the engine after writing a new script. C++ Hot-reloading is planned for a future update so you won't have to restart the editor to see your code changes!
-
 ### Editor Controls
 When you launch the engine, you will start in Editor Mode attached to the default camera. When you enter Play Mode, these default controls are disassociated from the camera so you can use them in your own game scripts.
 
@@ -134,7 +132,9 @@ When you launch the engine, you will start in Editor Mode attached to the defaul
 | **TAB** | Toggle Engine Stats view in Play Mode (this binding only works in Play Mode)|
 | **LEFT CTRL** | Snap selected model to grid |
 | **LEFT ALT** | Snap selected model to the ground |
+| **LEFT CTRL + P** | toggle engine terminal |
 | **Escape** | Exit Play Mode (if playing) OR Exit Engine (if in editor) |
+
 
 <p align="center">
   <img src="screenshots/vortex_engine_screenshot_1.png" width="800" alt="Vortex Engine Editor Interface">
