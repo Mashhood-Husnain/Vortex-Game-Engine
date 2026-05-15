@@ -63,6 +63,12 @@ include_directories(vendor/nvml)
 add_library(miniaudio vendor/miniaudio/miniaudio.c)
 target_include_directories(miniaudio PUBLIC vendor/miniaudio)
 
+# Environment Variables (.env)
+# ----------------------------
+if(EXISTS "${CMAKE_SOURCE_DIR}/.env")
+    configure_file("${CMAKE_SOURCE_DIR}/.env" "${CMAKE_BINARY_DIR}/.env" COPYONLY)
+endif()
+
 # ----------------------------
 # Shaders & Assets
 # ----------------------------
@@ -114,6 +120,7 @@ add_executable(engine
     Vortex/src/vortex_canvas.cpp
 
     Vortex/src/util/vortex_save_load.cpp
+    Vortex/src/util/vortex_save_load_encryption.cpp
     Vortex/src/util/vortex_nvml.cpp
 )
 

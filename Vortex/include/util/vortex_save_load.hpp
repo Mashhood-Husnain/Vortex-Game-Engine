@@ -4,6 +4,7 @@
 #include <vector>
 #include <string>
 #include <fstream>
+#include <sstream>
 #include <filesystem>
 #include <iostream>
 
@@ -42,4 +43,12 @@ public:
     static void load_project(Snapshot *snapshot);
     static bool check_save_state(Snapshot *snapshot);
     static void take_snapshot(SnapshotState state, VortexApplication *window, std::string project_name="");
+};
+
+class VortexEncrypt
+{
+    static std::string get_key();
+public:
+    static void write_encrypted(const std::string &file_path, const std::string &data);
+    static std::string read_decrypted(const std::string &file_path);
 };

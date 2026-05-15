@@ -74,7 +74,7 @@ private:
     float last_frame = 0.0f;
     float deltaTime = 0.0f;
 
-    bool enable_splash_screen = true; 
+    bool enable_splash_screen = false; 
     bool is_playing_splash = true;
     GLuint splash_texture = 0;
     int splash_width = 0;

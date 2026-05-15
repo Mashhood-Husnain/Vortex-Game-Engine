@@ -87,12 +87,11 @@ void VortexProject::save_project(Snapshot *snapshot)
     }
 
     std::string file_path = "saves/" + snapshot->project_name + ".vtx";
-    std::ofstream file(file_path);
 
-    file << save_data.dump(4);
-    file.close();
+    std::string json_string = save_data.dump(4);
+    VortexEncrypt::write_encrypted(file_path, json_string);
 
-    VORTEX_INFO("[PROJECT] Successfully saved to ", file_path);
+    VORTEX_INFO("[PROJECT] Successfully saved to: ", file_path);
 }
 
 std::vector<std::string> VortexProject::search_save_files(const std::string &file_name)
@@ -125,18 +124,24 @@ std::vector<std::string> VortexProject::search_save_files(const std::string &fil
 void VortexProject::load_project(Snapshot *snapshot)
 {
     std::string file_path = "saves/" + snapshot->project_name + ".vtx";
-
     if (!std::filesystem::exists(file_path))
     {
         VORTEX_WARN("[PROJECT ERROR] Save file not found: ", file_path);
         return;
     }
 
-    std::ifstream file(file_path);
+    std::string decrypted_data = VortexEncrypt::read_decrypted(file_path);
+    if (decrypted_data.empty()) return;
 
     json save_data;
-    file >> save_data;
-    file.close();
+    try
+    {
+        save_data = json::parse(decrypted_data);
+    } catch(...)
+    {
+        VORTEX_ERROR("[LOAD ERROR] Save file is corrupted or wrong encryption key!");
+        return;
+    }
 
     for (VortexModel *model : snapshot->active_models) model->should_destroy = true;
     for (ParticleSystem *ps : snapshot->active_systems) ps->should_destroy = true;
@@ -256,9 +261,10 @@ void VortexProject::load_project(Snapshot *snapshot)
 bool VortexProject::check_save_state(Snapshot *snapshot)
 {
     std::string filepath = "saves/" + snapshot->project_name + ".vtx"; 
-    std::ifstream file(filepath);
 
-    if (!file.is_open())
+    std::string decrypted_data = VortexEncrypt::read_decrypted(filepath);
+
+    if (decrypted_data.empty())
     {
         return snapshot->active_models.empty() && snapshot->active_systems.empty();
     }
@@ -266,7 +272,7 @@ bool VortexProject::check_save_state(Snapshot *snapshot)
     json saved_data;
     try
     {
-        file >> saved_data;
+        saved_data = json::parse(decrypted_data);
     } catch (...)
     {
         return false;
