@@ -300,7 +300,7 @@ std::vector<glm::vec3> VortexModel::get_world_bounds_min_max()
 
     for (int i = 0; i < 8; i++)
     {
-        glm::vec3 transformed = glm::vec3(model_matrix * glm::vec4(corners[i], 1.0f));
+        glm::vec3 transformed = glm::vec3(matrix * glm::vec4(corners[i], 1.0f));
         world_min = glm::min(world_min, transformed);
         world_max = glm::max(world_max, transformed);
     }

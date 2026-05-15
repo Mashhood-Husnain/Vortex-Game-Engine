@@ -120,7 +120,6 @@ CollisionHit VortexPhysics::check_collision_detailed(VortexModel *modela, Vortex
 {
     CollisionHit result;
     if (!modela || !modelb || !modela->shared_data || !modelb->shared_data) return result;
-    if (modelb->get_componant<VortexRigidbody>() == nullptr) return result;
 
     glm::mat4 matrix_a = modela->get_model_matrix();
     glm::mat4 matrix_b = modelb->get_model_matrix();
@@ -130,17 +129,39 @@ CollisionHit VortexPhysics::check_collision_detailed(VortexModel *modela, Vortex
 
     if (!test_OBB_overlap(global_a, global_b)) return result;
 
-    for (size_t i = 0; i < modela->shared_data->objects.size(); i++)
+    bool has_inner_objects_a = modela->shared_data->objects.size() > 0;
+    bool has_inner_objects_b = modelb->shared_data->objects.size() > 0;
+    
+    if (!has_inner_objects_a && !has_inner_objects_b)
     {
-        if (!modela->active_parts[i]) continue;
-        const auto& obj_a = modela->shared_data->objects[i];
-        
-        glm::mat4 sub_matrix_a = glm::translate(matrix_a, obj_a.transform.position);
-        sub_matrix_a *= glm::mat4_cast(obj_a.transform.orientation);
-        sub_matrix_a = glm::scale(sub_matrix_a, obj_a.transform.scale);
+        result.has_hit = true;
+        result.hit_sub_object_index = -1;
+        return result;
+    }
+    
+    std::vector<OBB> colliders_a;
+    if (has_inner_objects_a)
+    {
+        for (size_t i = 0; i < modela->shared_data->objects.size(); i++)
+        {
+            if (!modela->active_parts[i]) continue;
+            const auto& obj_a = modela->shared_data->objects[i];
+            
+            glm::mat4 sub_matrix_a = glm::translate(matrix_a, obj_a.transform.position);
+            sub_matrix_a *= glm::mat4_cast(obj_a.transform.orientation);
+            sub_matrix_a = glm::scale(sub_matrix_a, obj_a.transform.scale);
 
-        OBB sub_a = get_obb(obj_a.collider, sub_matrix_a);
-
+            colliders_a.push_back(get_obb(obj_a.collider, sub_matrix_a));
+        }
+    }
+    else
+    {
+        colliders_a.push_back(global_a);
+    }
+    
+    std::vector<OBB> colliders_b;
+    if (has_inner_objects_b)
+    {
         for (size_t j = 0; j < modelb->shared_data->objects.size(); j++)
         {
             if (!modelb->active_parts[j]) continue;
@@ -150,16 +171,27 @@ CollisionHit VortexPhysics::check_collision_detailed(VortexModel *modela, Vortex
             sub_matrix_b *= glm::mat4_cast(obj_b.transform.orientation);
             sub_matrix_b = glm::scale(sub_matrix_b, obj_b.transform.scale);
 
-            OBB sub_b = get_obb(obj_b.collider, sub_matrix_b);
-
-            if (test_OBB_overlap(sub_a, sub_b))
+            colliders_b.push_back(get_obb(obj_b.collider, sub_matrix_b));
+        }
+    }
+    else
+    {
+        colliders_b.push_back(global_b);
+    }
+    
+    for (size_t i = 0; i < colliders_a.size(); i++)
+    {
+        for (size_t j = 0; j < colliders_b.size(); j++)
+        {
+            if (test_OBB_overlap(colliders_a[i], colliders_b[j]))
             {
                 result.has_hit = true;
-                result.hit_sub_object_index = (int)j; 
+                result.hit_sub_object_index = has_inner_objects_b ? (int)j : -1;
                 return result;
             }
         }
     }
+    
     return result;
 }
 

@@ -125,28 +125,28 @@ Frustum VortexCamera::get_frustum()
     frustum.rightFace.distance = view_proj[3][3] - view_proj[3][0];
     frustum.rightFace.normalize();
 
-    frustum.bottomFace.normal.x = view_proj[0][3] + view_proj[0][0];
-    frustum.bottomFace.normal.y = view_proj[1][3] + view_proj[1][0];
-    frustum.bottomFace.normal.z = view_proj[2][3] + view_proj[2][0];
-    frustum.bottomFace.distance = view_proj[3][3] + view_proj[3][0];
+    frustum.bottomFace.normal.x = view_proj[0][3] + view_proj[0][1];
+    frustum.bottomFace.normal.y = view_proj[1][3] + view_proj[1][1];
+    frustum.bottomFace.normal.z = view_proj[2][3] + view_proj[2][1];
+    frustum.bottomFace.distance = view_proj[3][3] + view_proj[3][1];
     frustum.bottomFace.normalize();
 
-    frustum.topFace.normal.x = view_proj[0][3] - view_proj[0][0];
-    frustum.topFace.normal.y = view_proj[1][3] - view_proj[1][0];
-    frustum.topFace.normal.z = view_proj[2][3] - view_proj[2][0];
-    frustum.topFace.distance = view_proj[3][3] - view_proj[3][0];
+    frustum.topFace.normal.x = view_proj[0][3] - view_proj[0][1];
+    frustum.topFace.normal.y = view_proj[1][3] - view_proj[1][1];
+    frustum.topFace.normal.z = view_proj[2][3] - view_proj[2][1];
+    frustum.topFace.distance = view_proj[3][3] - view_proj[3][1];
     frustum.topFace.normalize();
 
-    frustum.nearFace.normal.x = view_proj[0][3] + view_proj[0][0];
-    frustum.nearFace.normal.y = view_proj[1][3] + view_proj[1][0];
-    frustum.nearFace.normal.z = view_proj[2][3] + view_proj[2][0];
-    frustum.nearFace.distance = view_proj[3][3] + view_proj[3][0];
+    frustum.nearFace.normal.x = view_proj[0][3] + view_proj[0][2];
+    frustum.nearFace.normal.y = view_proj[1][3] + view_proj[1][2];
+    frustum.nearFace.normal.z = view_proj[2][3] + view_proj[2][2];
+    frustum.nearFace.distance = view_proj[3][3] + view_proj[3][2];
     frustum.nearFace.normalize();
 
-    frustum.farFace.normal.x = view_proj[0][3] - view_proj[0][0];
-    frustum.farFace.normal.y = view_proj[1][3] - view_proj[1][0];
-    frustum.farFace.normal.z = view_proj[2][3] - view_proj[2][0];
-    frustum.farFace.distance = view_proj[3][3] - view_proj[3][0];
+    frustum.farFace.normal.x = view_proj[0][3] - view_proj[0][2];
+    frustum.farFace.normal.y = view_proj[1][3] - view_proj[1][2];
+    frustum.farFace.normal.z = view_proj[2][3] - view_proj[2][2];
+    frustum.farFace.distance = view_proj[3][3] - view_proj[3][2];
     frustum.farFace.normalize();
 
     return frustum;

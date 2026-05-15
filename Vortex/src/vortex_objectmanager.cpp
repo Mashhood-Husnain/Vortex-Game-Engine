@@ -44,13 +44,6 @@ void VortexObjectManager::update(float deltaTime)
         if (model->is_active)
         {
             model->update(deltaTime);
-        }
-    }
-
-    for (VortexModel *model : active_models)
-    {
-        if (model->is_active)
-        {
             model->late_update(deltaTime);
         }
     }
@@ -77,18 +70,18 @@ void VortexObjectManager::update(float deltaTime)
 
 void VortexObjectManager::draw(VortexCamera &camera, bool show_wireframe)
 {
-    // Frustum cam_frustum = camera.get_frustum();
+    Frustum cam_frustum = camera.get_frustum();
 
     for (VortexModel *model : active_models)
     {
         if (model->is_active)
         {
-            // std::vector<glm::vec3> min_max = model->get_world_bounds_min_max();
+            std::vector<glm::vec3> min_max = model->get_world_bounds_min_max();
 
-            // if (!VortexPhysics::aabb_in_frustum(min_max[0], min_max[1], cam_frustum))
-            // {
-            //     continue;
-            // }
+            if (!VortexPhysics::aabb_in_frustum(min_max[0], min_max[1], cam_frustum))
+            {
+                continue;
+            }
 
             model->draw(*model_shader, camera, show_wireframe);
 

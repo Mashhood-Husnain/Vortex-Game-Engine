@@ -8,7 +8,9 @@ Thumbs.db
 *~
 *.user
 saves/
+Vortex/Game/game_example/
 *.ideas
+.env
 
 # --- 2. C++ Compilation Artifacts ---
 *.o
