@@ -11,6 +11,7 @@
 #include "vortex_uimanager.hpp"
 #include "vortex_application.hpp"
 #include "vortex_camera.hpp"
+#include "vortex_debugrenderer.hpp"
 
 #include "util/vortex_global_vars.hpp"
 #include "util/vortex_script_registry.hpp"
@@ -19,6 +20,7 @@
 
 #include <iostream>
 #include <glm/glm.hpp>
+#include <glm/gtx/quaternion.hpp>
 #include <cstdlib>
 #include <cmath>
 #include <string>
@@ -28,3 +30,9 @@ using Vec3 = glm::vec3;
 using Vec4 = glm::vec4;
 using Mat4 = glm::mat4;
 using Quaternion = glm::quat;
+
+using glm::angleAxis;
+using glm::rotation;
+using glm::distance;
+using glm::normalize;
+using glm::length;

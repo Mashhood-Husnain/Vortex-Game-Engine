@@ -35,6 +35,12 @@ class VortexRigidbody;
 
 struct SharedMesh;
 
+enum class Space
+{
+    LOCAL,
+    WORLD
+};
+
 struct Transform
 {
     glm::vec3 position;
@@ -59,6 +65,14 @@ struct Transform
     glm::vec3 get_position()
     {
         return position;
+    }
+
+    void rotate(const glm::vec3 &axis, float angle, Space space)
+    {
+        glm::quat q_delta = glm::angleAxis(angle, glm::normalize(axis));
+
+        if (space == Space::LOCAL) orientation = orientation * q_delta;
+        else orientation = q_delta * orientation;
     }
 };
 

@@ -27,4 +27,5 @@ public:
     static void check_object_status();
 
     static VortexModel* get_object_by_tag(std::string tag);
+    static void destroy_object(VortexModel *target_object);
 };

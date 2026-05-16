@@ -35,6 +35,7 @@
 #include "vortex_audio.hpp"
 #include "vortex_objectmanager.hpp"
 #include "vortex_uimanager.hpp"
+#include "vortex_debugrenderer.hpp"
 
 #include "util/vortex_global_vars.hpp"
 #include "util/vortex_gpu_pre_init.hpp"

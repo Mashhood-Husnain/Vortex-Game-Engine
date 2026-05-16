@@ -332,6 +332,7 @@ VortexApplication::VortexApplication(std::string window_name)
     VortexKeyboard::init(window);
     VortexMouse::init(window);
     VortexAudio::init();
+    VortexDebugRenderer::get().init();
 
     glfwSwapInterval(1);
 
@@ -543,6 +544,8 @@ void VortexApplication::run(std::function<void()> draw_callback)
         VortexObjectManager::draw(*camera, show_wireframe);
         VortexObjectManager::check_object_status();
 
+        VortexDebugRenderer::get().render(camera);
+
         environment_grid->draw(*camera);
 
         if (post_processor)
@@ -599,6 +602,7 @@ void VortexApplication::run(std::function<void()> draw_callback)
         VortexKeyboard::update();
         VortexMouse::update();
         VortexAudio::update();
+        VortexDebugRenderer::get().clear();
         glfwSwapBuffers(window);
     }
 }

@@ -3,10 +3,11 @@
 class PlayerMovement : public VortexMonoBehaviour
 {
 private:
-    const float movement_speed = 10.0f;
+    const float movement_speed = 17.0f;
     const float jump_force = 10.0f;
     float velocity_y = 0.0f;
     bool is_grounded = true;
+    const float gravity = 20.0f;
 public:
     void on_start() override
     {
@@ -15,10 +16,23 @@ public:
 
     void on_update(float deltaTime) override
     {
-        if(VortexKeyboard::get_key("W")) transform().position.x += movement_speed * deltaTime;
-        if(VortexKeyboard::get_key("S")) transform().position.x -= movement_speed * deltaTime;
-        if(VortexKeyboard::get_key("A")) transform().position.z -= movement_speed * deltaTime;
-        if(VortexKeyboard::get_key("D")) transform().position.z += movement_speed * deltaTime;
+        Vec3 cam_forward = engine().get_camera()->get_front();
+        Vec3 cam_right = engine().get_camera()->get_right();
+
+        cam_forward.y = cam_right.y = 0.0f;
+
+        cam_forward = normalize(cam_forward);
+        cam_right = normalize(cam_right);
+
+        Vec3 move_dir(0.0f);
+        if(VortexKeyboard::get_key("W")) move_dir += cam_forward;
+        if(VortexKeyboard::get_key("S")) move_dir -= cam_forward;
+        if(VortexKeyboard::get_key("A")) move_dir -= cam_right;
+        if(VortexKeyboard::get_key("D")) move_dir += cam_right;
+
+        if (length(move_dir) > 0.0f) move_dir = normalize(move_dir) * movement_speed * deltaTime;
+
+        transform().position += move_dir;
 
         if (is_grounded && VortexKeyboard::get_key("SPACE"))
         {
@@ -29,7 +43,7 @@ public:
         // record previous frame y position
         float previous_y = transform().position.y;
 
-        velocity_y -= GLOBAL::GRAVITY * deltaTime * !is_grounded;
+        velocity_y -= gravity * deltaTime * !is_grounded;
         transform().position.y += velocity_y * deltaTime;
 
         // check player collision so as to come to a stop

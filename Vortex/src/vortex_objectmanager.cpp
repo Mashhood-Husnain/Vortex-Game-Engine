@@ -167,3 +167,8 @@ VortexModel* VortexObjectManager::get_object_by_tag(std::string tag)
 
     return nullptr;
 }
+
+void VortexObjectManager::destroy_object(VortexModel *target_object)
+{
+    target_object->should_destroy = true;
+}
