@@ -83,9 +83,55 @@ void VortexModel::draw(const VortexShader &shader, VortexCamera &camera, bool wi
     {
         active_shader->setMat4("view", camera.getViewMatrix());
         active_shader->setMat4("projection", camera.getProjectionMatrix());
-
-        active_shader->setVec3("lightPos", GLOBAL::LIGHTPOS);
         active_shader->setVec3("viewPos", camera.get_position());
+
+        const int MAX_LIGHTS = 4;
+        int light_count = 0;
+        bool using_safety_net = false;
+
+        glm::vec3 l_positions[MAX_LIGHTS];
+        glm::vec3 l_colors[MAX_LIGHTS];
+        float l_ambients[MAX_LIGHTS];
+
+        for (VortexModel *scene_model : VortexObjectManager::active_models)
+        {
+            if (scene_model->is_active && scene_model->light)
+            {
+                l_positions[light_count] = scene_model->transform.position;
+                l_colors[light_count] = scene_model->light->color * scene_model->light->intensity;
+                l_ambients[light_count] = scene_model->light->ambient_strength;
+
+                light_count++;
+                if (light_count >= MAX_LIGHTS) break;
+            }
+        }
+
+        if (app->get_state() == EngineState::EDITOR && light_count == 0)
+        {
+            l_positions[0] = camera.get_position();
+            l_colors[0] = glm::vec3(1.0f);
+            l_ambients[0] = 0.5f;
+
+            light_count = 1;
+            using_safety_net = true;
+        }
+
+        active_shader->setInt("numLights", light_count);
+
+        active_shader->setFloat("constantFalloff", 1.0f);
+        active_shader->setFloat("linearFalloff", using_safety_net ? 0.0f : 0.09f);
+        active_shader->setFloat("quadraticFalloff", using_safety_net ? 0.0f : 0.032f);
+
+        for (int i = 0; i < light_count; i++)
+        {
+            std::string pos_name = "lightPos[" + std::to_string(i) + "]";
+            std::string col_name = "lightColor[" + std::to_string(i) + "]";
+            std::string amb_name = "ambientStrength[" + std::to_string(i) + "]";
+
+            active_shader->setVec3(pos_name, l_positions[i]);
+            active_shader->setVec3(col_name, l_colors[i]);
+            active_shader->setFloat(amb_name, l_ambients[i]);
+        }
 
         // textures (multi-sampling)
         active_shader->setInt("u_hasTexture", shared_data->texture_id!= 0);
@@ -158,9 +204,12 @@ VortexModel::~VortexModel()
     {
         delete script;
     }
+
     behaviours.clear();
     app = nullptr;
     shared_data = nullptr;
+    rigidbody = nullptr;
+    light = nullptr;
 }
 
 void VortexModel::add_behaviour(const std::string &script_name, VortexMonoBehaviour *script)
@@ -311,4 +360,56 @@ std::vector<glm::vec3> VortexModel::get_world_bounds_min_max()
     };
 
     return min_max;
+}
+
+VortexModel* VortexModel::clone()
+{
+    VortexModel* new_model = new VortexModel(file_path, app);
+
+    new_model->transform = transform;
+    new_model->show_collider = show_collider;
+    new_model->collider_scale = collider_scale;
+    new_model->active_parts = active_parts;
+
+    new_model->transform.position.x += 1.0f;
+
+    if (rigidbody)
+    {
+        new_model->rigidbody = new VortexRigidbody();
+        new_model->rigidbody->vortexGameObject = new_model;
+        new_model->rigidbody->vortexTransform = &new_model->transform;
+
+        json rb_data;
+        rigidbody->serialize(rb_data);
+        new_model->rigidbody->deserialize(rb_data);
+    }
+
+    if (light)
+    {
+        new_model->light = new VortexLight();
+        new_model->light->vortexGameObject = new_model;
+        new_model->light->vortexTransform = &new_model->transform;
+
+        json l_data;
+        light->serialize(l_data);
+        new_model->light->deserialize(l_data);
+    }
+
+    for (size_t i = 0; i < script_names.size(); i++)
+    {
+        std::string script_name = script_names[i];
+        VortexMonoBehaviour* original_script = behaviours[i];
+
+        VortexMonoBehaviour* new_script = ScriptRegistry::get().create(script_name);
+        if (new_script)
+        {
+            json script_data;
+            original_script->serialize(script_data);
+            new_script->deserialize(script_data);
+
+            new_model->add_behaviour(script_name, new_script);
+        }
+    }
+
+    return new_model;
 }

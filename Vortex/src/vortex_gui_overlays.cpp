@@ -119,7 +119,7 @@ void VortexGUI::engine_stats()
 
 void VortexGUI::camera_info(VortexCamera *camera)
 {
-    if (!camera || !show_debug_gui) return;
+    if (!camera || !show_gui) return;
 
     ImGui::Begin("Camera");
 

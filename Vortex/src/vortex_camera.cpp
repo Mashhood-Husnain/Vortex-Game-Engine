@@ -70,7 +70,7 @@ void VortexCamera::check_camera_movement(float deltaTime)
     if (VortexKeyboard::get_key("W")) processKeyboard("FORWARD", deltaTime);
     if (VortexKeyboard::get_key("S")) processKeyboard("BACKWARD", deltaTime);
     if (VortexKeyboard::get_key("A")) processKeyboard("LEFT", deltaTime);
-    if (VortexKeyboard::get_key("D")) processKeyboard("RIGHT", deltaTime);
+    if (VortexKeyboard::get_key("D") && !VortexKeyboard::get_key_down("LEFTCONTROL")) processKeyboard("RIGHT", deltaTime);
     if (VortexKeyboard::get_key("Q")) processKeyboard("UP", deltaTime);
     if (VortexKeyboard::get_key("E")) processKeyboard("DOWN", deltaTime);
 }

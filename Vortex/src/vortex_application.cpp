@@ -176,6 +176,17 @@ void VortexApplication::check_key_press()
         {
             gui.show_terminal = !gui.show_terminal;
         }
+
+        if (VortexKeyboard::get_key("LEFTCONTROL") && VortexKeyboard::get_key_down("D") && gui.m_selected_model)
+        {
+            VortexModel *current_model = gui.m_selected_model; 
+            VortexModel *cloned_model = current_model->clone();                
+            VortexObjectManager::active_models.push_back(cloned_model);
+
+            current_model->is_selected = false;
+            cloned_model->is_selected = true;
+            gui.m_selected_model = cloned_model;
+        }
     }
 
     if (VortexKeyboard::get_key_down("TAB") && current_state == EngineState::PLAY)
@@ -365,6 +376,7 @@ VortexApplication::~VortexApplication()
     VortexAssetManager::clean_up();
     VortexObjectManager::clean_up();
     VortexAudio::clean_up();
+    VortexDebugRenderer::get().clean_up();
 
     if (game_code)
     {
@@ -546,7 +558,16 @@ void VortexApplication::run(std::function<void()> draw_callback)
 
         VortexDebugRenderer::get().render(camera);
 
-        environment_grid->draw(*camera);
+        if (current_state == EngineState::EDITOR)
+        {
+            environment_grid->draw(*camera);
+
+            if (view_world_axis)
+            {
+                draw_world_axis();
+                draw_world_axis_gizmo();
+            }
+        }
 
         if (post_processor)
         {
@@ -555,12 +576,6 @@ void VortexApplication::run(std::function<void()> draw_callback)
             glViewport(0, 0, gui.scene_width, gui.scene_height);
             glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
             post_processor->draw(currentFrame);
-        }
-        
-        if (view_world_axis)
-        {
-            draw_world_axis();
-            draw_world_axis_gizmo();
         }
 
         VortexUIManager::render_ui();
@@ -602,7 +617,7 @@ void VortexApplication::run(std::function<void()> draw_callback)
         VortexKeyboard::update();
         VortexMouse::update();
         VortexAudio::update();
-        VortexDebugRenderer::get().clear();
+        VortexDebugRenderer::get().update();
         glfwSwapBuffers(window);
     }
 }

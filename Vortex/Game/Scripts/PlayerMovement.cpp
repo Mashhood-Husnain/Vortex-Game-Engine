@@ -3,15 +3,19 @@
 class PlayerMovement : public VortexMonoBehaviour
 {
 private:
-    const float movement_speed = 17.0f;
+    const float walking_speed = 5.0f;
+    const float sprint_speed = 10.0f;
+    float movement_speed = 0.0f;
     const float jump_force = 10.0f;
     float velocity_y = 0.0f;
     bool is_grounded = true;
     const float gravity = 20.0f;
+
+    VortexModel *lightSource = nullptr;
 public:
     void on_start() override
     {
-        // Initialization
+        lightSource = VortexObjectManager::get_object_by_tag("LightSource");
     }
 
     void on_update(float deltaTime) override
@@ -29,6 +33,12 @@ public:
         if(VortexKeyboard::get_key("S")) move_dir -= cam_forward;
         if(VortexKeyboard::get_key("A")) move_dir -= cam_right;
         if(VortexKeyboard::get_key("D")) move_dir += cam_right;
+
+        movement_speed = walking_speed;
+        if (VortexKeyboard::get_key("LEFTSHIFT"))
+        {
+            movement_speed = sprint_speed;
+        }
 
         if (length(move_dir) > 0.0f) move_dir = normalize(move_dir) * movement_speed * deltaTime;
 
@@ -50,6 +60,7 @@ public:
         for (VortexModel *other : VortexObjectManager::active_models)
         {
             if (other == &object() || !other->is_active) continue;
+            if (lightSource && other == lightSource) continue;
             
             if (VortexPhysics::check_collision_detailed(&object(), other).has_hit)
             {

@@ -52,6 +52,13 @@ void VortexProject::save_project(Snapshot *snapshot)
             j_model["rigidbody"] = rb_data;
         }
 
+        if (model->light)
+        {
+            json l_data;
+            model->light->serialize(l_data);
+            j_model["light"] = l_data;
+        }
+
         save_data["models"].push_back(j_model);
     }
 
@@ -208,11 +215,18 @@ void VortexProject::load_project(Snapshot *snapshot)
         {
             new_model->rigidbody = new VortexRigidbody();
             new_model->rigidbody->vortexGameObject = new_model;
-            
-            // THE FIX: Must also link the transform when loading from a save file!
             new_model->rigidbody->vortexTransform = &new_model->transform; 
             
             new_model->rigidbody->deserialize(j_model["rigidbody"]);
+        }
+
+        if (j_model.contains("light"))
+        {
+            new_model->light = new VortexLight();
+            new_model->light->vortexGameObject = new_model;
+            new_model->light->vortexTransform = &new_model->transform;
+
+            new_model->light->deserialize(j_model["light"]);
         }
 
         snapshot->active_models.push_back(new_model);
@@ -313,6 +327,36 @@ bool VortexProject::check_save_state(Snapshot *snapshot)
             if (!float_equals(saved_model["collider_scale"][0], model->collider_scale.x) ||
                 !float_equals(saved_model["collider_scale"][1], model->collider_scale.y) ||
                 !float_equals(saved_model["collider_scale"][2], model->collider_scale.z)) return false;
+        }
+
+        bool has_live_rb = (model->rigidbody != nullptr);
+        bool has_saved_rb = saved_model.contains("rigidbody");
+
+        if (has_live_rb != has_saved_rb) return false;
+        if (has_live_rb && has_saved_rb)
+        {
+            json live_rb_data;
+            model->rigidbody->serialize(live_rb_data);
+            
+            if (saved_model["rigidbody"] != live_rb_data) return false; // Component values changed!
+        }
+
+        bool has_live_light = (model->light != nullptr);
+        bool has_saved_light = saved_model.contains("light");
+
+        if (has_live_light != has_saved_light) return false;
+        if (has_live_light && has_saved_light)
+        {
+            json live_light_data;
+            model->light->serialize(live_light_data);
+            json& saved_light = saved_model["light"];
+            
+            if (!float_equals(saved_light["color"][0], model->light->color.x) ||
+                !float_equals(saved_light["color"][1], model->light->color.y) ||
+                !float_equals(saved_light["color"][2], model->light->color.z)) return false;
+                
+            if (!float_equals(saved_light["intensity"], model->light->intensity)) return false;
+            if (!float_equals(saved_light["ambient_strength"], model->light->ambient_strength)) return false;
         }
 
         if (saved_model.contains("scripts") && saved_model["scripts"].size() != model->script_names.size()) return false;

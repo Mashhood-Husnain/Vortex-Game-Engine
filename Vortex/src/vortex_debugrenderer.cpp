@@ -73,14 +73,28 @@ void VortexDebugRenderer::render(VortexCamera* camera)
     glBindVertexArray(0);
 }
 
-void VortexDebugRenderer::clear()
+void VortexDebugRenderer::update()
 {
     m_line_vertices.clear();
 }
 
-VortexDebugRenderer::~VortexDebugRenderer()
+void VortexDebugRenderer::clean_up()
 {
-    delete m_shader;
-    glDeleteVertexArrays(1, &VAO);
-    glDeleteBuffers(1, &VBO);
+    if (m_shader)
+    {
+        delete m_shader;
+        m_shader = nullptr;
+    }
+
+    if (VAO != 0)
+    {
+        glDeleteVertexArrays(1, &VAO);
+        VAO = 0;
+    }
+
+    if (VBO != 0)
+    {
+        glDeleteBuffers(1, &VBO);
+        VBO = 0;
+    }
 }

@@ -119,6 +119,7 @@ add_executable(engine
     Vortex/src/vortex_uimanager.cpp
     Vortex/src/vortex_canvas.cpp
     Vortex/src/vortex_debugrenderer.cpp
+    Vortex/src/vortex_light.cpp
     
     Vortex/src/util/vortex_save_load.cpp
     Vortex/src/util/vortex_save_load_encryption.cpp

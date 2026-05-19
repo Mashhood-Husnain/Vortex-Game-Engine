@@ -4,6 +4,7 @@
 VortexShader *VortexObjectManager::model_shader = nullptr;
 VortexShader *VortexObjectManager::collider_shader = nullptr;
 VortexShader *VortexObjectManager::particle_shader = nullptr;
+VortexShader *VortexObjectManager::unlit_shader = nullptr;
 
 std::vector<VortexModel*> VortexObjectManager::active_models;
 std::vector<VortexModel*> VortexObjectManager::pending_models;
@@ -14,6 +15,7 @@ void VortexObjectManager::init()
     particle_shader = new VortexShader("shaders/particles.vert", "shaders/particles.frag");
     model_shader = new VortexShader("shaders/default.vert", "shaders/default.frag");
     collider_shader = new VortexShader("shaders/collider.vert", "shaders/collider.frag");
+    unlit_shader = new VortexShader("shaders/unlit.vert", "shaders/unlit.frag");
 }
 
 void VortexObjectManager::clean_up()
@@ -83,7 +85,16 @@ void VortexObjectManager::draw(VortexCamera &camera, bool show_wireframe)
                 continue;
             }
 
-            model->draw(*model_shader, camera, show_wireframe);
+            if (model->light)
+            {
+                unlit_shader->use();
+                unlit_shader->setVec3("lightColor", model->light->color * model->light->intensity);
+                model->draw(*unlit_shader, camera, show_wireframe);
+            }
+            else
+            {
+                model->draw(*model_shader, camera, show_wireframe);
+            }
 
             if (model->show_collider)
             {

@@ -24,6 +24,7 @@
 #include "util/vortex_logs.hpp"
 #include "vortex_collider.hpp"
 #include "vortex_rigidbody.hpp"
+#include "vortex_light.hpp"
 
 #include "stb_image.h"
 
@@ -105,6 +106,7 @@ class VortexModel
     bool m_is_dirty = true;
 public:
     VortexRigidbody *rigidbody = nullptr;
+    VortexLight *light = nullptr;
 
     VortexApplication *app;
     std::string model_name;
@@ -144,6 +146,8 @@ public:
     glm::mat4 get_model_matrix();
     void set_model_matrix(glm::mat4 matrix);
 
+    VortexModel *clone();
+
     glm::vec3 get_world_bounds_min();
     glm::vec3 get_world_bounds_max();
     std::vector<glm::vec3> get_world_bounds_min_max();
@@ -158,6 +162,7 @@ public:
     T* get_componant()
     {
         if constexpr (std::is_same_v<T, VortexRigidbody>) return rigidbody;
+        if constexpr (std::is_same_v<T, VortexLight>) return light;
 
         for (VortexMonoBehaviour *script : behaviours)
         {

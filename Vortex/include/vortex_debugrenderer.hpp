@@ -36,7 +36,7 @@ public:
     void draw_sphere(const glm::vec3 &center, float radius, const glm::vec3 &color);
 
     void render(VortexCamera *camera);
-    void clear();
+    void update();
 
-    ~VortexDebugRenderer();
+    void clean_up();
 };

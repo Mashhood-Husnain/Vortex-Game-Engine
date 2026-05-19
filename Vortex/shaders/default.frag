@@ -1,5 +1,7 @@
 #version 330 core
 
+#define MAX_LIGHTS 4
+
 out vec4 FragColor;
 
 in vec3 Normal;
@@ -13,11 +15,18 @@ uniform sampler2D u_metallicMap;
 // uniform sampler2D u_normalMap; // will be added later for better lighting
 
 uniform sampler2D shadowMap;
-uniform vec3 lightPos; // light position in world space
+uniform int numLights; // number of active lights in the scene
+uniform vec3 lightPos[MAX_LIGHTS]; // light position in world space
 uniform vec3 viewPos; // camera position in world space
+uniform vec3 lightColor[MAX_LIGHTS]; // color of each light
+uniform float ambientStrength[MAX_LIGHTS]; // ambient strength for each light
 uniform bool u_hasTexture;
 uniform bool u_hasRoughness;
 uniform bool u_hasMetallic;
+
+uniform float constantFalloff;
+uniform float linearFalloff;
+uniform float quadraticFalloff;
 
 uniform vec3 u_fogColor; // temp fog color
 uniform float u_fogDensity; // temp fog density
@@ -47,20 +56,18 @@ float ShadowCalculation(vec4 fragPosLightSpace, vec3 normal, vec3 lightDir)
     float cosTheta = dot(normal, lightDir);
     float bias = max(0.0005 * (1.0 - cosTheta), 0.00005);
     
-    // Normal Offset to kill the last of the acne
     vec3 shiftedPos = projCoords + (normal * 0.0008);
 
     float shadow = 0.0;
     vec2 texelSize = 1.0 / textureSize(shadowMap, 0);
 
-    float angle = random(FragPos.xy) * 6.283185; // 2 * PI
+    float angle = random(FragPos.xy) * 6.283185; 
     float s = sin(angle);
     float c = cos(angle);
     mat2 rotation = mat2(c, -s, s, c);
 
     for (int i = 0; i < 16; i++)
     {
-        // Rotate and scale the poisson sample
         vec2 offset = (rotation * poissonDisk[i]) * texelSize * 1.5; 
         float pcfDepth = texture(shadowMap, shiftedPos.xy + offset).r;
         shadow += shiftedPos.z - bias > pcfDepth ? 1.0 : 0.0;
@@ -89,28 +96,45 @@ void main()
     {
         metallic = texture(u_metallicMap, TexCoords).r;
     }
-
-    // ambient lighting
-    vec3 ambient = 0.5 * diffuseCol;
-
-    // basic lighting
+    
     vec3 norm = normalize(Normal);
-    vec3 lightDir = normalize(lightPos - FragPos);
     vec3 viewDir = normalize(viewPos - FragPos);
 
-    // diffuse
-    float diff = max(dot(norm, lightDir), 0.0);
-    vec3 diffuse = diff * diffuseCol;
+    vec3 total_ambient = vec3(0.0);
+    vec3 total_diffuse = vec3(0.0);
+    vec3 total_specular = vec3(0.0);
 
-    // specular
-    vec3 reflectDir = reflect(-lightDir, norm);
-    float spec = pow(max(dot(viewDir, reflectDir), 0.0), (1.0 - roughness) * 128.0);
-    vec3 specular = spec * mix(vec3(0.3), diffuseCol, metallic);
+    for (int i = 0; i < numLights; i++)
+    {
+        float distance = length(lightPos[i] - FragPos);
+        float attenuation = 1.0 / (constantFalloff + linearFalloff * distance + quadraticFalloff * (distance * distance));
 
-    float shadow = ShadowCalculation(FragPosLightSpace, norm, lightDir);
-    vec3 lighting = ambient + (1.0 - shadow) * (diffuse + specular);
+        // ambient
+        vec3 ambient = ambientStrength[i] * lightColor[i] * diffuseCol;
 
-    lighting *= diffuseCol;    
+        // diffuse
+        vec3 lightDir = normalize(lightPos[i] - FragPos);
+        float diff = max(dot(norm, lightDir), 0.0);
+        vec3 diffuse = diff * lightColor[i] * diffuseCol;
+
+        // specular
+        vec3 reflectDir = reflect(-lightDir, norm);
+        float spec_power = max((1.0 - roughness) * 128.0, 1.0);
+        float spec = pow(max(dot(viewDir, reflectDir), 0.0), spec_power);
+        vec3 specular = spec * lightColor[i] * mix(vec3(0.3), diffuseCol, metallic);
+
+        float shadow = 0.0;
+        if (i == 0)
+        {
+            shadow = ShadowCalculation(FragPosLightSpace, norm, lightDir);
+        }
+
+        total_ambient += ambient * attenuation;
+        total_diffuse += (1.0 - shadow) * diffuse * attenuation;
+        total_specular += (1.0 - shadow) * specular * attenuation;
+    }
+
+    vec3 lighting = total_ambient + total_diffuse + total_specular;
     lighting += (random(TexCoords) - 0.5) * (1.0 / 255.0);
 
     FragColor = vec4(lighting, 1.0);

@@ -147,7 +147,39 @@ void VortexGUI::inspector_info(VortexModel* model, ParticleSystem *ps)
                     }
                 }
 
-                if (model->script_names.empty() && !model->rigidbody)
+                if (model->light)
+                {
+                    ImGui::PushStyleColor(ImGuiCol_Header, ImVec4(0.22f, 0.22f, 0.15f, 1.0f));
+                    bool l_open = ImGui::TreeNodeEx("Vortex Light", sub_header_flags);
+                    ImGui::PopStyleColor();
+
+                    if (l_open)
+                    {
+                        ImGui::Indent(10.0f);
+                        ImGui::Spacing();
+
+                        ImGui::ColorEdit3("Light Color", &model->light->color.x);
+                        ImGui::DragFloat("Intensity", &model->light->intensity, 0.05f, 0.0f, 100.0f);
+                        ImGui::DragFloat("Ambient Strength", &model->light->ambient_strength, 0.01f, 0.0f, 1.0f);
+                        
+                        ImGui::Spacing();
+                        ImGui::SetCursorPosX(ImGui::GetWindowContentRegionMax().x - 70.0f);
+                        
+                        ImGui::PushStyleColor(ImGuiCol_Button, ImVec4(0.4f, 0.15f, 0.15f, 0.8f));
+                        ImGui::PushStyleColor(ImGuiCol_ButtonHovered, ImVec4(0.6f, 0.2f, 0.2f, 1.0f));
+                        if (ImGui::Button("Remove##Light", ImVec2(70, 0)))
+                        {
+                            delete model->light;
+                            model->light = nullptr;
+                        }
+                        ImGui::PopStyleColor(2);
+                        
+                        ImGui::Spacing();
+                        ImGui::Unindent(10.0f);
+                    }
+                }
+
+                if (model->script_names.empty() && !model->rigidbody && !model->light)
                 {
                     ImGui::TextDisabled("No components attached.");
                 }
@@ -230,6 +262,15 @@ void VortexGUI::inspector_info(VortexModel* model, ParticleSystem *ps)
                             model->rigidbody = new VortexRigidbody();
                             model->rigidbody->vortexGameObject = model;
                             model->rigidbody->vortexTransform = &model->transform; 
+                        }
+                    }
+                    if (model->get_componant<VortexLight>() == nullptr)
+                    {
+                        if (ImGui::Selectable("Vortex Light"))
+                        {
+                            model->light = new VortexLight();
+                            model->light->vortexGameObject = model;
+                            model->light->vortexTransform = &model->transform;
                         }
                     }
 
@@ -351,6 +392,28 @@ void VortexGUI::inspector_info(VortexModel* model, ParticleSystem *ps)
             }
 
             ImGui::Spacing();
+
+            ImGui::PushStyleColor(ImGuiCol_Button, ImVec4(0.20f, 0.40f, 0.60f, 0.80f));
+            ImGui::PushStyleColor(ImGuiCol_ButtonHovered, ImVec4(0.25f, 0.45f, 0.70f, 1.00f));
+            ImGui::PushStyleColor(ImGuiCol_ButtonActive, ImVec4(0.30f, 0.50f, 0.80f, 1.00f));
+
+            if (ImGui::Button("Duplicate Model", ImVec2(-1, 32)))
+            {
+                VortexModel* cloned_model = model->clone();
+                
+                VortexObjectManager::active_models.push_back(cloned_model);
+
+                model->is_selected = false;
+                cloned_model->is_selected = true;
+                m_selected_model = cloned_model;
+                
+                ImGui::PopStyleColor(3);
+                ImGui::PopStyleVar(2);
+                ImGui::PopID();
+                return; 
+            }
+            ImGui::PopStyleColor(3);
+
             ImGui::Spacing();
 
             ImGui::PushStyleColor(ImGuiCol_Button, ImVec4(0.60f, 0.20f, 0.20f, 0.80f));

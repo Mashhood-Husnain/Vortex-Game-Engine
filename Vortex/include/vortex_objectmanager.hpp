@@ -14,6 +14,7 @@ class VortexObjectManager
     static VortexShader *model_shader;
     static VortexShader *collider_shader;
     static VortexShader *particle_shader;
+    static VortexShader *unlit_shader;
 public:
     static std::vector<VortexModel*> active_models;
     static std::vector<VortexModel*> pending_models;
