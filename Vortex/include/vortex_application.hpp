@@ -51,7 +51,8 @@ class VortexGrid;
 enum class EngineState
 {
     EDITOR,
-    PLAY
+    PLAY,
+    PROJECT_HUB
 };
 
 class VortexApplication
@@ -82,12 +83,11 @@ private:
     int splash_height = 0;
     float splash_timer = 0.0f;
 
-    EngineState current_state = EngineState::EDITOR;
+    EngineState current_state = EngineState::PROJECT_HUB;
     bool show_exit_modal = false;
     bool has_unsaved_changes = false;
     bool show_wireframe = false;
     bool show_mouse_cursor = true;
-    bool view_world_axis = false;
 
     VortexCamera *camera = nullptr;
     VortexCamera *editor_camera = nullptr;
@@ -112,8 +112,6 @@ private:
     void check_key_press();
     void change_window_size();
     void setup_world_axis_buffers();
-    void draw_world_axis();
-    void draw_world_axis_gizmo();
     void load_splash_screen();
     void draw_splash_overlay(float dt);
     void init_game_code();
@@ -129,6 +127,9 @@ public:
     void show_mouse(bool status);
     void request_exit();
 
+    void enter_play_mode();
+    void trigger_compile();
+
     GLFWwindow* get_window_ptr() const;
     float get_delta_time() const;
     int get_width() const;
@@ -136,7 +137,6 @@ public:
 
     EngineState get_state() const;
     bool is_wireframe_enabled() const;
-    bool is_world_axis_visible() const;
     bool is_exit_modal_open() const;
     bool has_unsaved() const;
 
@@ -150,7 +150,6 @@ public:
 
     void set_state(EngineState state);
     void toggle_wireframe(bool enable);
-    void toggle_world_axis(bool enable);
     void toggle_exit_modal(bool show);
 
     void mark_unsaved_changes();

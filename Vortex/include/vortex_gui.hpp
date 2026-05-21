@@ -121,6 +121,8 @@ class VortexGUI
     unsigned int scene_rbo = 0;
     unsigned int scene_texture = 0;
 
+    char m_new_project_name[128] = "";
+
     void refresh_skybox_list();
     void gui_set_skybox();
 
@@ -147,16 +149,19 @@ public:
 
     static char save_project_name[128];
 
-    bool show_gui = true;
-    bool show_debug_gui = true;
+    bool show_inspector = true;
+    bool show_camera_info = true;
+    bool show_creator_window = true;
+    bool show_engine_stats = true;
+    bool show_terminal = false;
+    bool show_tool_window = true;
+    bool show_skybox_post_process_options = true;    
 
     static int m_selected_skybox_idx;
     static int m_selected_shader_idx;
 
     std::string _vendor_;
     std::string _renderer_;
-
-    bool show_terminal = false;
 
     VortexGUI();
     ~VortexGUI();
@@ -170,9 +175,16 @@ public:
     void update();
     void render();
 
-    void begin_scene_inspector();
-    void inspector_info(VortexModel *model, ParticleSystem *ps);
-    void end_scene_inspector();
+    void scene_inspector();
+    void inspect_model(VortexModel *model);
+    void inspect_particle_system(ParticleSystem *ps);
+    void draw_model_info_panel(VortexModel* model, int flags);
+    void draw_model_components_panel(VortexModel* model, int flags);
+    void draw_model_transform_panel(VortexModel* model, int flags);
+    void draw_model_actions(VortexModel* model);
+
+    void draw_main_menu_bar();
+    void draw_project_hub();
 
     void creator_window();
     void camera_info(VortexCamera *camera);

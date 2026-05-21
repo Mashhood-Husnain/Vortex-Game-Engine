@@ -5,7 +5,7 @@ EngineStatsThreaded g_engine_stats;
 
 void VortexGUI::engine_stats()
 {
-    if (!show_debug_gui) return;
+    if (!show_engine_stats) return;
 
     ImGui::Begin("Performance");
 
@@ -119,7 +119,7 @@ void VortexGUI::engine_stats()
 
 void VortexGUI::camera_info(VortexCamera *camera)
 {
-    if (!camera || !show_gui) return;
+    if (!camera || !show_camera_info) return;
 
     ImGui::Begin("Camera");
 

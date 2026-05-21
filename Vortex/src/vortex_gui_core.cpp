@@ -93,122 +93,48 @@ void VortexGUI::update()
 
 void VortexGUI::render()
 {
-    if (app->get_state() == EngineState::EDITOR)
+    if (show_tool_window && app->get_state() == EngineState::EDITOR)
     {
-        ImGuiWindowFlags toolbar_flags = ImGuiWindowFlags_AlwaysAutoResize;
+        ImGuiWindowFlags toolbar_flags = ImGuiWindowFlags_NoScrollbar | ImGuiWindowFlags_NoScrollWithMouse;
 
+        ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(0, 8));
         ImGui::Begin("Toolbar", nullptr, toolbar_flags);
+        ImGui::PopStyleVar();
+
+        float button_width = 140.0f;
+        float spacing = ImGui::GetStyle().ItemSpacing.x;
+        float total_width = (button_width * 2) + spacing;
+        
+        float cursor_x = (ImGui::GetWindowSize().x - total_width) * 0.5f;
+        if (cursor_x > 0.0f) ImGui::SetCursorPosX(cursor_x);
 
         ImGui::PushStyleColor(ImGuiCol_Button, ImVec4(0.18f, 0.32f, 0.22f, 0.80f));
         ImGui::PushStyleColor(ImGuiCol_ButtonHovered, ImVec4(0.22f, 0.38f, 0.26f, 1.00f));
         ImGui::PushStyleColor(ImGuiCol_ButtonActive, ImVec4(0.25f, 0.45f, 0.30f, 1.00f));
         
-        if (ImGui::Button("RUN GAME", ImVec2(120, 32)))
+        if (ImGui::Button("RUN GAME", ImVec2(button_width, 32)))
         {
-            VORTEX_INFO("[ENGINE] Entering Play Mode...");
-
-            VortexProject::take_snapshot(SnapshotState::SAVE, app, "temp_playmode_backup");
-
-            app->set_state(EngineState::PLAY);
-            app->show_mouse(false);
-            app->toggle_wireframe(false);
-            app->toggle_world_axis(false);
-            show_gui = false;
-            show_debug_gui = false;
-            show_terminal = false;
-
-            for (VortexModel *model : VortexObjectManager::active_models)
-            {
-                for (VortexMonoBehaviour *script : model->behaviours)
-                {
-                    script->on_start();
-                }
-            }
+            app->enter_play_mode(); 
         }
-        
         ImGui::PopStyleColor(3);
+
+        ImGui::SameLine();
 
         ImGui::PushStyleColor(ImGuiCol_Button, ImVec4(0.2f, 0.6f, 0.3f, 1.0f));
         ImGui::PushStyleColor(ImGuiCol_ButtonHovered, ImVec4(0.3f, 0.7f, 0.4f, 1.0f));
         ImGui::PushStyleColor(ImGuiCol_ButtonActive, ImVec4(0.1f, 0.5f, 0.2f, 1.0f));
         
         bool is_currently_compiling = CompilerState::is_compiling.load();
+        if (is_currently_compiling) ImGui::BeginDisabled();
 
-        if (is_currently_compiling)
+        const char* compile_text = is_currently_compiling ? "COMPILING..." : "COMPILE";
+
+        if (ImGui::Button(compile_text, ImVec2(button_width, 32)))
         {
-            ImGui::BeginDisabled();
+            app->trigger_compile();
         }
 
-        if (ImGui::Button("Compile Script"))
-        {
-            CompilerState::progress.store(0.0f);
-            CompilerState::is_compiling.store(true);
-            
-            {
-                std::lock_guard<std::mutex> lock(CompilerState::status_mutex);
-                CompilerState::status_text = "Starting CMake Build...";
-            }
-
-            std::thread([]() 
-            {
-                #ifdef _WIN32
-                    #define POPEN _popen
-                    #define PCLOSE _pclose
-                #else
-                    #define POPEN popen
-                    #define PCLOSE pclose
-                #endif
-
-                FILE* pipe = POPEN("make VortexGame 2>&1", "r");
-                
-                if (pipe) 
-                {
-                    char buffer[256];
-                    while (fgets(buffer, sizeof(buffer), pipe) != nullptr) 
-                    {
-                        std::string line = buffer;
-
-                        if (!line.empty() && line.back() == '\n') line.pop_back();
-
-                        {
-                            std::lock_guard<std::mutex> lock(CompilerState::status_mutex);
-                            CompilerState::status_text = line;
-                        }
-
-                        size_t bracket_open = line.find('[');
-                        size_t percent_sign = line.find('%');
-                        
-                        if (bracket_open != std::string::npos && percent_sign != std::string::npos && percent_sign > bracket_open)
-                        {
-                            std::string num_str = line.substr(bracket_open + 1, percent_sign - bracket_open - 1);
-                            try {
-                                float percent = std::stof(num_str) / 100.0f;
-                                CompilerState::progress.store(percent);
-                            } catch (...) {}
-                        }
-                    }
-                    PCLOSE(pipe);
-                }
-
-                CompilerState::progress.store(1.0f);
-                
-                {
-                    std::lock_guard<std::mutex> lock(CompilerState::status_mutex);
-                    CompilerState::status_text = "Build Complete! Triggering Hot Reload...";
-                }
-
-                std::this_thread::sleep_for(std::chrono::milliseconds(500));
-                
-                CompilerState::is_compiling.store(false);
-
-            }).detach();
-        }
-
-        if (is_currently_compiling)
-        {
-            ImGui::EndDisabled();
-        }
-
+        if (is_currently_compiling) ImGui::EndDisabled();
         ImGui::PopStyleColor(3);
 
         ImGui::End();

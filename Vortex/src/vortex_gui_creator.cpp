@@ -5,7 +5,7 @@
 
 void VortexGUI::creator_window()
 {
-    if (!show_gui) return;
+    if (!show_creator_window) return;
 
     ImGui::SetNextWindowSizeConstraints(ImVec2(300, 100), ImVec2(FLT_MAX, FLT_MAX));
 

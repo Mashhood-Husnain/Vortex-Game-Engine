@@ -125,16 +125,17 @@ When you launch the engine, you will start in Editor Mode attached to the defaul
 | **M** | Release/Capture Mouse (Use this to interact with the Creator Tool or Inspector) |
 | **Z** | Toggle Wireframe view for all models |
 | **F** | Toggle Fullscreen / Windowed mode |
-| **V** | Toggle XYZ Gizmo |
 | **R** | Toggle for Rotating object |
 | **T** | Toggle for Translating object |
 | **Y** | Toggle for Scaling object |
 | **TAB** | Toggle Engine Stats view in Play Mode (this binding only works in Play Mode)|
 | **LEFT CTRL + Mouse Drag** | Snap selected model to grid |
-| **LEFT ALT** | Snap selected model to the ground |
 | **LEFT CTRL + P** | Toggle Engine Terminal |
 | **LEFT CTRL + S** | Save the Current Project |
 | **LEFT CTRL + D** | Duplicate Current Selected Model(s) |
+| **LEFT CTRL + R** | Enter Play Mode |
+| **LEFT CTRL + C** | Compile Scripts |
+| **LEFT ALT** | Snap selected model to the ground |
 | **Right Mouse Click (on folder)** | Options for Folders |
 | **DEL** | Deletes Selected Model(s) |
 | **Escape** | Exit Play Mode (if playing) OR Exit Engine (if in editor) |

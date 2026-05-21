@@ -48,7 +48,7 @@ void VortexGUI::gui_set_post_processor()
 
 void VortexGUI::post_process_options()
 {
-    if (!show_gui) return;
+    if (!show_skybox_post_process_options) return;
     if (!m_shaders_loaded) refresh_shader_list();
 
     ImGui::Begin("Post-Processing");
@@ -124,7 +124,7 @@ void VortexGUI::gui_set_skybox()
 
 void VortexGUI::skybox_options()
 {   
-    if (!show_gui) return;
+    if (!show_skybox_post_process_options) return;
     if (!m_skybox_loaded) refresh_skybox_list();
 
     ImGui::Begin("SkyBox");

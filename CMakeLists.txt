@@ -104,6 +104,7 @@ add_executable(engine
     Vortex/src/vortex_gui_editor.cpp
     Vortex/src/vortex_gui_dockspace.cpp
     Vortex/src/vortex_gui_terminal.cpp
+    Vortex/src/vortex_gui_menus.cpp
     Vortex/src/vortex_postprocessor.cpp
     Vortex/src/vortex_skybox.cpp
     Vortex/src/vortex_grid.cpp
