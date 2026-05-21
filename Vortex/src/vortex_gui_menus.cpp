@@ -63,7 +63,6 @@ void VortexGUI::draw_main_menu_bar()
             ImGui::MenuItem("Creator Window", NULL, &show_creator_window);
             ImGui::MenuItem("Engine Stats", NULL, &show_engine_stats);
             ImGui::MenuItem("Terminal Output", NULL, &show_terminal);
-            ImGui::MenuItem("Tool Window", NULL, &show_tool_window);
             ImGui::MenuItem("Skybox/Post-Process", NULL, &show_skybox_post_process_options);
             ImGui::EndMenu();
         }

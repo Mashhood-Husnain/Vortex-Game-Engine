@@ -93,53 +93,6 @@ void VortexGUI::update()
 
 void VortexGUI::render()
 {
-    if (show_tool_window && app->get_state() == EngineState::EDITOR)
-    {
-        ImGuiWindowFlags toolbar_flags = ImGuiWindowFlags_NoScrollbar | ImGuiWindowFlags_NoScrollWithMouse;
-
-        ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(0, 8));
-        ImGui::Begin("Toolbar", nullptr, toolbar_flags);
-        ImGui::PopStyleVar();
-
-        float button_width = 140.0f;
-        float spacing = ImGui::GetStyle().ItemSpacing.x;
-        float total_width = (button_width * 2) + spacing;
-        
-        float cursor_x = (ImGui::GetWindowSize().x - total_width) * 0.5f;
-        if (cursor_x > 0.0f) ImGui::SetCursorPosX(cursor_x);
-
-        ImGui::PushStyleColor(ImGuiCol_Button, ImVec4(0.18f, 0.32f, 0.22f, 0.80f));
-        ImGui::PushStyleColor(ImGuiCol_ButtonHovered, ImVec4(0.22f, 0.38f, 0.26f, 1.00f));
-        ImGui::PushStyleColor(ImGuiCol_ButtonActive, ImVec4(0.25f, 0.45f, 0.30f, 1.00f));
-        
-        if (ImGui::Button("RUN GAME", ImVec2(button_width, 32)))
-        {
-            app->enter_play_mode(); 
-        }
-        ImGui::PopStyleColor(3);
-
-        ImGui::SameLine();
-
-        ImGui::PushStyleColor(ImGuiCol_Button, ImVec4(0.2f, 0.6f, 0.3f, 1.0f));
-        ImGui::PushStyleColor(ImGuiCol_ButtonHovered, ImVec4(0.3f, 0.7f, 0.4f, 1.0f));
-        ImGui::PushStyleColor(ImGuiCol_ButtonActive, ImVec4(0.1f, 0.5f, 0.2f, 1.0f));
-        
-        bool is_currently_compiling = CompilerState::is_compiling.load();
-        if (is_currently_compiling) ImGui::BeginDisabled();
-
-        const char* compile_text = is_currently_compiling ? "COMPILING..." : "COMPILE";
-
-        if (ImGui::Button(compile_text, ImVec2(button_width, 32)))
-        {
-            app->trigger_compile();
-        }
-
-        if (is_currently_compiling) ImGui::EndDisabled();
-        ImGui::PopStyleColor(3);
-
-        ImGui::End();
-    }
-
     ImGui::Render();
     ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
 }

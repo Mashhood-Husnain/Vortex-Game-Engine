@@ -29,9 +29,7 @@ void VortexGUI::build_dockspace()
             ImGuiID dock_middle_bottom = ImGui::DockBuilderSplitNode(dock_main_id, ImGuiDir_Down, 0.30f, nullptr, &dock_main_id);
             
             ImGuiID dock_middle_bottom_left = ImGui::DockBuilderSplitNode(dock_middle_bottom, ImGuiDir_Left, 0.333f, nullptr, &dock_middle_bottom);
-            
-            ImGuiID dock_middle_bottom_right = ImGui::DockBuilderSplitNode(dock_middle_bottom, ImGuiDir_Right, 0.50f, nullptr, &dock_middle_bottom);
-            
+                        
             ImGuiID dock_middle_bottom_middle = dock_middle_bottom;
 
             // Main View
@@ -48,7 +46,6 @@ void VortexGUI::build_dockspace()
             // Middle-Bottom Region
             ImGui::DockBuilderDockWindow("Performance", dock_middle_bottom_left);
             ImGui::DockBuilderDockWindow("Camera", dock_middle_bottom_middle);
-            ImGui::DockBuilderDockWindow("Toolbar", dock_middle_bottom_right);
 
             ImGui::DockBuilderFinish(dockspace_id);
         }

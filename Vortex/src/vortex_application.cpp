@@ -237,7 +237,6 @@ void VortexApplication::check_key_press()
             gui.show_creator_window = true;
             gui.show_engine_stats = true;
             gui.show_terminal = true;
-            gui.show_tool_window = true;
             gui.show_skybox_post_process_options = true;
 
             show_mouse(true);
@@ -789,7 +788,6 @@ void VortexApplication::enter_play_mode()
     gui.show_creator_window = false;
     gui.show_engine_stats = false;
     gui.show_terminal = false;
-    gui.show_tool_window = false;
     gui.show_skybox_post_process_options = false;
 
     for (VortexModel *model : VortexObjectManager::active_models)

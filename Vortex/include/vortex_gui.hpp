@@ -154,7 +154,6 @@ public:
     bool show_creator_window = true;
     bool show_engine_stats = true;
     bool show_terminal = false;
-    bool show_tool_window = true;
     bool show_skybox_post_process_options = true;    
 
     static int m_selected_skybox_idx;
