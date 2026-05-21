@@ -374,6 +374,7 @@ VortexModel* VortexModel::clone()
     new_model->show_collider = show_collider;
     new_model->collider_scale = collider_scale;
     new_model->active_parts = active_parts;
+    new_model->folder = folder;
 
     new_model->transform.position.x += 1.0f;
 

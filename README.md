@@ -136,6 +136,7 @@ When you launch the engine, you will start in Editor Mode attached to the defaul
 | **LEFT CTRL + S** | Save the Current Project |
 | **LEFT CTRL + D** | Duplicate Current Selected Model(s) |
 | **Right Mouse Click (on folder)** | Options for Folders |
+| **DEL** | Deletes Selected Model(s) |
 | **Escape** | Exit Play Mode (if playing) OR Exit Engine (if in editor) |
 
 

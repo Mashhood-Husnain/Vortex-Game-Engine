@@ -32,7 +32,9 @@ void VortexKeyboard::init(GLFWwindow* window)
             {"UP", GLFW_KEY_UP},
             {"DOWN", GLFW_KEY_DOWN},
             {"LEFT", GLFW_KEY_LEFT},
-            {"RIGHT", GLFW_KEY_RIGHT}
+            {"RIGHT", GLFW_KEY_RIGHT},
+
+            {"DELETE", GLFW_KEY_DELETE}
         };
 
         for (const auto& pair : s_key_map) 

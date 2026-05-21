@@ -206,6 +206,17 @@ void VortexApplication::check_key_press()
             std::string project_name = std::string(gui.save_project_name);
             VortexProject::take_snapshot(SnapshotState::SAVE, this, project_name);
         }
+
+        if (!gui.m_selected_models.empty(), VortexKeyboard::get_key_down("DELETE"))
+        {
+            for (VortexModel *model : gui.m_selected_models)
+            {
+                model->should_destroy = true;
+                model->is_selected = false;
+            }
+
+            gui.m_selected_models.clear();
+        }
     }
 
     if (VortexKeyboard::get_key_down("TAB") && current_state == EngineState::PLAY)
