@@ -9,9 +9,11 @@ void VortexProject::save_project(Snapshot *snapshot)
     }
 
     json save_data;
-    save_data["project_name"] = snapshot->project_name;
 
+    save_data["project_name"] = snapshot->project_name;
     save_data["models"] = json::array();
+    save_data["empty_folders"] = snapshot->explicit_empty_folders;
+
     for (VortexModel *model : snapshot->active_models)
     {
         json j_model;
@@ -58,6 +60,8 @@ void VortexProject::save_project(Snapshot *snapshot)
             model->light->serialize(l_data);
             j_model["light"] = l_data;
         }
+
+        j_model["folder"] = model->folder;
 
         save_data["models"].push_back(j_model);
     }
@@ -156,6 +160,11 @@ void VortexProject::load_project(Snapshot *snapshot)
     snapshot->active_models.clear();
     snapshot->active_systems.clear();
 
+    if (save_data.contains("empty_folders"))
+    {
+        snapshot->explicit_empty_folders = save_data["empty_folders"].get<std::vector<std::string>>();
+    }
+
     for (const auto &j_model : save_data["models"])
     {
         VortexModel *new_model = new VortexModel(j_model["path"], snapshot->window);
@@ -166,6 +175,15 @@ void VortexProject::load_project(Snapshot *snapshot)
             {
                 new_model->active_parts[i] = true;
             }
+        }
+
+        if (j_model.contains("folder"))
+        {
+            new_model->folder = j_model["folder"];
+        }
+        else
+        {
+            new_model->folder = "Scene";
         }
 
         new_model->transform.position = glm::vec3(j_model["position"][0], j_model["position"][1], j_model["position"][2]);
@@ -296,6 +314,22 @@ bool VortexProject::check_save_state(Snapshot *snapshot)
     if (saved_data["m_selected_shader_idx"] != snapshot->m_selected_shader_idx) return false;
 
     if (saved_data["models"].size() != snapshot->active_models.size()) return false;
+
+    std::vector<std::string> live_empty_folders = snapshot->explicit_empty_folders;
+    std::vector<std::string> saved_empty_folders = {"Scene"}; // Default fallback
+
+    if (saved_data.contains("empty_folders")) 
+    {
+        saved_empty_folders = saved_data["empty_folders"].get<std::vector<std::string>>();
+    }
+    
+    if (live_empty_folders.size() != saved_empty_folders.size()) return false;
+
+    for (size_t i = 0; i < live_empty_folders.size(); i++) 
+    {
+        if (live_empty_folders[i] != saved_empty_folders[i]) return false;
+    }
+
     if (saved_data["particle_systems"].size() != snapshot->active_systems.size()) return false;
 
     auto float_equals = [](float a, float b) { return std::abs(a - b) < 0.001f; };
@@ -306,6 +340,11 @@ bool VortexProject::check_save_state(Snapshot *snapshot)
         json& saved_model = saved_data["models"][i];
 
         if (saved_model["name"] != model->model_name) return false;
+
+        std::string live_folder = model->folder.empty() ? "Scene" : model->folder;
+        std::string saved_folder = saved_model.contains("folder") ? saved_model["folder"] : "Scene";
+        
+        if (live_folder != saved_folder) return false;
 
         if (!float_equals(saved_model["position"][0], model->transform.position.x) ||
             !float_equals(saved_model["position"][1], model->transform.position.y) ||
@@ -338,7 +377,7 @@ bool VortexProject::check_save_state(Snapshot *snapshot)
             json live_rb_data;
             model->rigidbody->serialize(live_rb_data);
             
-            if (saved_model["rigidbody"] != live_rb_data) return false; // Component values changed!
+            if (saved_model["rigidbody"] != live_rb_data) return false;
         }
 
         bool has_live_light = (model->light != nullptr);
@@ -404,6 +443,7 @@ void VortexProject::take_snapshot(SnapshotState state, VortexApplication *window
         VortexObjectManager::active_particlesystems,
         VortexGUI::m_selected_skybox_idx,
         VortexGUI::m_selected_shader_idx,
+        VortexGUI::explicit_empty_folders,
         window
     };
 

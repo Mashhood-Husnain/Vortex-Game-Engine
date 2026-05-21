@@ -9,6 +9,7 @@
 int VortexGUI::m_selected_shader_idx = 0;
 int VortexGUI::m_selected_skybox_idx = 0;
 char VortexGUI::save_project_name[128] = "";
+std::vector<std::string> VortexGUI::explicit_empty_folders = {"Scene"};
 
 VortexGUI::VortexGUI()
 {
@@ -330,5 +331,5 @@ VortexGUI::~VortexGUI()
     m_available_model_paths.clear();
 
     app = nullptr;
-    m_selected_model = nullptr;    
+    m_selected_models.clear();    
 }

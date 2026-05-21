@@ -8,28 +8,147 @@ void VortexGUI::begin_scene_inspector()
     if (!show_gui) return;
 
     ImGui::SetNextWindowSizeConstraints(ImVec2(300, 100), ImVec2(FLT_MAX, FLT_MAX));
-
     ImGui::Begin("Scene Inspector");
+
+    static char new_folder_path[128] = "Scene/NewFolder";
+    ImGui::SetNextItemWidth(ImGui::GetContentRegionAvail().x - 100);
+    ImGui::InputText("##NewFolder", new_folder_path, IM_ARRAYSIZE(new_folder_path));
+    ImGui::SameLine();
+
+    if (ImGui::Button("Create Path") && strlen(new_folder_path) > 0)
+    {
+        std::string path(new_folder_path);
+        if (std::find(explicit_empty_folders.begin(), explicit_empty_folders.end(), path) == explicit_empty_folders.end())
+        {
+            explicit_empty_folders.push_back(path);
+        }
+    }
+    
+    ImGui::Spacing();
+    ImGui::Separator();
+    ImGui::Spacing();
+
+    FolderNode root;
+
+    auto insert_into_tree = [&](const std::string& path, VortexModel* model)
+    {
+        std::stringstream ss(path);
+        std::string part;
+        FolderNode* current = &root;
+
+        while (std::getline(ss, part, '/')) 
+        {
+            if (part.empty()) continue;
+            current = &(current->subfolders[part]);
+        }
+        
+        if (model) current->models.push_back(model);
+    };
+
+    for (const std::string& empty_path : explicit_empty_folders)
+    {
+        insert_into_tree(empty_path, nullptr);
+    }
 
     for (VortexModel* model : VortexObjectManager::active_models)
     {
-        inspector_info(model, nullptr);
+        insert_into_tree(model->folder.empty() ? "Scene" : model->folder, model);
     }
 
-    for (ParticleSystem* ps : VortexObjectManager::active_particlesystems)
+    std::function<void(const std::string&, FolderNode&, std::string)> draw_node;
+    draw_node = [&](const std::string& name, FolderNode& node, std::string current_path)
     {
-        inspector_info(nullptr, ps);
-    }
+        ImGui::PushStyleColor(ImGuiCol_Header, ImVec4(0.2f, 0.2f, 0.22f, 1.0f));
+        bool folder_open = ImGui::TreeNodeEx(name.c_str(), ImGuiTreeNodeFlags_Framed | ImGuiTreeNodeFlags_DefaultOpen);
+        ImGui::PopStyleColor();
 
-    bool is_collapsed = ImGui::IsWindowCollapsed();
-    if (!is_collapsed && m_scene_was_collapsed)
+        if (ImGui::BeginPopupContextItem()) 
+        {
+            if (name == "Scene") 
+            {
+                ImGui::TextDisabled("Default folder cannot be deleted.");
+            }
+            else
+            {
+                ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(1.0f, 0.4f, 0.4f, 1.0f));
+                if (ImGui::Selectable("Delete Folder"))
+                {
+                    for (VortexModel* m : VortexObjectManager::active_models)
+                    {
+                        if (m->folder.find(current_path) == 0) 
+                        {
+                            m->folder = "Scene";
+                        }
+                    }
+
+                    auto it = std::find(explicit_empty_folders.begin(), explicit_empty_folders.end(), current_path);
+                    if (it != explicit_empty_folders.end()) explicit_empty_folders.erase(it);
+
+                    ImGui::PopStyleColor();
+                    ImGui::EndPopup();
+                    
+                    if (folder_open) ImGui::TreePop();
+                    return;
+                }
+                ImGui::PopStyleColor();
+            }
+            ImGui::EndPopup();
+        }
+
+        if (ImGui::BeginDragDropTarget())
+        {
+            if (const ImGuiPayload* payload = ImGui::AcceptDragDropPayload("MODEL_NODE"))
+            {
+                VortexModel* dragged_model = *(VortexModel**)payload->Data;
+                
+                if (m_selected_models.find(dragged_model) != m_selected_models.end())
+                {
+                    for (VortexModel* m : m_selected_models) m->folder = current_path;
+                }
+                else
+                {
+                    dragged_model->folder = current_path;
+                }
+            }
+            ImGui::EndDragDropTarget();
+        }
+
+        if (folder_open)
+        {
+            for (auto& [sub_name, sub_node] : node.subfolders)
+            {
+                std::string next_path = current_path.empty() ? sub_name : current_path + "/" + sub_name;
+                draw_node(sub_name, sub_node, next_path);
+            }
+
+            for (VortexModel* model : node.models)
+            {
+                inspector_info(model, nullptr);
+            }
+
+            if (node.subfolders.empty() && node.models.empty())
+            {
+                ImGui::TextDisabled("  (Empty)");
+            }
+
+            ImGui::TreePop();
+        }
+    };
+
+    for (auto& [root_name, root_node] : root.subfolders)
     {
-        m_force_creator_collapse = true;
+        draw_node(root_name, root_node, root_name);
     }
-    m_scene_was_collapsed = is_collapsed;
 
-    m_scene_pos = ImGui::GetWindowPos();
-    m_scene_size = ImGui::GetWindowSize();
+    ImGui::Separator(); ImGui::Spacing();
+
+    if (ImGui::CollapsingHeader("Particle Systems", ImGuiTreeNodeFlags_DefaultOpen))
+    {
+        for (ParticleSystem* ps : VortexObjectManager::active_particlesystems)
+        {
+            inspector_info(nullptr, ps);
+        }
+    }
 }
 
 void VortexGUI::inspector_info(VortexModel* model, ParticleSystem *ps)
@@ -46,11 +165,10 @@ void VortexGUI::inspector_info(VortexModel* model, ParticleSystem *ps)
         
         std::string header_id = model->model_name + "###" + std::to_string((uintptr_t)model);
 
-        bool is_currently_selected = (m_selected_model == model);
+        bool is_currently_selected = (m_selected_models.find(model) != m_selected_models.end());
         
-        if (is_currently_selected) {
-            ImGui::SetNextItemOpen(true, ImGuiCond_Once); 
-            
+        if (is_currently_selected)
+        {            
             ImGui::PushStyleColor(ImGuiCol_Header, ImVec4(0.25f, 0.35f, 0.45f, 0.60f));
             ImGui::PushStyleColor(ImGuiCol_HeaderHovered, ImVec4(0.30f, 0.40f, 0.50f, 0.80f));
             ImGui::PushStyleColor(ImGuiCol_HeaderActive, ImVec4(0.35f, 0.45f, 0.55f, 1.00f));
@@ -58,15 +176,67 @@ void VortexGUI::inspector_info(VortexModel* model, ParticleSystem *ps)
 
         bool is_header_open = ImGui::CollapsingHeader(header_id.c_str());
 
+        
+
         if (ImGui::IsItemClicked(ImGuiMouseButton_Left))
         {
-            m_selected_model = model;            
-            model->is_selected = true; 
+            if (ImGui::GetIO().KeyCtrl)
+            {
+                if (is_currently_selected)
+                {
+                    m_selected_models.erase(model);
+                    model->is_selected = false;
+                }
+                else
+                {
+                    m_selected_models.insert(model);
+                    model->is_selected = true;
+                }
+            }
+            else if(!is_currently_selected)
+            {
+                for (VortexModel* m : m_selected_models) m->is_selected = false;
+                m_selected_models.clear();
+                
+                m_selected_models.insert(model);
+                model->is_selected = true;
+            }
+        }
+
+        if (ImGui::IsItemHovered() && ImGui::IsMouseReleased(ImGuiMouseButton_Left) && !ImGui::GetIO().KeyCtrl)
+        {
+            if (is_currently_selected && m_selected_models.size() > 1)
+            {
+                ImVec2 drag_delta = ImGui::GetMouseDragDelta(ImGuiMouseButton_Left);
+                if (drag_delta.x == 0.0f && drag_delta.y == 0.0f)
+                {
+                    for (VortexModel* m : m_selected_models) m->is_selected = false;
+                    m_selected_models.clear();
+
+                    m_selected_models.insert(model);
+                    model->is_selected = true;
+                }
+            }
         }
 
         if (is_currently_selected)
         {
             ImGui::PopStyleColor(3); 
+        }
+
+        if (ImGui::BeginDragDropSource(ImGuiDragDropFlags_SourceAllowNullID))
+        {
+            ImGui::SetDragDropPayload("MODEL_NODE", &model, sizeof(VortexModel*));
+            
+            if (m_selected_models.size() > 1 && is_currently_selected)
+            {
+                ImGui::Text("Moving %zu selected items...", m_selected_models.size());
+            }
+            else
+            {
+                ImGui::Text("Moving: %s", model->model_name.c_str());
+            }
+            ImGui::EndDragDropSource();
         }
 
         if (is_header_open)
@@ -400,14 +570,15 @@ void VortexGUI::inspector_info(VortexModel* model, ParticleSystem *ps)
             if (ImGui::Button("Duplicate Model", ImVec2(-1, 32)))
             {
                 VortexModel* cloned_model = model->clone();
-                
                 VortexObjectManager::active_models.push_back(cloned_model);
 
-                model->is_selected = false;
-                cloned_model->is_selected = true;
-                m_selected_model = cloned_model;
+                for (auto* m : m_selected_models) m->is_selected = false;
+                m_selected_models.clear();
                 
-                ImGui::PopStyleColor(3);
+                cloned_model->is_selected = true;
+                m_selected_models.insert(cloned_model);
+                
+                ImGui::PopStyleColor();
                 ImGui::PopStyleVar(2);
                 ImGui::PopID();
                 return; 
@@ -423,7 +594,7 @@ void VortexGUI::inspector_info(VortexModel* model, ParticleSystem *ps)
             {
                 model->should_destroy = true;
                 model->is_selected = false;
-                m_selected_model = nullptr;
+                m_selected_models.erase(model);
             }
             ImGui::PopStyleColor(3);
 

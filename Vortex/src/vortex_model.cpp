@@ -28,6 +28,8 @@ VortexModel::VortexModel(const std::string& path, VortexApplication *window)
 
     model_name = base_name + "_" + std::to_string(id);
 
+    glGenQueries(1, &occlusion_query);
+
     shared_data = VortexAssetManager::get_mesh(path);
     if (shared_data)
     {
@@ -210,6 +212,8 @@ VortexModel::~VortexModel()
     shared_data = nullptr;
     rigidbody = nullptr;
     light = nullptr;
+
+    glDeleteQueries(1, &occlusion_query);
 }
 
 void VortexModel::add_behaviour(const std::string &script_name, VortexMonoBehaviour *script)

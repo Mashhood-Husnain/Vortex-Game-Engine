@@ -110,6 +110,8 @@ public:
 
     VortexApplication *app;
     std::string model_name;
+
+    std::string folder = "Scene";
     
     Transform transform = {
         .position = glm::vec3(0.0f),
@@ -123,6 +125,8 @@ public:
     bool show_collider = false;
 
     bool is_selected = false;
+
+    GLuint occlusion_query;
 
     std::string file_path;
 

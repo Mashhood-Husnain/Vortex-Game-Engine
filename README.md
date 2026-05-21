@@ -130,9 +130,12 @@ When you launch the engine, you will start in Editor Mode attached to the defaul
 | **T** | Toggle for Translating object |
 | **Y** | Toggle for Scaling object |
 | **TAB** | Toggle Engine Stats view in Play Mode (this binding only works in Play Mode)|
-| **LEFT CTRL** | Snap selected model to grid |
+| **LEFT CTRL + Mouse Drag** | Snap selected model to grid |
 | **LEFT ALT** | Snap selected model to the ground |
-| **LEFT CTRL + P** | toggle engine terminal |
+| **LEFT CTRL + P** | Toggle Engine Terminal |
+| **LEFT CTRL + S** | Save the Current Project |
+| **LEFT CTRL + D** | Duplicate Current Selected Model(s) |
+| **Right Mouse Click (on folder)** | Options for Folders |
 | **Escape** | Exit Play Mode (if playing) OR Exit Engine (if in editor) |
 
 

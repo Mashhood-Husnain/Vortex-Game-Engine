@@ -5,10 +5,33 @@ VortexShader *VortexObjectManager::model_shader = nullptr;
 VortexShader *VortexObjectManager::collider_shader = nullptr;
 VortexShader *VortexObjectManager::particle_shader = nullptr;
 VortexShader *VortexObjectManager::unlit_shader = nullptr;
+VortexShader *VortexObjectManager::depth_only_shader = nullptr;
+VortexShader *VortexObjectManager::outline_shader = nullptr;
 
 std::vector<VortexModel*> VortexObjectManager::active_models;
 std::vector<VortexModel*> VortexObjectManager::pending_models;
 std::vector<ParticleSystem*> VortexObjectManager::active_particlesystems;
+
+void setup_occlusion_cube()
+{
+    if (occlusion_VAO != 0) return;
+
+    glGenVertexArrays(1, &occlusion_VAO);
+    glGenBuffers(1, &occlusion_VBO);
+    glBindVertexArray(occlusion_VAO);
+
+    glBindBuffer(GL_ARRAY_BUFFER, occlusion_VBO);
+    glBufferData(
+        GL_ARRAY_BUFFER,
+        sizeof(GLOBAL::DEFAULT_VERTICES::OCCLUSION_VERTICES),
+        GLOBAL::DEFAULT_VERTICES::OCCLUSION_VERTICES,
+        GL_STATIC_DRAW
+    );
+
+    glEnableVertexAttribArray(0);
+    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), (void*)0);
+    glBindVertexArray(0);
+}
 
 void VortexObjectManager::init()
 {
@@ -16,27 +39,35 @@ void VortexObjectManager::init()
     model_shader = new VortexShader("shaders/default.vert", "shaders/default.frag");
     collider_shader = new VortexShader("shaders/collider.vert", "shaders/collider.frag");
     unlit_shader = new VortexShader("shaders/unlit.vert", "shaders/unlit.frag");
+    depth_only_shader = new VortexShader("shaders/depth_only.vert", "shaders/depth_only.frag");
+    outline_shader = new VortexShader("shaders/outline.vert", "shaders/outline.frag");
 }
 
 void VortexObjectManager::clean_up()
 {
-    for (VortexModel* model : active_models)
-    {
-        delete model;
-    }
+    for (VortexModel* model : active_models) delete model;
     active_models.clear();
 
-    for (VortexModel* model : pending_models)
-    {
-        delete model;
-    }
+    for (VortexModel* model : pending_models) delete model;
     pending_models.clear();
 
-    for (ParticleSystem* ps : active_particlesystems)
-    {
-        delete ps;
-    }
-    active_particlesystems.clear();    
+    for (ParticleSystem* ps : active_particlesystems) delete ps;
+    active_particlesystems.clear(); 
+    
+    delete model_shader;
+    model_shader = nullptr;
+    
+    delete collider_shader;
+    collider_shader = nullptr;
+
+    delete particle_shader;
+    particle_shader = nullptr;
+
+    delete unlit_shader;
+    unlit_shader = nullptr;
+
+    delete depth_only_shader;
+    depth_only_shader = nullptr;
 }
 
 void VortexObjectManager::update(float deltaTime)
@@ -73,43 +104,139 @@ void VortexObjectManager::update(float deltaTime)
 void VortexObjectManager::draw(VortexCamera &camera, bool show_wireframe)
 {
     Frustum cam_frustum = camera.get_frustum();
+    glm::vec3 camera_pos = camera.get_position();
+
+    std::vector<VortexModel*> render_queue;
+    for (VortexModel *model : active_models)
+    {
+        if (model->is_active) render_queue.push_back(model);
+    }
+
+    std::sort(render_queue.begin(), render_queue.end(), [&camera_pos](VortexModel *a, VortexModel *b){
+        glm::vec3 da = a->transform.position - camera_pos;
+        glm::vec3 db = b->transform.position - camera_pos;
+
+        float dist_a = glm::dot(da, da);
+        float dist_b = glm::dot(db, db);
+
+        return dist_a < dist_b;
+    });
+
+    setup_occlusion_cube();
+
+    glEnable(GL_DEPTH_TEST);
+    glDepthFunc(GL_LESS);
+
+    glEnable(GL_CULL_FACE);
+    glCullFace(GL_BACK);
+
+    glDepthMask(GL_TRUE);
+
+    for (VortexModel *model : render_queue)
+    {
+        if (!model->is_active) continue;
+
+        std::vector<glm::vec3> min_max = model->get_world_bounds_min_max();
+
+        if (!VortexPhysics::aabb_in_frustum(min_max[0], min_max[1], cam_frustum))
+        {
+            continue;
+        }
+
+        glm::vec3 center = (min_max[0] + min_max[1]) * 0.5f;
+        glm::vec3 size = min_max[1] - min_max[0];
+        glm::mat4 box_model = glm::translate(glm::mat4(1.0f), center);
+        box_model = glm::scale(box_model, size);
+
+        glColorMask(GL_FALSE, GL_FALSE, GL_FALSE, GL_FALSE);
+        glDepthMask(GL_FALSE);
+
+        depth_only_shader->use();
+        depth_only_shader->setMat4("view", camera.getViewMatrix());
+        depth_only_shader->setMat4("projection", camera.getProjectionMatrix());
+        depth_only_shader->setMat4("model", box_model);
+
+        glBeginQuery(GL_ANY_SAMPLES_PASSED, model->occlusion_query);
+        glBindVertexArray(occlusion_VAO);
+        glDrawArrays(GL_TRIANGLES, 0, 36);
+        glBindVertexArray(0);
+        glEndQuery(GL_ANY_SAMPLES_PASSED);
+
+        glColorMask(GL_TRUE, GL_TRUE, GL_TRUE, GL_TRUE);
+        glDepthMask(GL_TRUE);
+
+        GLuint passed = 0;
+        glGetQueryObjectuiv(model->occlusion_query, GL_QUERY_RESULT, &passed);
+
+        if (passed == 0) continue;
+
+        if(model->is_selected)
+        {
+            glEnable(GL_STENCIL_TEST);
+            glStencilOp(GL_KEEP, GL_KEEP, GL_REPLACE);
+            glStencilFunc(GL_ALWAYS, 1, 0xFF);
+            glStencilMask(0xFF);
+        }
+
+        if (model->light)
+        {
+            unlit_shader->use();
+            unlit_shader->setVec3("lightColor", model->light->color * model->light->intensity);
+            model->draw(*unlit_shader, camera, show_wireframe);
+        }
+        else
+        {
+            model->draw(*model_shader, camera, show_wireframe);
+        }
+
+        if (model->is_selected)
+        {
+            glStencilMask(0x00);
+            glDisable(GL_STENCIL_TEST);
+        }
+
+        if (model->show_collider)
+        {
+            glDisable(GL_CULL_FACE);
+
+            model->shared_data->collider.draw(*collider_shader, camera, model);
+
+            for (size_t i = 0; i < model->shared_data->objects.size(); i++)
+            {
+                if (model->active_parts[i])
+                {
+                    model->shared_data->objects[i].collider.draw(*collider_shader, camera, model);
+                }
+            }
+
+            glEnable(GL_CULL_FACE);
+        }
+    }
+
+    glEnable(GL_STENCIL_TEST);
+    glStencilFunc(GL_NOTEQUAL, 1, 0xFF);
+    glStencilMask(0x00);
+    glDisable(GL_DEPTH_TEST);
+
+    outline_shader->use();
+    outline_shader->setMat4("view", camera.getViewMatrix());
+    outline_shader->setMat4("projection", camera.getProjectionMatrix());
+
+    outline_shader->setVec3("outline_color", glm::vec3(1.0f, 0.6f, 0.0f));
+    outline_shader->setFloat("outline_thickness", 0.05f);
 
     for (VortexModel *model : active_models)
     {
-        if (model->is_active)
+        if (model->is_active && model->is_selected)
         {
-            std::vector<glm::vec3> min_max = model->get_world_bounds_min_max();
-
-            if (!VortexPhysics::aabb_in_frustum(min_max[0], min_max[1], cam_frustum))
-            {
-                continue;
-            }
-
-            if (model->light)
-            {
-                unlit_shader->use();
-                unlit_shader->setVec3("lightColor", model->light->color * model->light->intensity);
-                model->draw(*unlit_shader, camera, show_wireframe);
-            }
-            else
-            {
-                model->draw(*model_shader, camera, show_wireframe);
-            }
-
-            if (model->show_collider)
-            {
-                model->shared_data->collider.draw(*collider_shader, camera, model);
-
-                for (size_t i = 0; i < model->shared_data->objects.size(); i++)
-                {
-                    if (model->active_parts[i])
-                    {
-                        model->shared_data->objects[i].collider.draw(*collider_shader, camera, model);
-                    }
-                }
-            }
+            model->draw(*outline_shader, camera, false); 
         }
     }
+
+    glEnable(GL_DEPTH_TEST);
+    glDisable(GL_STENCIL_TEST);
+
+    glDisable(GL_CULL_FACE);
 
     for (ParticleSystem *ps : active_particlesystems)
     {

@@ -5,7 +5,15 @@
 #include "vortex_camera.hpp"
 #include "vortex_physics.hpp"
 
+#include "util/vortex_global_vars.hpp"
+
 #include <string>
+#include <algorithm>
+
+static GLuint occlusion_VAO = 0;
+static GLuint occlusion_VBO = 0;
+
+void setup_occlusion_cube();
 
 class ParticleSystem;
 
@@ -15,6 +23,8 @@ class VortexObjectManager
     static VortexShader *collider_shader;
     static VortexShader *particle_shader;
     static VortexShader *unlit_shader;
+    static VortexShader *depth_only_shader;
+    static VortexShader *outline_shader;
 public:
     static std::vector<VortexModel*> active_models;
     static std::vector<VortexModel*> pending_models;

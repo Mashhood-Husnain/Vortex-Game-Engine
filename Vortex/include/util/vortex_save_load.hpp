@@ -32,6 +32,7 @@ struct Snapshot
     std::vector<ParticleSystem*> &active_systems;
     int &m_selected_skybox_idx;
     int &m_selected_shader_idx;
+    std::vector<std::string> explicit_empty_folders;
     VortexApplication *window;
 };
 

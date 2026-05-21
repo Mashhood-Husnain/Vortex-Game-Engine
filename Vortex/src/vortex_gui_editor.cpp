@@ -22,7 +22,7 @@ void VortexGUI::draw_editor_viewport(float deltaTime, VortexCamera* camera)
 
         ImGuizmo::BeginFrame();
 
-        if (m_selected_model)
+        if (!m_selected_models.empty())
         {
             if (m_current_op == 0) m_current_op = ImGuizmo::TRANSLATE;
 
@@ -42,7 +42,11 @@ void VortexGUI::draw_editor_viewport(float deltaTime, VortexCamera* camera)
 
             glm::mat4 view = camera->getViewMatrix();
             glm::mat4 projection = camera->getProjectionMatrix();
-            glm::mat4 model_matrix = m_selected_model->get_model_matrix();
+
+            VortexModel *anchor = *m_selected_models.begin();
+
+            glm::mat4 anchor_old_matrix = anchor->get_model_matrix();
+            glm::mat4 gizmo_matrix = anchor_old_matrix;
 
             float snap_values[3] = { 1.0f, 1.0f, 1.0f };
             if (m_current_op == ImGuizmo::ROTATE)
@@ -52,18 +56,35 @@ void VortexGUI::draw_editor_viewport(float deltaTime, VortexCamera* camera)
 
             float* snap_pointer = VortexKeyboard::get_key("LEFTCONTROL") ? snap_values : nullptr;
 
-            ImGuizmo::Manipulate(glm::value_ptr(view), glm::value_ptr(projection), m_current_op, ImGuizmo::LOCAL, glm::value_ptr(model_matrix), nullptr, snap_pointer);
+            ImGuizmo::Manipulate(glm::value_ptr(view), glm::value_ptr(projection), m_current_op, ImGuizmo::LOCAL, glm::value_ptr(gizmo_matrix), nullptr, snap_pointer);
 
             if (ImGuizmo::IsUsing())
             {
                 m_is_using_gizmo = true;
-                float mTranslation[3], mRotation[3], mScale[3];
-                ImGuizmo::DecomposeMatrixToComponents(glm::value_ptr(model_matrix), mTranslation, mRotation, mScale);
+                
+                glm::mat4 delta_matrix = gizmo_matrix * glm::inverse(anchor_old_matrix);
 
-                m_selected_model->transform.position = glm::vec3(mTranslation[0], mTranslation[1], mTranslation[2]);
-                m_selected_model->transform.set_euler(glm::vec3(mRotation[0], mRotation[1], mRotation[2]));
-                m_selected_model->transform.scale = glm::vec3(mScale[0], mScale[1], mScale[2]);
-                m_selected_model->set_model_matrix(model_matrix);
+                for (VortexModel* model : m_selected_models)
+                {
+                    glm::mat4 final_matrix;
+                    
+                    if (model == anchor) 
+                    {
+                        final_matrix = gizmo_matrix;
+                    } 
+                    else 
+                    {
+                        final_matrix = delta_matrix * model->get_model_matrix();
+                    }
+
+                    float mTranslation[3], mRotation[3], mScale[3];
+                    ImGuizmo::DecomposeMatrixToComponents(glm::value_ptr(final_matrix), mTranslation, mRotation, mScale);
+
+                    model->transform.position = glm::vec3(mTranslation[0], mTranslation[1], mTranslation[2]);
+                    model->transform.set_euler(glm::vec3(mRotation[0], mRotation[1], mRotation[2]));
+                    model->transform.scale = glm::vec3(mScale[0], mScale[1], mScale[2]);
+                    model->set_model_matrix(final_matrix);
+                }
             }
             else
             {
@@ -113,13 +134,35 @@ void VortexGUI::handle_picking(VortexCamera* camera, ImVec2 image_pos)
 
             if (hit.has_hit)
             {
-                m_selected_model = hit.hit_model;
-                m_selected_model->is_selected = true;
+                if (ImGui::GetIO().KeyCtrl)
+                {
+                    if (m_selected_models.find(hit.hit_model) != m_selected_models.end())
+                    {
+                        m_selected_models.erase(hit.hit_model);
+                        hit.hit_model->is_selected = false;
+                    }
+                    else
+                    {
+                        m_selected_models.insert(hit.hit_model);
+                        hit.hit_model->is_selected = true;
+                    }
+                }
+                else
+                {
+                    for (VortexModel* m : m_selected_models) m->is_selected = false;
+                    m_selected_models.clear();
+
+                    m_selected_models.insert(hit.hit_model);
+                    hit.hit_model->is_selected = true;
+                }
             }
             else
             {
-                if (m_selected_model) m_selected_model->is_selected = false;
-                m_selected_model = nullptr;
+                if (!ImGui::GetIO().KeyCtrl)
+                {
+                    for (VortexModel* m : m_selected_models) m->is_selected = false;
+                    m_selected_models.clear();
+                }
             }
         }
     }
@@ -127,23 +170,24 @@ void VortexGUI::handle_picking(VortexCamera* camera, ImVec2 image_pos)
 
 void VortexGUI::snap_to_floor()
 {
-    if (!m_selected_model) return;
-
-    auto& objects = m_selected_model->get_objects();
-    if (objects.empty()) return;
-
-    float lowest_local_y = 1e10f;
-    for (const auto& obj : objects)
+    for (VortexModel* model : m_selected_models)
     {
-        float obj_bottom = obj.collider.min.y + obj.transform.position.y;
-        if (obj_bottom < lowest_local_y) lowest_local_y = obj_bottom;
+        auto& objects = model->get_objects();
+        if (objects.empty()) continue;
+
+        float lowest_local_y = 1e10f;
+        for (const auto& obj : objects)
+        {
+            float obj_bottom = obj.collider.min.y + obj.transform.position.y;
+            if (obj_bottom < lowest_local_y) lowest_local_y = obj_bottom;
+        }
+
+        float scaled_lowest_y = lowest_local_y * model->transform.scale.y;
+
+        model->transform.set_position(
+            glm::vec3(model->transform.get_position().x, -scaled_lowest_y, model->transform.get_position().z)
+        );
+
+        model->set_model_matrix(model->get_model_matrix());
     }
-
-    float scaled_lowest_y = lowest_local_y * m_selected_model->transform.scale.y;
-
-    m_selected_model->transform.set_position(
-        glm::vec3(m_selected_model->transform.get_position().x, -scaled_lowest_y, m_selected_model->transform.get_position().z)
-    );
-
-    m_selected_model->set_model_matrix(m_selected_model->get_model_matrix());
 }

@@ -138,6 +138,7 @@ void VortexApplication::request_exit()
         VortexObjectManager::active_particlesystems,
         gui.m_selected_skybox_idx,
         gui.m_selected_shader_idx,
+        gui.explicit_empty_folders,
         this
     };
 
@@ -177,15 +178,33 @@ void VortexApplication::check_key_press()
             gui.show_terminal = !gui.show_terminal;
         }
 
-        if (VortexKeyboard::get_key("LEFTCONTROL") && VortexKeyboard::get_key_down("D") && gui.m_selected_model)
+        if (VortexKeyboard::get_key("LEFTCONTROL") && VortexKeyboard::get_key_down("D"))
         {
-            VortexModel *current_model = gui.m_selected_model; 
-            VortexModel *cloned_model = current_model->clone();                
-            VortexObjectManager::active_models.push_back(cloned_model);
+            std::vector<VortexModel*> newly_cloned_models;
 
-            current_model->is_selected = false;
-            cloned_model->is_selected = true;
-            gui.m_selected_model = cloned_model;
+            for (VortexModel *current_model : gui.m_selected_models)
+            {
+                VortexModel *cloned_model = current_model->clone();
+                VortexObjectManager::active_models.push_back(cloned_model);
+
+                newly_cloned_models.push_back(cloned_model);
+
+                current_model->is_selected = false;
+            }
+
+            gui.m_selected_models.clear();
+
+            for (VortexModel * clone : newly_cloned_models)
+            {
+                clone->is_selected = true;
+                gui.m_selected_models.insert(clone);
+            }
+        }
+
+        if (VortexKeyboard::get_key("LEFTCONTROL") && VortexKeyboard::get_key_down("S"))
+        {
+            std::string project_name = std::string(gui.save_project_name);
+            VortexProject::take_snapshot(SnapshotState::SAVE, this, project_name);
         }
     }
 
@@ -274,8 +293,15 @@ void VortexApplication::draw_world_axis_gizmo()
     glEnable(GL_DEPTH_TEST);
 }
 
+// void glfw_error_callback(int error, const char* description)
+// {
+//     std::cerr << "[GLFW ERROR " << error << "]: " << description << std::endl;
+// }
+
 VortexApplication::VortexApplication(std::string window_name)
 {
+    // glfwSetErrorCallback(glfw_error_callback);
+
     if (!glfwInit())
     {
         VORTEX_ERROR("Failed to initialize GLFW");
@@ -308,6 +334,7 @@ VortexApplication::VortexApplication(std::string window_name)
     camera = editor_camera;
 
     glfwWindowHint(GLFW_VISIBLE, GLFW_FALSE);
+    glfwWindowHint(GLFW_STENCIL_BITS, 8);
 
     window = glfwCreateWindow(default_window_width, default_window_height, this->window_name.c_str(), nullptr, nullptr);
     if (window == nullptr)
@@ -373,6 +400,8 @@ VortexApplication::~VortexApplication()
     delete environment_grid;
     delete editor_camera;
 
+    if (post_processor) delete post_processor;
+
     VortexAssetManager::clean_up();
     VortexObjectManager::clean_up();
     VortexAudio::clean_up();
@@ -385,9 +414,6 @@ VortexApplication::~VortexApplication()
         game_code = nullptr;
     }
 
-    if (window) glfwDestroyWindow(window);
-    if (post_processor) delete post_processor;
-
     worldaxis_shader = nullptr;
     shadow_manager = nullptr;
     window = nullptr;
@@ -397,7 +423,9 @@ VortexApplication::~VortexApplication()
     skybox = nullptr;
     environment_grid = nullptr;
 
+    if (window) glfwDestroyWindow(window);
     glfwTerminate();
+
     VORTEX_INFO("[ENGINE] Successfully Closed Application!");
 }
 
@@ -545,7 +573,9 @@ void VortexApplication::run(std::function<void()> draw_callback)
         glViewport(0, 0, gui.scene_width, gui.scene_height);
         
         if (!skybox) glClearColor(0.1f, 0.1f, 0.15f, 1.0f);
-        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
+        glStencilMask(0xFF);
+        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
 
         if (skybox) skybox->draw(camera);
 

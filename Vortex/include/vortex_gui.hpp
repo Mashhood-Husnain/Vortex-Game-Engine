@@ -9,6 +9,7 @@
 #include <GLFW/glfw3.h>
 #include <glm/glm.hpp>
 #include <set>
+#include <map>
 #include <filesystem>
 #include <vector>
 #include <algorithm>
@@ -82,6 +83,12 @@ struct HUDElement
     bool is_visible = true;
 };
 
+struct FolderNode
+{
+    std::map<std::string, FolderNode> subfolders;
+    std::vector<VortexModel*> models;
+};
+
 class VortexGUI
 {
     VortexApplication *app;
@@ -126,9 +133,11 @@ class VortexGUI
 
     void setup_scene_fbo(int width, int height);
 public:
-    VortexModel *m_selected_model = nullptr;
+    std::set<VortexModel*> m_selected_models;
     ImGuizmo::OPERATION m_current_op = ImGuizmo::TRANSLATE;
     bool m_is_using_gizmo = false;
+
+    static std::vector<std::string> explicit_empty_folders;
 
     int scene_width = 1920;
     int scene_height = 1080;
