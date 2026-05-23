@@ -24,6 +24,16 @@ void VortexGUI::draw_editor_viewport(float deltaTime, VortexCamera* camera)
 
         if (!m_selected_models.empty())
         {
+            VortexModel *anchor = *m_selected_models.begin();
+
+            if (!anchor)
+            {
+                m_selected_models.clear();
+                ImGui::End();
+                ImGui::PopStyleVar();
+                return;
+            }
+
             if (m_current_op == 0) m_current_op = ImGuizmo::TRANSLATE;
 
             ImGuizmo::SetOrthographic(false);
@@ -42,8 +52,6 @@ void VortexGUI::draw_editor_viewport(float deltaTime, VortexCamera* camera)
 
             glm::mat4 view = camera->getViewMatrix();
             glm::mat4 projection = camera->getProjectionMatrix();
-
-            VortexModel *anchor = *m_selected_models.begin();
 
             glm::mat4 anchor_old_matrix = anchor->get_model_matrix();
             glm::mat4 gizmo_matrix = anchor_old_matrix;
@@ -66,6 +74,8 @@ void VortexGUI::draw_editor_viewport(float deltaTime, VortexCamera* camera)
 
                 for (VortexModel* model : m_selected_models)
                 {
+                    if (!model) continue;
+
                     glm::mat4 final_matrix;
                     
                     if (model == anchor) 

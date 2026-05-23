@@ -100,8 +100,6 @@ private:
     unsigned int world_axisVAO;
     unsigned int world_axisVBO;
 
-    VortexGUI gui;
-
     GameMemory game_memory;
     GameCode *game_code = nullptr;
 
@@ -143,8 +141,6 @@ public:
     VortexCamera *get_camera() const;
     VortexCamera *get_editor_camera() const;
     ShadowManager *get_shadow_manager() const;
-
-    VortexGUI &get_gui();
 
     void set_camera(VortexCamera *camera);
 

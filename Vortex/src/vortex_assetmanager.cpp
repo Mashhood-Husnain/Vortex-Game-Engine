@@ -263,6 +263,8 @@ SharedMesh* VortexAssetManager::get_mesh(const std::string &filepath)
 
 void VortexAssetManager::clean_up()
 {
+    VORTEX_INFO("[ASSET MANAGER] Releasing cached VRAM meshes and texture resources...");
+
     for (auto const& [path, mesh] : mesh_vault)
     {
         if (mesh->VAO != 0) glDeleteVertexArrays(1, &mesh->VAO);
@@ -280,5 +282,7 @@ void VortexAssetManager::clean_up()
         delete mesh;
     }
     mesh_vault.clear();
+    spawn_counts.clear();
 }
+
 

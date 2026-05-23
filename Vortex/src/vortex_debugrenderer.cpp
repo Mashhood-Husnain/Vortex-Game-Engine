@@ -80,6 +80,8 @@ void VortexDebugRenderer::update()
 
 void VortexDebugRenderer::clean_up()
 {
+    VORTEX_INFO("[DEBUG] Purging pipeline vertex buffers and clearing debug draw queues...");
+
     if (m_shader)
     {
         delete m_shader;

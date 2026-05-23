@@ -65,6 +65,8 @@ void VortexAudio::update()
 
 void VortexAudio::clean_up()
 {
+    VORTEX_INFO("[AUDIO] Closing hardware audio stream context and unloading sound buffers...");
+
     if (!initialized) return;
 
     for (ma_sound* sound : active_sounds) 

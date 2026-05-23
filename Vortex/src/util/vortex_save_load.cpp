@@ -3,9 +3,9 @@
 
 void VortexProject::save_project(Snapshot *snapshot)
 {
-    if (!std::filesystem::exists("saves"))
+    if (!std::filesystem::exists(SAVE_DIRECTORY))
     {
-        std::filesystem::create_directory("saves");
+        std::filesystem::create_directory(SAVE_DIRECTORY);
     }
 
     json save_data;
@@ -97,7 +97,7 @@ void VortexProject::save_project(Snapshot *snapshot)
         save_data["camera"]["pitch"] = snapshot->window->get_editor_camera()->get_pitch();
     }
 
-    std::string file_path = "saves/" + snapshot->project_name + ".vtx";
+    std::string file_path = SAVE_DIRECTORY + "/" + snapshot->project_name + ".vtx";
 
     std::string json_string = save_data.dump(4);
     VortexEncrypt::write_encrypted(file_path, json_string);
@@ -107,7 +107,7 @@ void VortexProject::save_project(Snapshot *snapshot)
 
 std::vector<std::string> VortexProject::search_save_files(const std::string &file_name)
 {
-    const std::string base_path = "saves/";
+    const std::string base_path = SAVE_DIRECTORY + "/";
 
     if (!file_name.empty())
     {
@@ -134,7 +134,7 @@ std::vector<std::string> VortexProject::search_save_files(const std::string &fil
 
 void VortexProject::load_project(Snapshot *snapshot)
 {
-    std::string file_path = "saves/" + snapshot->project_name + ".vtx";
+    std::string file_path = SAVE_DIRECTORY + "/" + snapshot->project_name + ".vtx";
     if (!std::filesystem::exists(file_path))
     {
         VORTEX_WARN("[PROJECT ERROR] Save file not found: ", file_path);
@@ -167,7 +167,7 @@ void VortexProject::load_project(Snapshot *snapshot)
 
     for (const auto &j_model : save_data["models"])
     {
-        VortexModel *new_model = new VortexModel(j_model["path"], snapshot->window);
+        VortexModel *new_model = new VortexModel(j_model["path"], snapshot->window, j_model["name"]);
 
         if (new_model->shared_data)
         {
@@ -292,7 +292,7 @@ void VortexProject::load_project(Snapshot *snapshot)
 
 bool VortexProject::check_save_state(Snapshot *snapshot)
 {
-    std::string filepath = "saves/" + snapshot->project_name + ".vtx"; 
+    std::string filepath = SAVE_DIRECTORY + "/" + snapshot->project_name + ".vtx"; 
 
     std::string decrypted_data = VortexEncrypt::read_decrypted(filepath);
 
@@ -316,7 +316,7 @@ bool VortexProject::check_save_state(Snapshot *snapshot)
     if (saved_data["models"].size() != snapshot->active_models.size()) return false;
 
     std::vector<std::string> live_empty_folders = snapshot->explicit_empty_folders;
-    std::vector<std::string> saved_empty_folders = {"Scene"}; // Default fallback
+    std::vector<std::string> saved_empty_folders = {"Scene"};
 
     if (saved_data.contains("empty_folders")) 
     {
@@ -435,7 +435,7 @@ bool VortexProject::check_save_state(Snapshot *snapshot)
 
 void VortexProject::take_snapshot(SnapshotState state, VortexApplication *window, std::string project_name)
 {
-    if (project_name.empty()) project_name = std::string(VortexGUI::save_project_name);
+    if (project_name.empty()) project_name = std::string(VortexGUI::m_new_project_name);
 
     Snapshot snapshot = {
         project_name,
@@ -449,4 +449,47 @@ void VortexProject::take_snapshot(SnapshotState state, VortexApplication *window
 
     if (state == SnapshotState::SAVE) VortexProject::save_project(&snapshot);
     else if (state == SnapshotState::LOAD) VortexProject::load_project(&snapshot);
+}
+
+void VortexProject::clean_playmode_backups()
+{
+    VORTEX_INFO("[PROJECT] Purging temporary playmode cache files from backup storage directory...");
+
+    std::string target_dir = SAVE_DIRECTORY;
+    std::string prefix = "temp_playmode_backup_";
+
+    VORTEX_INFO("[PROJECT] Scanning '" + SAVE_DIRECTORY + "/' for stale runtime playmode backups...");
+
+    if (!std::filesystem::exists(target_dir) || !std::filesystem::is_directory(target_dir))
+    {
+        return;
+    }
+
+    size_t deleted_count = 0;
+
+    try
+    {
+        for (const auto& entry : std::filesystem::directory_iterator(target_dir))
+        {
+            if (entry.is_regular_file())
+            {
+                std::string filename = entry.path().filename().string();
+
+                if (filename.rfind(prefix, 0) == 0)
+                {
+                    std::filesystem::remove(entry.path());
+                    deleted_count++;
+                }
+            }
+        }
+
+        if (deleted_count > 0)
+        {
+            VORTEX_INFO("[PROJECT] Successfully purged ", deleted_count, " temporary playmode backup files.");
+        }
+    }
+    catch (const std::filesystem::filesystem_error& e)
+    {
+        VORTEX_ERROR("[PROJECT ERROR] Failed to clear playmode backups: ", e.what());
+    }
 }

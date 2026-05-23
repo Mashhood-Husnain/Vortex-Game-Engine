@@ -45,6 +45,8 @@ void VortexObjectManager::init()
 
 void VortexObjectManager::clean_up()
 {
+    VORTEX_INFO("[OBJECT MANAGER] Destroying active scene entities and clearing simulation registry...");
+
     for (VortexModel* model : active_models) delete model;
     active_models.clear();
 
@@ -137,79 +139,100 @@ void VortexObjectManager::draw(VortexCamera &camera, bool show_wireframe)
         if (!model->is_active) continue;
 
         std::vector<glm::vec3> min_max = model->get_world_bounds_min_max();
+        glm::vec3 min_bound = min_max[0];
+        glm::vec3 max_bound = min_max[1];
 
-        if (!VortexPhysics::aabb_in_frustum(min_max[0], min_max[1], cam_frustum))
+        bool is_camera_inside = (camera_pos.x >= min_bound.x && camera_pos.x <= max_bound.x &&
+                                 camera_pos.y >= min_bound.y && camera_pos.y <= max_bound.y &&
+                                 camera_pos.z >= min_bound.z && camera_pos.z <= max_bound.z);
+
+        if (!is_camera_inside && !VortexPhysics::aabb_in_frustum(min_bound, max_bound, cam_frustum))
         {
-            continue;
+            model->is_visible = true;
+            continue; 
         }
 
-        glm::vec3 center = (min_max[0] + min_max[1]) * 0.5f;
-        glm::vec3 size = min_max[1] - min_max[0];
-        glm::mat4 box_model = glm::translate(glm::mat4(1.0f), center);
-        box_model = glm::scale(box_model, size);
+        GLuint available = 0;
+        glGetQueryObjectuiv(model->occlusion_query, GL_QUERY_RESULT_AVAILABLE, &available);
 
-        glColorMask(GL_FALSE, GL_FALSE, GL_FALSE, GL_FALSE);
-        glDepthMask(GL_FALSE);
-
-        depth_only_shader->use();
-        depth_only_shader->setMat4("view", camera.getViewMatrix());
-        depth_only_shader->setMat4("projection", camera.getProjectionMatrix());
-        depth_only_shader->setMat4("model", box_model);
-
-        glBeginQuery(GL_ANY_SAMPLES_PASSED, model->occlusion_query);
-        glBindVertexArray(occlusion_VAO);
-        glDrawArrays(GL_TRIANGLES, 0, 36);
-        glBindVertexArray(0);
-        glEndQuery(GL_ANY_SAMPLES_PASSED);
-
-        glColorMask(GL_TRUE, GL_TRUE, GL_TRUE, GL_TRUE);
-        glDepthMask(GL_TRUE);
-
-        GLuint passed = 0;
-        glGetQueryObjectuiv(model->occlusion_query, GL_QUERY_RESULT, &passed);
-
-        if (passed == 0) continue;
-
-        if(model->is_selected)
+        if (available)
         {
-            glEnable(GL_STENCIL_TEST);
-            glStencilOp(GL_KEEP, GL_KEEP, GL_REPLACE);
-            glStencilFunc(GL_ALWAYS, 1, 0xFF);
-            glStencilMask(0xFF);
+            GLuint passed = 0;
+            glGetQueryObjectuiv(model->occlusion_query, GL_QUERY_RESULT, &passed);
+            
+            model->is_visible = (passed > 0); 
         }
 
-        if (model->light)
+        if (model->is_visible || is_camera_inside)
         {
-            unlit_shader->use();
-            unlit_shader->setVec3("lightColor", model->light->color * model->light->intensity);
-            model->draw(*unlit_shader, camera, show_wireframe);
-        }
-        else
-        {
-            model->draw(*model_shader, camera, show_wireframe);
-        }
-
-        if (model->is_selected)
-        {
-            glStencilMask(0x00);
-            glDisable(GL_STENCIL_TEST);
-        }
-
-        if (model->show_collider)
-        {
-            glDisable(GL_CULL_FACE);
-
-            model->shared_data->collider.draw(*collider_shader, camera, model);
-
-            for (size_t i = 0; i < model->shared_data->objects.size(); i++)
+            if(model->is_selected)
             {
-                if (model->active_parts[i])
-                {
-                    model->shared_data->objects[i].collider.draw(*collider_shader, camera, model);
-                }
+                glEnable(GL_STENCIL_TEST);
+                glStencilOp(GL_KEEP, GL_KEEP, GL_REPLACE);
+                glStencilFunc(GL_ALWAYS, 1, 0xFF);
+                glStencilMask(0xFF);
             }
 
-            glEnable(GL_CULL_FACE);
+            if (model->light)
+            {
+                unlit_shader->use();
+                unlit_shader->setVec3("lightColor", model->light->color * model->light->intensity);
+                model->draw(*unlit_shader, camera, show_wireframe);
+            }
+            else
+            {
+                model->draw(*model_shader, camera, show_wireframe);
+            }
+
+            if (model->is_selected)
+            {
+                glStencilMask(0x00);
+                glDisable(GL_STENCIL_TEST);
+            }
+
+            if (model->show_collider)
+            {
+                glDisable(GL_CULL_FACE);
+
+                model->shared_data->collider.draw(*collider_shader, camera, model);
+
+                for (size_t i = 0; i < model->shared_data->objects.size(); i++)
+                {
+                    if (model->active_parts[i])
+                    {
+                        model->shared_data->objects[i].collider.draw(*collider_shader, camera, model);
+                    }
+                }
+
+                glEnable(GL_CULL_FACE);
+            }
+        }
+
+        if (!is_camera_inside)
+        {
+            glm::vec3 center = (min_bound + max_bound) * 0.5f;
+            glm::vec3 size = (max_bound - min_bound) * 1.02f;
+            glm::mat4 box_model = glm::translate(glm::mat4(1.0f), center);
+            box_model = glm::scale(box_model, size);
+
+            glColorMask(GL_FALSE, GL_FALSE, GL_FALSE, GL_FALSE);
+            glDepthMask(GL_FALSE);
+            glDepthFunc(GL_LEQUAL);
+
+            depth_only_shader->use();
+            depth_only_shader->setMat4("view", camera.getViewMatrix());
+            depth_only_shader->setMat4("projection", camera.getProjectionMatrix());
+            depth_only_shader->setMat4("model", box_model);
+
+            glBeginQuery(GL_ANY_SAMPLES_PASSED, model->occlusion_query);
+            glBindVertexArray(occlusion_VAO);
+            glDrawArrays(GL_TRIANGLES, 0, 36);
+            glBindVertexArray(0);
+            glEndQuery(GL_ANY_SAMPLES_PASSED);
+
+            glColorMask(GL_TRUE, GL_TRUE, GL_TRUE, GL_TRUE);
+            glDepthMask(GL_TRUE);
+            glDepthFunc(GL_LESS);
         }
     }
 
@@ -309,4 +332,23 @@ VortexModel* VortexObjectManager::get_object_by_tag(std::string tag)
 void VortexObjectManager::destroy_object(VortexModel *target_object)
 {
     target_object->should_destroy = true;
+}
+
+void VortexObjectManager::clear_scene()
+{
+    VORTEX_INFO("[OBJECT MANAGER] Wiping scene memory for context switch...");
+
+    for (VortexModel* model : active_models)
+    {
+        delete model;
+    }
+    active_models.clear();
+
+    for (ParticleSystem* ps : active_particlesystems)
+    {
+        delete ps;
+    }
+    active_particlesystems.clear();
+
+    VortexAssetManager::clean_up();
 }

@@ -12,7 +12,7 @@
 #include "vortex_application.hpp"
 #include "vortex_shaders.hpp"
 
-VortexModel::VortexModel(const std::string& path, VortexApplication *window)
+VortexModel::VortexModel(const std::string& path, VortexApplication *window, const std::string& loaded_name)
 {
     if (!window)
     {
@@ -24,9 +24,29 @@ VortexModel::VortexModel(const std::string& path, VortexApplication *window)
     file_path = path;
 
     std::string base_name = std::filesystem::path(path).stem().string();
-    int id = VortexAssetManager::spawn_counts[base_name]++;
+    if (loaded_name.empty())
+    {
+        int id = VortexAssetManager::spawn_counts[base_name]++;
+        model_name = base_name + "_" + std::to_string(id);
+    }
+    else
+    {
+        model_name = loaded_name;
 
-    model_name = base_name + "_" + std::to_string(id);
+        size_t last_underscore = model_name.find_last_of('_');
+        if (last_underscore != std::string::npos)
+        {
+            try
+            {
+                int parsed_id = std::stoi(model_name.substr(last_underscore + 1));
+                if (parsed_id >= VortexAssetManager::spawn_counts[base_name])
+                {
+                    VortexAssetManager::spawn_counts[base_name] = parsed_id + 1; 
+                }
+            }
+            catch (...) {}
+        }
+    }
 
     glGenQueries(1, &occlusion_query);
 

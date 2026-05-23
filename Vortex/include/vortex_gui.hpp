@@ -91,110 +91,106 @@ struct FolderNode
 
 class VortexGUI
 {
-    VortexApplication *app;
+    static VortexApplication *app;
 
-    std::set<VortexModel*> m_processed_models;
+    static std::set<VortexModel*> m_processed_models;
 
-    std::set<ParticleSystem*> m_processed_ps;
+    static std::set<ParticleSystem*> m_processed_ps;
 
-    std::vector<std::string> m_shader_files;
-    std::vector<std::string> m_display_names;
-    bool m_shaders_loaded = false;
+    static std::vector<std::string> m_shader_files;
+    static std::vector<std::string> m_display_names;
+    static bool m_shaders_loaded;
 
-    std::vector<std::vector<std::string>> m_skybox_files;
-    std::vector<std::string> m_skybox_display_names;
-    bool m_skybox_loaded = false;
+    static std::vector<std::vector<std::string>> m_skybox_files;
+    static std::vector<std::string> m_skybox_display_names;
+    static bool m_skybox_loaded;
 
     ImVec2 m_scene_pos = ImVec2(0, 0);
     ImVec2 m_scene_size = ImVec2(0, 0);
 
-    bool m_scene_was_collapsed = true;
-    bool m_creator_was_collapsed = true;
-    bool m_force_scene_collapse = true;
-    bool m_force_creator_collapse = true;
+    static std::vector<std::string> m_available_model_names;
+    static std::vector<std::string> m_available_model_paths;
+    static bool m_models_scanned;
 
-    std::vector<std::string> m_available_model_names;
-    std::vector<std::string> m_available_model_paths;
-    bool m_models_scanned = false;
+    static unsigned int scene_fbo;
+    static unsigned int scene_rbo;
+    static unsigned int scene_texture;
 
-    unsigned int scene_fbo = 0;
-    unsigned int scene_rbo = 0;
-    unsigned int scene_texture = 0;
+    static char m_project_to_delete[128];
 
-    char m_new_project_name[128] = "";
+    static void refresh_skybox_list();
+    static void gui_set_skybox();
 
-    void refresh_skybox_list();
-    void gui_set_skybox();
+    static void refresh_shader_list();
+    static void gui_set_post_processor();
 
-    void refresh_shader_list();
-    void gui_set_post_processor();
+    static void handle_picking(VortexCamera *camera, ImVec2 image_pos);
+    static void handle_shortcuts();
+    static void snap_to_floor();
 
-    void handle_picking(VortexCamera *camera, ImVec2 image_pos);
-    void handle_shortcuts();
-    void snap_to_floor();
-
-    void setup_scene_fbo(int width, int height);
+    static void setup_scene_fbo(int width, int height);
 public:
-    std::set<VortexModel*> m_selected_models;
-    ImGuizmo::OPERATION m_current_op = ImGuizmo::TRANSLATE;
-    bool m_is_using_gizmo = false;
+    static std::set<VortexModel*> m_selected_models;
+    static ImGuizmo::OPERATION m_current_op;
+    static bool m_is_using_gizmo;
 
     static std::vector<std::string> explicit_empty_folders;
 
-    int scene_width = 1920;
-    int scene_height = 1080;
+    static int scene_width;
+    static int scene_height;
 
-    int viewport_width = 1920;
-    int viewport_height = 1080;
+    static int viewport_width;
+    static int viewport_height;
 
-    static char save_project_name[128];
-
-    bool show_inspector = true;
-    bool show_camera_info = true;
-    bool show_creator_window = true;
-    bool show_engine_stats = true;
-    bool show_terminal = false;
-    bool show_skybox_post_process_options = true;    
+    static bool show_inspector;
+    static bool show_camera_info;
+    static bool show_creator_window;
+    static bool show_engine_stats;
+    static bool show_terminal;
+    static bool show_skybox_post_process_options;    
 
     static int m_selected_skybox_idx;
     static int m_selected_shader_idx;
 
-    std::string _vendor_;
-    std::string _renderer_;
+    static char m_new_project_name[128];
+
+    static std::string _vendor_;
+    static std::string _renderer_;
 
     VortexGUI();
-    ~VortexGUI();
 
-    void build_dockspace();
-    void draw_editor_viewport(float deltaTime, VortexCamera* camera);
-    void resize_scene_fbo(int width, int height);
-    void bind_framebuffer();
+    static void build_dockspace();
+    static void draw_editor_viewport(float deltaTime, VortexCamera* camera);
+    static void resize_scene_fbo(int width, int height);
+    static void bind_framebuffer();
 
-    void init(VortexApplication* app, int width, int height);
-    void update();
-    void render();
+    static void init(VortexApplication* app, int width, int height);
+    static void update();
+    static void render();
 
-    void scene_inspector();
-    void inspect_model(VortexModel *model);
-    void inspect_particle_system(ParticleSystem *ps);
-    void draw_model_info_panel(VortexModel* model, int flags);
-    void draw_model_components_panel(VortexModel* model, int flags);
-    void draw_model_transform_panel(VortexModel* model, int flags);
-    void draw_model_actions(VortexModel* model);
+    static void scene_inspector();
+    static void inspect_model(VortexModel *model);
+    static void inspect_particle_system(ParticleSystem *ps);
+    static void draw_model_info_panel(VortexModel* model, int flags);
+    static void draw_model_components_panel(VortexModel* model, int flags);
+    static void draw_model_transform_panel(VortexModel* model, int flags);
+    static void draw_model_actions(VortexModel* model);
 
-    void draw_main_menu_bar();
-    void draw_project_hub();
+    static void draw_main_menu_bar();
+    static void draw_project_hub();
 
-    void creator_window();
-    void camera_info(VortexCamera *camera);
+    static void creator_window();
+    static void camera_info(VortexCamera *camera);
 
-    void post_process_options();
-    void skybox_options();
+    static void post_process_options();
+    static void skybox_options();
 
-    void draw_exit_modal();
+    static void draw_exit_modal();
 
-    void engine_stats();
+    static void engine_stats();
 
-    void draw_terminal();
-    void draw_compiler_modal();
+    static void draw_terminal();
+    static void draw_compiler_modal();
+
+    static void clean_up();
 };

@@ -108,8 +108,8 @@ public:
     VortexRigidbody *rigidbody = nullptr;
     VortexLight *light = nullptr;
 
-    VortexApplication *app;
-    std::string model_name;
+    VortexApplication *app = nullptr;
+    std::string model_name = "";
 
     std::string folder = "Scene";
     
@@ -126,6 +126,8 @@ public:
 
     bool is_selected = false;
 
+    bool is_visible = true;
+
     GLuint occlusion_query;
 
     std::string file_path;
@@ -140,7 +142,7 @@ public:
 
     std::vector<bool> active_parts;
 
-    VortexModel(const std::string &model_path, VortexApplication *window);
+    VortexModel(const std::string& path, VortexApplication *window, const std::string& loaded_name = "");
     void draw(const VortexShader &shader, VortexCamera &camera, bool wireframe);
     std::vector<VortexModel_Object>& get_objects();
 

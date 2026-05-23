@@ -37,13 +37,15 @@ struct Snapshot
 };
 
 class VortexProject
-{    
+{
 public:
+    inline static const std::string SAVE_DIRECTORY = "saves";
     static std::vector<std::string> search_save_files(const std::string &file_name="");
     static void save_project(Snapshot *snapshot);
     static void load_project(Snapshot *snapshot);
     static bool check_save_state(Snapshot *snapshot);
     static void take_snapshot(SnapshotState state, VortexApplication *window, std::string project_name="");
+    static void clean_playmode_backups();
 };
 
 class VortexEncrypt

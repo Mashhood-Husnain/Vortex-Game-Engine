@@ -6,17 +6,62 @@
 #include <thread>
 #include <cstdlib>
 
+VortexApplication *VortexGUI::app = nullptr;
+
 int VortexGUI::m_selected_shader_idx = 0;
 int VortexGUI::m_selected_skybox_idx = 0;
-char VortexGUI::save_project_name[128] = "";
+
+char VortexGUI::m_new_project_name[128] = "";
+char VortexGUI::m_project_to_delete[128] = "";
+
+bool VortexGUI::show_inspector = true;
+bool VortexGUI::show_camera_info = true;
+bool VortexGUI::show_creator_window = true;
+bool VortexGUI::show_engine_stats = true;
+bool VortexGUI::show_terminal = false;
+bool VortexGUI::show_skybox_post_process_options = true;
+
+std::set<VortexModel*> VortexGUI::m_selected_models = {nullptr};
+
 std::vector<std::string> VortexGUI::explicit_empty_folders = {"Scene"};
+
+std::string VortexGUI::_vendor_ = "";
+std::string VortexGUI::_renderer_ = "";
+
+int VortexGUI::scene_width = 1920;
+int VortexGUI::scene_height = 1080;
+
+int VortexGUI::viewport_width = 1920;
+int VortexGUI::viewport_height = 1080;
+
+std::set<VortexModel*> VortexGUI::m_processed_models = {nullptr};
+std::set<ParticleSystem*> VortexGUI::m_processed_ps = {nullptr};
+
+std::vector<std::string> VortexGUI::m_available_model_names = {};
+std::vector<std::string> VortexGUI::m_available_model_paths = {};
+bool VortexGUI::m_models_scanned = false;
+
+unsigned int VortexGUI::scene_fbo = 0;
+unsigned int VortexGUI::scene_rbo = 0;
+unsigned int VortexGUI::scene_texture = 0;
+
+ImGuizmo::OPERATION VortexGUI::m_current_op = ImGuizmo::TRANSLATE;
+bool VortexGUI::m_is_using_gizmo = false;
+
+std::vector<std::string> VortexGUI::m_shader_files = {};
+std::vector<std::string> VortexGUI::m_display_names = {};
+bool VortexGUI::m_shaders_loaded = false;
+
+std::vector<std::vector<std::string>> VortexGUI::m_skybox_files = {{}};
+std::vector<std::string> VortexGUI::m_skybox_display_names = {};
+bool VortexGUI::m_skybox_loaded = false;
 
 VortexGUI::VortexGUI()
 {
     
 }
 
-void VortexGUI::init(VortexApplication *app, int width, int height)
+void VortexGUI::init(VortexApplication *_app, int width, int height)
 {
     IMGUI_CHECKVERSION();
     ImGui::CreateContext();
@@ -73,8 +118,7 @@ void VortexGUI::init(VortexApplication *app, int width, int height)
     colors[ImGuiCol_Separator]      = ImVec4(0.18f, 0.18f, 0.19f, 1.00f);
     colors[ImGuiCol_SeparatorHovered]=ImVec4(0.22f, 0.22f, 0.24f, 1.00f);
 
-    this->app = app;
-
+    app = _app;
     setup_scene_fbo(width, height);
 
     ImGui_ImplGlfw_InitForOpenGL(app->get_window_ptr(), true);
@@ -124,7 +168,7 @@ void VortexGUI::draw_exit_modal()
 
             ImGui::Text("Project Name:");
             ImGui::SetNextItemWidth(300.0f);
-            ImGui::InputText("##ProjectName", save_project_name, IM_ARRAYSIZE(save_project_name));
+            ImGui::InputText("##ProjectName", m_new_project_name, IM_ARRAYSIZE(m_new_project_name));
 
             ImGui::Spacing();
             ImGui::Spacing();
@@ -183,32 +227,43 @@ void VortexGUI::draw_exit_modal()
     ImGui::PopStyleColor();
 }
 
-VortexGUI::~VortexGUI()
+void VortexGUI::clean_up()
 {
-    glDeleteFramebuffers(1, &scene_fbo);
-    glDeleteTextures(1, &scene_texture);
-    glDeleteRenderbuffers(1, &scene_rbo);
+    VORTEX_INFO("[GUI] Cleaning up UI subsystem resources...");
 
-    ImGui_ImplOpenGL3_Shutdown();
-    ImGui_ImplGlfw_Shutdown();
-    ImGui::DestroyContext();
-
+    m_selected_models.clear();
     m_processed_models.clear();
     m_processed_ps.clear();
 
     m_shader_files.clear();
     m_display_names.clear();
-
-    for (std::vector<std::string> file : m_skybox_files)
-    {
-        file.clear();
-    }
     m_skybox_files.clear();
     m_skybox_display_names.clear();
-
     m_available_model_names.clear();
     m_available_model_paths.clear();
 
+    if (scene_texture != 0)
+    {
+        glDeleteTextures(1, &scene_texture);
+        scene_texture = 0;
+    }
+
+    if (scene_rbo != 0)
+    {
+        glDeleteRenderbuffers(1, &scene_rbo);
+        scene_rbo = 0;
+    }
+
+    if (scene_fbo != 0)
+    {
+        glDeleteFramebuffers(1, &scene_fbo);
+        scene_fbo = 0;
+    }
+
+    m_shaders_loaded = false;
+    m_skybox_loaded = false;
+    m_models_scanned = false;
+    m_is_using_gizmo = false;
+
     app = nullptr;
-    m_selected_models.clear();    
 }

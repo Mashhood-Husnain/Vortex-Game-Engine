@@ -4,6 +4,7 @@
 #include "vortex_shaders.hpp"
 #include "vortex_camera.hpp"
 #include "vortex_physics.hpp"
+#include "vortex_assetmanager.hpp"
 
 #include "util/vortex_global_vars.hpp"
 
@@ -36,6 +37,8 @@ public:
     static void update(float deltaTime);
     static void draw(VortexCamera &camera, bool show_wireframe);
     static void check_object_status();
+
+    static void clear_scene();
 
     static VortexModel* get_object_by_tag(std::string tag);
     static void destroy_object(VortexModel *target_object);
