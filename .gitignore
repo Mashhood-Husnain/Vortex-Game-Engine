@@ -11,6 +11,7 @@ saves/
 Vortex/Game/game_example/
 *.ideas
 .env
+TODO.md
 
 # --- 2. C++ Compilation Artifacts ---
 *.o
