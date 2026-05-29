@@ -112,6 +112,7 @@ void VortexGUI::draw_project_hub()
     
     bool found_valid_project = false;
     static bool show_overwrite_error = false;
+    bool selected_project = false;
 
     if (std::filesystem::exists(VortexProject::SAVE_DIRECTORY) && std::filesystem::is_directory(VortexProject::SAVE_DIRECTORY))
     {
@@ -144,7 +145,10 @@ void VortexGUI::draw_project_hub()
                     VortexGUI::explicit_empty_folders = {"Scene"};
 
                     VortexProject::take_snapshot(SnapshotState::LOAD, app, m_new_project_name);
+
                     app->set_state(EngineState::EDITOR);
+
+                    selected_project = true;
                 }
 
                 ImGui::SameLine(selectable_width + 8.0f);
@@ -209,7 +213,10 @@ void VortexGUI::draw_project_hub()
                 VortexGUI::explicit_empty_folders = {"Scene"};
 
                 VortexProject::take_snapshot(SnapshotState::SAVE, app, m_new_project_name);
+
                 app->set_state(EngineState::EDITOR);
+
+                selected_project = true;
             }
         }
     }
@@ -268,4 +275,20 @@ void VortexGUI::draw_project_hub()
     }
 
     ImGui::End();
+
+    if (selected_project)
+    {
+        const char *current_window_title = glfwGetWindowTitle(app->get_window_ptr());
+        std::string title_str = current_window_title;
+
+        size_t arrow_pos = title_str.find(" -> ");
+        if (arrow_pos != std::string::npos)
+        {
+            title_str = title_str.substr(0, arrow_pos);
+        }
+
+        std::string new_window_title = title_str + " -> " + m_new_project_name;
+        
+        glfwSetWindowTitle(app->get_window_ptr(), new_window_title.c_str());
+    }
 }
