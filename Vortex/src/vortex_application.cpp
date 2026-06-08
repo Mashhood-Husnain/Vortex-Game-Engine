@@ -10,7 +10,7 @@
 
 void VortexApplication::load_splash_screen()
 {
-    if (!enable_splash_screen) 
+    if (!enable_splash_screen)
     {
         is_playing_splash = false;
         return;
@@ -18,7 +18,7 @@ void VortexApplication::load_splash_screen()
 
     int channels;
     unsigned char* data = stbi_load("assets/branding/vortex_logo.png", &splash_width, &splash_height, &channels, 4);
-    
+
     if (!data)
     {
         VORTEX_ERROR("Splash screen logo not found!");
@@ -42,7 +42,7 @@ void VortexApplication::draw_splash_overlay(float dt)
     float total_duration = 4.5f;
     float fade_duration = 2.0f;
 
-    if (splash_timer >= total_duration) 
+    if (splash_timer >= total_duration)
     {
         is_playing_splash = false;
         glDeleteTextures(1, &splash_texture);
@@ -64,23 +64,23 @@ void VortexApplication::draw_splash_overlay(float dt)
 
     float scaleX = viewport->Size.x / (float)splash_width;
     float scaleY = viewport->Size.y / (float)splash_height;
-    float scale = std::max(scaleX, scaleY); 
-    
+    float scale = std::max(scaleX, scaleY);
+
     float display_width = splash_width * scale;
     float display_height = splash_height * scale;
 
     ImVec2 center = ImVec2(
-        viewport->Pos.x + (viewport->Size.x - display_width) * 0.5f, 
+        viewport->Pos.x + (viewport->Size.x - display_width) * 0.5f,
         viewport->Pos.y + (viewport->Size.y - display_height) * 0.5f
     );
-    
+
     ImU32 tint_color = IM_COL32(255, 255, 255, (int)(logo_alpha * 255.0f));
-    
+
     draw_list->AddImage(
-        (ImTextureID)(intptr_t)splash_texture, 
-        center, 
-        ImVec2(center.x + display_width, center.y + display_height), 
-        ImVec2(0.0f, 0.0f), ImVec2(1.0f, 1.0f), 
+        (ImTextureID)(intptr_t)splash_texture,
+        center,
+        ImVec2(center.x + display_width, center.y + display_height),
+        ImVec2(0.0f, 0.0f), ImVec2(1.0f, 1.0f),
         tint_color
     );
 }
@@ -106,10 +106,10 @@ GLFWmonitor* VortexApplication::get_current_monitor(GLFWwindow* window)
         mw = mode->width;
         mh = mode->height;
 
-        overlap = 
+        overlap =
             std::max(0, std::min(wx+ww, mx+mw) - std::max(wx, mx)) *
             std::max(0, std::min(wy+wh, my+mh) - std::max(wy, my));
-        
+
         if (bestoverlap < overlap)
         {
             bestoverlap = overlap;
@@ -245,9 +245,9 @@ void VortexApplication::check_key_press()
 
             VortexUIManager::cleanup();
 
-            VortexObjectManager::clear_scene(); 
+            VortexObjectManager::clear_scene();
             VortexGUI::m_selected_models.clear();
-            
+
             std::string project_name = VortexGUI::m_new_project_name;
             VortexProject::take_snapshot(SnapshotState::LOAD, this, "temp_playmode_backup_" + project_name);
         }
@@ -294,10 +294,10 @@ VortexApplication::VortexApplication(std::string window_name)
 
     default_window_width = static_cast<float>(work_width);
     default_window_height = static_cast<float>(work_height);
-    
+
     stored_window_width = default_window_width;
     stored_window_height = default_window_height;
-    
+
     stored_window_x_pos = static_cast<float>(work_x);
     stored_window_y_pos = static_cast<float>(work_y);
 
@@ -323,7 +323,7 @@ VortexApplication::VortexApplication(std::string window_name)
         glfwTerminate();
         exit(EXIT_FAILURE);
     }
-    
+
     glfwMakeContextCurrent(window);
     glfwSetWindowUserPointer(window, this);
     glfwSetFramebufferSizeCallback(window, framebuffer_size_callback);
@@ -419,7 +419,7 @@ void VortexApplication::change_window_size()
 
     if (is_fullscreen)
     {
-        if (glfwGetWindowMonitor(window) == nullptr) 
+        if (glfwGetWindowMonitor(window) == nullptr)
         {
             int x, y;
             glfwGetWindowPos(window, &x, &y);
@@ -429,7 +429,7 @@ void VortexApplication::change_window_size()
             int left, top, right, bottom;
             glfwGetWindowFrameSize(window, &left, &top, &right, &bottom);
 
-            stored_window_y_pos -= top; 
+            stored_window_y_pos -= top;
             stored_window_x_pos -= left;
         }
         glfwSetWindowMonitor(window, monitor, 0, 0, mode->width, mode->height, mode->refreshRate);
@@ -540,7 +540,7 @@ void VortexApplication::run(std::function<void()> draw_callback)
         {
             glBindFramebuffer(GL_FRAMEBUFFER, 0);
             glViewport(0, 0, static_cast<GLsizei>(default_window_width), static_cast<GLsizei>(default_window_height));
-            
+
             glClearColor(0.06f, 0.06f, 0.07f, 1.0f);
             glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
@@ -556,14 +556,14 @@ void VortexApplication::run(std::function<void()> draw_callback)
                 editor_camera->check_camera_movement(deltaTime);
             }
 
-            if (VortexGUI::scene_height > 0) 
+            if (VortexGUI::scene_height > 0)
             {
                 float target_aspect = VortexGUI::scene_width / VortexGUI::scene_height;
                 if (camera) camera->set_aspect_ratio(target_aspect);
                 if (editor_camera) editor_camera->set_aspect_ratio(target_aspect);
             }
 
-            if (VortexGUI::viewport_width > 0.0f && VortexGUI::viewport_height > 0.0f && 
+            if (VortexGUI::viewport_width > 0.0f && VortexGUI::viewport_height > 0.0f &&
             (VortexGUI::viewport_height != VortexGUI::scene_height || VortexGUI::viewport_width != VortexGUI::scene_width))
             {
                 VortexGUI::resize_scene_fbo(
@@ -587,7 +587,7 @@ void VortexApplication::run(std::function<void()> draw_callback)
             }
 
             glViewport(0, 0, static_cast<GLsizei>(VortexGUI::scene_width), static_cast<GLsizei>(VortexGUI::scene_height));
-            
+
             if (!skybox) glClearColor(0.1f, 0.1f, 0.15f, 1.0f);
 
             glStencilMask(0xFF);
@@ -622,13 +622,13 @@ void VortexApplication::run(std::function<void()> draw_callback)
 
             glBindFramebuffer(GL_FRAMEBUFFER, 0);
             glViewport(0, 0, static_cast<GLsizei>(default_window_width), static_cast<GLsizei>(default_window_height));
-            
+
             glClearColor(0.06f, 0.06f, 0.07f, 1.0f);
             glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
             glDisable(GL_DEPTH_TEST);
             glDisable(GL_CULL_FACE);
-            
+
             VortexGUI::build_dockspace();
             VortexGUI::draw_main_menu_bar();
             VortexGUI::engine_stats();
@@ -652,7 +652,7 @@ void VortexApplication::run(std::function<void()> draw_callback)
 
         glEnable(GL_DEPTH_TEST);
         glEnable(GL_CULL_FACE);
-        
+
         VortexKeyboard::update();
         VortexMouse::update();
         VortexAudio::update();
@@ -664,7 +664,7 @@ void VortexApplication::run(std::function<void()> draw_callback)
 void VortexApplication::set_post_processor(PostProcessor *post_processor)
 {
     if (this->post_processor) delete this->post_processor;
-    
+
     this->post_processor = post_processor;
     if (this->post_processor) this->post_processor->resize(static_cast<int>(VortexGUI::scene_width), static_cast<int>(VortexGUI::scene_height));
 }
@@ -730,7 +730,7 @@ void VortexApplication::check_for_hot_reload()
     #endif
 
     std::filesystem::copy_file(game_code_name, test_temp_path, std::filesystem::copy_options::overwrite_existing, ec);
-    
+
     int retries = 0;
     while (retries < 10)
     {
@@ -753,7 +753,7 @@ void VortexApplication::check_for_hot_reload()
         {
             delete script;
         }
-        model->behaviours.clear(); 
+        model->behaviours.clear();
     }
 
     ScriptRegistry::get().clear();
@@ -773,13 +773,13 @@ void VortexApplication::check_for_hot_reload()
             for (const std::string& script_name : model->script_names)
             {
                 VortexMonoBehaviour* fresh_script = ScriptRegistry::get().create(script_name);
-                
+
                 if (fresh_script)
                 {
                     fresh_script->vortexGameObject = model;
                     fresh_script->vortexEngine = this;
                     fresh_script->vortexTransform = &model->transform;
-                    
+
                     restored_behaviours.push_back(fresh_script);
                     restored_names.push_back(script_name);
                 }
@@ -788,7 +788,7 @@ void VortexApplication::check_for_hot_reload()
                     VORTEX_WARN("[ENGINE] Script '", script_name, "' is missing from the DLL. Removing from model.");
                 }
             }
-            
+
             model->behaviours = restored_behaviours;
             model->script_names = restored_names;
         }
@@ -815,7 +815,7 @@ void VortexApplication::enter_play_mode()
     VortexGUI::show_engine_stats = false;
     VortexGUI::show_terminal = false;
     VortexGUI::show_skybox_post_process_options = false;
-    
+
     for (VortexModel* model : VortexGUI::m_selected_models)
     {
         if (model) model->is_selected = false;
@@ -837,13 +837,13 @@ void VortexApplication::trigger_compile()
 
     CompilerState::progress.store(0.0f);
     CompilerState::is_compiling.store(true);
-    
+
     {
         std::lock_guard<std::mutex> lock(CompilerState::status_mutex);
         CompilerState::status_text = "Starting CMake Build...";
     }
 
-    std::thread([]() 
+    std::thread([]()
     {
         #ifdef _WIN32
             #define POPEN _popen
@@ -854,11 +854,11 @@ void VortexApplication::trigger_compile()
         #endif
 
         FILE* pipe = POPEN("make VortexGame 2>&1", "r");
-        
-        if (pipe) 
+
+        if (pipe)
         {
             char buffer[256];
-            while (fgets(buffer, sizeof(buffer), pipe) != nullptr) 
+            while (fgets(buffer, sizeof(buffer), pipe) != nullptr)
             {
                 std::string line = buffer;
                 if (!line.empty() && line.back() == '\n') line.pop_back();
@@ -870,7 +870,7 @@ void VortexApplication::trigger_compile()
 
                 size_t bracket_open = line.find('[');
                 size_t percent_sign = line.find('%');
-                
+
                 if (bracket_open != std::string::npos && percent_sign != std::string::npos && percent_sign > bracket_open)
                 {
                     std::string num_str = line.substr(bracket_open + 1, percent_sign - bracket_open - 1);
@@ -884,7 +884,7 @@ void VortexApplication::trigger_compile()
         }
 
         CompilerState::progress.store(1.0f);
-        
+
         {
             std::lock_guard<std::mutex> lock(CompilerState::status_mutex);
             CompilerState::status_text = "Build Complete! Triggering Hot Reload...";

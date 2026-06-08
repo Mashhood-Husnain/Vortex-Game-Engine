@@ -13,6 +13,7 @@ Vortex/Game/Scripts/*.cpp
 *.ideas
 .env
 TODO.md
+*.focus-config
 
 # --- 2. C++ Compilation Artifacts ---
 *.o
