@@ -61,14 +61,14 @@ private:
     GLFWwindow *window = nullptr;
     std::string window_name;
 
-    int default_window_width;
-    int default_window_height;
+    float default_window_width;
+    float default_window_height;
     bool is_fullscreen = false;
 
-    int stored_window_x_pos  = 0.0f;
-    int stored_window_y_pos  = 0.0f;
-    int stored_window_width  = 0.0f;
-    int stored_window_height = 0.0f;
+    float stored_window_x_pos  = 0;
+    float stored_window_y_pos  = 0;
+    float stored_window_width  = 0;
+    float stored_window_height = 0;
 
     float mouse_last_x = 0.0f;
     float mouse_last_y = 0.0f;
@@ -130,8 +130,8 @@ public:
 
     GLFWwindow* get_window_ptr() const;
     float get_delta_time() const;
-    int get_width() const;
-    int get_height() const;
+    float get_width() const;
+    float get_height() const;
 
     EngineState get_state() const;
     bool is_wireframe_enabled() const;

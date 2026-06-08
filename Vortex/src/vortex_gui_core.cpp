@@ -28,11 +28,11 @@ std::vector<std::string> VortexGUI::explicit_empty_folders = {"Scene"};
 std::string VortexGUI::_vendor_ = "";
 std::string VortexGUI::_renderer_ = "";
 
-int VortexGUI::scene_width = 1920;
-int VortexGUI::scene_height = 1080;
+float VortexGUI::scene_width = 1920.0f;
+float VortexGUI::scene_height = 1080.0f;
 
-int VortexGUI::viewport_width = 1920;
-int VortexGUI::viewport_height = 1080;
+float VortexGUI::viewport_width = 1920;
+float VortexGUI::viewport_height = 1080;
 
 std::set<VortexModel*> VortexGUI::m_processed_models = {nullptr};
 std::set<ParticleSystem*> VortexGUI::m_processed_ps = {nullptr};

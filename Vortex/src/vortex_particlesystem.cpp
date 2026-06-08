@@ -73,7 +73,7 @@ void ParticleSystem::update(float deltaTime)
 
             while(settings.spawn_timer >= spawn_interval)
             {
-                float angle = (rand() % 360) * (M_PI / 180.0f);
+                float angle = static_cast<float>(rand() % 360) * (static_cast<float>(M_PI) / 180.0f);
                 glm::vec3 velocity(cos(angle), 1.0f, sin(angle));
 
                 emit(

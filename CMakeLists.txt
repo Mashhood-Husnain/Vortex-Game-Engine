@@ -1,7 +1,7 @@
 cmake_minimum_required(VERSION 3.10)
 project(VortexEngine)
 
-set(CMAKE_CXX_STANDARD 17)
+set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_WINDOWS_EXPORT_ALL_SYMBOLS ON)
@@ -12,6 +12,7 @@ set(CMAKE_POSITION_INDEPENDENT_CODE ON)
 # ----------------------------
 if(MSVC)
     add_compile_definitions(_USE_MATH_DEFINES NOMINMAX WIN32_LEAN_AND_MEAN)
+    add_compile_options(/wd4005)
 endif()
 
 if(UNIX AND NOT APPLE)
@@ -175,11 +176,15 @@ target_link_libraries(engine
     miniaudio
     ImGuizmo
     Threads::Threads
-    m
-    rt
 )
 
 # OS-Specific Libraries
-if(UNIX AND NOT APPLE)
-    target_link_libraries(engine ${CMAKE_DL_LIBS} dl asound)
+if (UNIX AND NOT APPLE)
+    target_link_libraries(engine
+        m
+        rt
+        asound
+        dl
+        ${CMAKE_DL_LIBS}
+    )
 endif()

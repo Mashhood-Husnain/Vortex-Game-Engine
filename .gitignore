@@ -9,6 +9,7 @@ Thumbs.db
 *.user
 saves/
 Vortex/Game/game_example/
+Vortex/Game/Scripts/*.cpp
 *.ideas
 .env
 TODO.md

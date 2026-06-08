@@ -137,8 +137,7 @@ void VortexGUI::draw_project_hub()
 
                 if (ImGui::Selectable((project_name + "##" + project_name).c_str(), false, 0, ImVec2(selectable_width, 30)))
                 {
-                    strncpy(m_new_project_name, project_name.c_str(), sizeof(m_new_project_name) - 1);
-                    m_new_project_name[sizeof(m_new_project_name) - 1] = '\0';
+                    vortex_strncpy(m_new_project_name, sizeof(m_new_project_name), project_name.c_str());
 
                     VortexObjectManager::clear_scene();
                     VortexGUI::m_selected_models.clear();
@@ -159,8 +158,7 @@ void VortexGUI::draw_project_hub()
 
                 if (ImGui::Button(("X##del_" + project_name).c_str(), ImVec2(delete_btn_width, 30)))
                 {
-                    strncpy(m_project_to_delete, project_name.c_str(), sizeof(m_project_to_delete) - 1);
-                    m_project_to_delete[sizeof(m_project_to_delete) - 1] = '\0';
+                    vortex_strncpy(m_project_to_delete, sizeof(m_project_to_delete), project_name.c_str());
                     
                     open_delete_modal = true;
                 }

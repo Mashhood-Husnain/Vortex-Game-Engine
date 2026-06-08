@@ -23,6 +23,7 @@
 
 #include "util/vortex_engine_stats.hpp"
 #include "util/vortex_logs.hpp"
+#include "util/vortex_util.hpp"
 
 class VortexApplication;
 class VortexModel;
@@ -136,11 +137,11 @@ public:
 
     static std::vector<std::string> explicit_empty_folders;
 
-    static int scene_width;
-    static int scene_height;
+    static float scene_width;
+    static float scene_height;
 
-    static int viewport_width;
-    static int viewport_height;
+    static float viewport_width;
+    static float viewport_height;
 
     static bool show_inspector;
     static bool show_camera_info;

@@ -124,8 +124,8 @@ void VortexApplication::framebuffer_size_callback(GLFWwindow* window, int width,
     auto* app = static_cast<VortexApplication*>(glfwGetWindowUserPointer(window));
     if (app && width > 0 && height > 0)
     {
-        app->default_window_width = width;
-        app->default_window_height = height;
+        app->default_window_width = static_cast<float>(width);
+        app->default_window_height = static_cast<float>(height);
     }
 }
 
@@ -292,14 +292,14 @@ VortexApplication::VortexApplication(std::string window_name)
     int work_x, work_y, work_width, work_height;
     glfwGetMonitorWorkarea(primary_monitor, &work_x, &work_y, &work_width, &work_height);
 
-    default_window_width = work_width;
-    default_window_height = work_height;
+    default_window_width = static_cast<float>(work_width);
+    default_window_height = static_cast<float>(work_height);
     
     stored_window_width = default_window_width;
     stored_window_height = default_window_height;
     
-    stored_window_x_pos = work_x;
-    stored_window_y_pos = work_y;
+    stored_window_x_pos = static_cast<float>(work_x);
+    stored_window_y_pos = static_cast<float>(work_y);
 
     glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
     glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
@@ -316,7 +316,7 @@ VortexApplication::VortexApplication(std::string window_name)
     glfwWindowHint(GLFW_VISIBLE, GLFW_FALSE);
     glfwWindowHint(GLFW_STENCIL_BITS, 8);
 
-    window = glfwCreateWindow(default_window_width, default_window_height, this->window_name.c_str(), nullptr, nullptr);
+    window = glfwCreateWindow(static_cast<int>(default_window_width), static_cast<int>(default_window_height), this->window_name.c_str(), nullptr, nullptr);
     if (window == nullptr)
     {
         VORTEX_ERROR("Failed to create GLFW window");
@@ -421,7 +421,11 @@ void VortexApplication::change_window_size()
     {
         if (glfwGetWindowMonitor(window) == nullptr) 
         {
-            glfwGetWindowPos(window, &stored_window_x_pos, &stored_window_y_pos);
+            int x, y;
+            glfwGetWindowPos(window, &x, &y);
+            stored_window_width = static_cast<float>(x);
+            stored_window_height = static_cast<float>(y);
+
             int left, top, right, bottom;
             glfwGetWindowFrameSize(window, &left, &top, &right, &bottom);
 
@@ -432,13 +436,21 @@ void VortexApplication::change_window_size()
     }
     else
     {
-        glfwSetWindowMonitor(window, nullptr, stored_window_x_pos, stored_window_y_pos, stored_window_width, stored_window_height, 0);
+        glfwSetWindowMonitor(
+            window,
+            nullptr,
+            static_cast<int>(stored_window_x_pos),
+            static_cast<int>(stored_window_y_pos),
+            static_cast<int>(stored_window_width),
+            static_cast<int>(stored_window_height),
+            0
+        );
     }
 
     if (is_fullscreen)
     {
-        default_window_width  = mode->width;
-        default_window_height = mode->height;
+        default_window_width = static_cast<float>(mode->width);
+        default_window_height = static_cast<float>(mode->height);
     }
     else
     {
@@ -527,7 +539,7 @@ void VortexApplication::run(std::function<void()> draw_callback)
         if (current_state == EngineState::PROJECT_HUB)
         {
             glBindFramebuffer(GL_FRAMEBUFFER, 0);
-            glViewport(0, 0, default_window_width, default_window_height);
+            glViewport(0, 0, static_cast<GLsizei>(default_window_width), static_cast<GLsizei>(default_window_height));
             
             glClearColor(0.06f, 0.06f, 0.07f, 1.0f);
             glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
@@ -546,16 +558,23 @@ void VortexApplication::run(std::function<void()> draw_callback)
 
             if (VortexGUI::scene_height > 0) 
             {
-                float target_aspect = static_cast<float>(VortexGUI::scene_width) / static_cast<float>(VortexGUI::scene_height);
+                float target_aspect = VortexGUI::scene_width / VortexGUI::scene_height;
                 if (camera) camera->set_aspect_ratio(target_aspect);
                 if (editor_camera) editor_camera->set_aspect_ratio(target_aspect);
             }
 
-            if (VortexGUI::viewport_width > 0 && VortexGUI::viewport_height > 0 && 
+            if (VortexGUI::viewport_width > 0.0f && VortexGUI::viewport_height > 0.0f && 
             (VortexGUI::viewport_height != VortexGUI::scene_height || VortexGUI::viewport_width != VortexGUI::scene_width))
             {
-                VortexGUI::resize_scene_fbo(VortexGUI::viewport_width, VortexGUI::viewport_height);
-                if (post_processor) post_processor->resize(VortexGUI::scene_width, VortexGUI::scene_height);
+                VortexGUI::resize_scene_fbo(
+                    static_cast<int>(VortexGUI::viewport_width),
+                    static_cast<int>(VortexGUI::viewport_height)
+                );
+
+                if (post_processor) post_processor->resize(
+                    static_cast<int>(VortexGUI::scene_width),
+                    static_cast<int>(VortexGUI::scene_height)
+                );
             }
 
             if (post_processor)
@@ -567,7 +586,7 @@ void VortexApplication::run(std::function<void()> draw_callback)
                 VortexGUI::bind_framebuffer();
             }
 
-            glViewport(0, 0, VortexGUI::scene_width, VortexGUI::scene_height);
+            glViewport(0, 0, static_cast<GLsizei>(VortexGUI::scene_width), static_cast<GLsizei>(VortexGUI::scene_height));
             
             if (!skybox) glClearColor(0.1f, 0.1f, 0.15f, 1.0f);
 
@@ -594,7 +613,7 @@ void VortexApplication::run(std::function<void()> draw_callback)
             {
                 post_processor->end();
                 VortexGUI::bind_framebuffer();
-                glViewport(0, 0, VortexGUI::scene_width, VortexGUI::scene_height);
+                glViewport(0, 0, static_cast<GLsizei>(VortexGUI::scene_width), static_cast<GLsizei>(VortexGUI::scene_height));
                 glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
                 post_processor->draw(currentFrame);
             }
@@ -602,7 +621,7 @@ void VortexApplication::run(std::function<void()> draw_callback)
             VortexUIManager::render_ui();
 
             glBindFramebuffer(GL_FRAMEBUFFER, 0);
-            glViewport(0, 0, default_window_width, default_window_height);
+            glViewport(0, 0, static_cast<GLsizei>(default_window_width), static_cast<GLsizei>(default_window_height));
             
             glClearColor(0.06f, 0.06f, 0.07f, 1.0f);
             glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
@@ -647,7 +666,7 @@ void VortexApplication::set_post_processor(PostProcessor *post_processor)
     if (this->post_processor) delete this->post_processor;
     
     this->post_processor = post_processor;
-    if (this->post_processor) this->post_processor->resize(VortexGUI::scene_width, VortexGUI::scene_height);
+    if (this->post_processor) this->post_processor->resize(static_cast<int>(VortexGUI::scene_width), static_cast<int>(VortexGUI::scene_height));
 }
 
 void VortexApplication::set_skybox(VortexSkybox *skybox)
@@ -879,8 +898,8 @@ void VortexApplication::trigger_compile()
 
 GLFWwindow* VortexApplication::get_window_ptr() const { return window; }
 float VortexApplication::get_delta_time() const { return deltaTime; }
-int VortexApplication::get_width() const { return default_window_width; }
-int VortexApplication::get_height() const { return default_window_height; }
+float VortexApplication::get_width() const { return default_window_width; }
+float VortexApplication::get_height() const { return default_window_height; }
 
 EngineState VortexApplication::get_state() const { return current_state; }
 bool VortexApplication::is_wireframe_enabled() const { return show_wireframe; }

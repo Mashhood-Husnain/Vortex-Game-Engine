@@ -338,7 +338,7 @@ void VortexGUI::draw_model_components_panel(VortexModel* model, int flags)
                         {
                             std::string *str_ptr = (std::string*)var.data_ptr;
                             char buffer[256];
-                            strncpy(buffer, str_ptr->c_str(), sizeof(buffer));
+                            vortex_strncpy(buffer, sizeof(buffer), str_ptr->c_str());
                             if (ImGui::InputText(var.name.c_str(), buffer, IM_ARRAYSIZE(buffer))) *str_ptr = std::string(buffer);
                         }
                     }

@@ -68,7 +68,7 @@ void VortexDebugRenderer::render(VortexCamera* camera)
 
     glBufferSubData(GL_ARRAY_BUFFER, 0, m_line_vertices.size() * sizeof(DebugVertex), m_line_vertices.data());
 
-    glDrawArrays(GL_LINES, 0, m_line_vertices.size());
+    glDrawArrays(GL_LINES, 0, static_cast<GLsizei>(m_line_vertices.size()));
 
     glBindVertexArray(0);
 }

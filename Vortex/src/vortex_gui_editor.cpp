@@ -8,8 +8,8 @@ void VortexGUI::draw_editor_viewport(float deltaTime, VortexCamera* camera)
     ImGui::Begin("Scene View");
 
     ImVec2 viewportPanelSize = ImGui::GetContentRegionAvail();
-    viewport_width = static_cast<int>(viewportPanelSize.x);
-    viewport_height = static_cast<int>(viewportPanelSize.y);
+    viewport_width = viewportPanelSize.x;
+    viewport_height = viewportPanelSize.y;
 
     ImVec2 image_render_pos = ImGui::GetCursorScreenPos();
 

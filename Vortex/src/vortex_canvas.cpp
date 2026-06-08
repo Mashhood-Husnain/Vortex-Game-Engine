@@ -37,7 +37,7 @@ void VortexCanvas::draw()
         }
         else if (el.type == VortexCanvas_UIType::COUNTER)
         {
-            VortexHUD::Counter(el.text_data.c_str(), el.current_value, el.position, el.color);
+            VortexHUD::Counter(el.text_data.c_str(), static_cast<int>(el.current_value), el.position, el.color);
         }
     }
 

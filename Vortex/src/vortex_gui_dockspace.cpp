@@ -58,8 +58,8 @@ void VortexGUI::resize_scene_fbo(int width, int height)
 {
     if (width <= 0 || height <= 0) return;
     
-    scene_width = width;
-    scene_height = height;
+    scene_width = static_cast<float>(width);
+    scene_height = static_cast<float>(height);
 
     glBindFramebuffer(GL_FRAMEBUFFER, scene_fbo);
 
@@ -74,8 +74,8 @@ void VortexGUI::resize_scene_fbo(int width, int height)
 
 void VortexGUI::setup_scene_fbo(int width, int height)
 {
-    scene_width = width;
-    scene_height = height;
+    scene_width = static_cast<float>(width);
+    scene_height = static_cast<float>(height);
 
     glGenFramebuffers(1, &scene_fbo);
     glBindFramebuffer(GL_FRAMEBUFFER, scene_fbo);
