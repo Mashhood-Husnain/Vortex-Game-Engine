@@ -331,6 +331,20 @@ VortexApplication::VortexApplication(std::string window_name)
     glfwSetCursorPosCallback(window, mouse_callback);
     glfwSetWindowCloseCallback(window, window_close_callback);
 
+    if(glfwRawMouseMotionSupported())
+    {
+        glfwSetInputMode(window, GLFW_RAW_MOUSE_MOTION, GLFW_TRUE);
+        VORTEX_INFO("[INPUT] Hardware Raw Mouse Motion Enabled");
+    }
+
+    unsigned char pixels[16 * 16 * 4] = {0};
+    GLFWimage image = {
+        .width = 16,
+        .height = 16,
+        .pixels = pixels,
+    };
+    m_invisible_cursor = glfwCreateCursor(&image, 0, 0);
+
     if (!gladLoadGLLoader((GLADloadproc)glfwGetProcAddress))
     {
         VORTEX_ERROR("Failed to initialize GLAD");
@@ -683,11 +697,13 @@ void VortexApplication::show_mouse(bool status)
 
     if (show_mouse_cursor)
     {
+        glfwSetCursor(window, NULL);
         glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_NORMAL);
         io.ConfigFlags &= ~ImGuiConfigFlags_NoMouse;
     }
     else
     {
+        glfwSetCursor(window, m_invisible_cursor);
         glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
         io.ConfigFlags |= ImGuiConfigFlags_NoMouse;
     }

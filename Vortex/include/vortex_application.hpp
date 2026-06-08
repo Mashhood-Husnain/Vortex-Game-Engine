@@ -38,7 +38,6 @@
 #include "vortex_debugrenderer.hpp"
 
 #include "util/vortex_global_vars.hpp"
-#include "util/vortex_gpu_pre_init.hpp"
 #include "util/vortex_save_load.hpp"
 #include "util/vortex_logs.hpp"
 #include "util/vortex_game_api.hpp"
@@ -102,6 +101,8 @@ private:
 
     GameMemory game_memory;
     GameCode *game_code = nullptr;
+
+    GLFWcursor *m_invisible_cursor = nullptr;
 
     GLFWmonitor* get_current_monitor(GLFWwindow* window);
     static void framebuffer_size_callback(GLFWwindow* window, int width, int height);
