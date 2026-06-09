@@ -117,6 +117,10 @@ class VortexGUI
     static unsigned int scene_rbo;
     static unsigned int scene_texture;
 
+    static unsigned int render_scene_fbo;
+    static unsigned int render_scene_rbo;
+    static unsigned int render_scene_texture;
+
     static char m_project_to_delete[128];
 
     static void refresh_skybox_list();
@@ -130,7 +134,11 @@ class VortexGUI
     static void snap_to_floor();
 
     static void setup_scene_fbo(int width, int height);
+    static void destroy_scene();
+    static void destroy_render_scene();
 public:
+    static void setup_render_scene_fbo(int width, int height);
+
     static std::set<VortexModel*> m_selected_models;
     static ImGuizmo::OPERATION m_current_op;
     static bool m_is_using_gizmo;
@@ -139,16 +147,25 @@ public:
 
     static float scene_width;
     static float scene_height;
+    static float render_scene_width;
+    static float render_scene_height;
+
+    static bool scene_fbo_initialized;
+    static bool render_scene_fbo_initialized;
 
     static float viewport_width;
     static float viewport_height;
+    static float render_viewport_width;
+    static float render_viewport_height;
 
     static bool show_inspector;
     static bool show_camera_info;
     static bool show_creator_window;
     static bool show_engine_stats;
     static bool show_terminal;
-    static bool show_skybox_post_process_options;    
+    static bool show_skybox_post_process_options;
+    static bool draw_scene_viewport;
+    static bool show_render_scene_viewport;
 
     static int m_selected_skybox_idx;
     static int m_selected_shader_idx;
@@ -158,12 +175,18 @@ public:
     static std::string _vendor_;
     static std::string _renderer_;
 
+    static bool is_scene_view_visible;
+    static bool is_render_view_visible;
+
     VortexGUI();
 
     static void build_dockspace();
     static void draw_editor_viewport(float deltaTime, VortexCamera* camera);
+    static void draw_editor_render_viewport(float deltaTime, VortexCamera *camera);
     static void resize_scene_fbo(int width, int height);
+    static void resize_render_scene_fbo(int width, int height);
     static void bind_framebuffer();
+    static void bind_render_framebuffer();
 
     static void init(VortexApplication* app, int width, int height);
     static void update();
@@ -185,6 +208,7 @@ public:
 
     static void post_process_options();
     static void skybox_options();
+    static void sync_loaded_environment();
 
     static void draw_exit_modal();
 

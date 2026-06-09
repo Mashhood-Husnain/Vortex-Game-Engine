@@ -2,10 +2,46 @@
 #include "vortex_application.hpp"
 #include "vortex_physics.hpp"
 
+void VortexGUI::draw_editor_render_viewport(float deltaTime, VortexCamera *camera)
+{
+    if (!show_render_scene_viewport) return;
+
+    ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(0.0f, 0.0f));
+    if (app->get_state() == EngineState::PLAY)
+    {
+        ImGuiViewport* viewport = ImGui::GetMainViewport();
+        ImGui::SetNextWindowPos(viewport->WorkPos);
+        ImGui::SetNextWindowSize(viewport->WorkSize);
+        ImGui::SetNextWindowViewport(viewport->ID);
+
+        ImGuiWindowFlags window_flags = ImGuiWindowFlags_NoDocking | ImGuiWindowFlags_NoTitleBar |
+                                        ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoResize |
+                                        ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoBringToFrontOnFocus |
+                                        ImGuiWindowFlags_NoNavFocus;
+
+        is_render_view_visible = ImGui::Begin("Play Mode", nullptr, window_flags);
+    }
+    else
+    {
+        is_render_view_visible = ImGui::Begin("Render View");
+    }
+
+    ImVec2 viewportPanelSize = ImGui::GetContentRegionAvail();
+    render_viewport_width = viewportPanelSize.x;
+    render_viewport_height = viewportPanelSize.y;
+
+    ImGui::Image((void*)(intptr_t)render_scene_texture, ImVec2(render_viewport_width, render_viewport_height), ImVec2(0, 1), ImVec2(1, 0));
+
+    ImGui::End();
+    ImGui::PopStyleVar();
+}
+
 void VortexGUI::draw_editor_viewport(float deltaTime, VortexCamera* camera)
 {
+    if (!draw_scene_viewport) return;
+
     ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(0.0f, 0.0f));
-    ImGui::Begin("Scene View");
+    is_scene_view_visible = ImGui::Begin("Scene View");
 
     ImVec2 viewportPanelSize = ImGui::GetContentRegionAvail();
     viewport_width = viewportPanelSize.x;
@@ -64,12 +100,20 @@ void VortexGUI::draw_editor_viewport(float deltaTime, VortexCamera* camera)
 
             float* snap_pointer = VortexKeyboard::get_key("LEFTCONTROL") ? snap_values : nullptr;
 
-            ImGuizmo::Manipulate(glm::value_ptr(view), glm::value_ptr(projection), m_current_op, ImGuizmo::LOCAL, glm::value_ptr(gizmo_matrix), nullptr, snap_pointer);
+            ImGuizmo::Manipulate(
+                glm::value_ptr(view),
+                glm::value_ptr(projection),
+                m_current_op,
+                ImGuizmo::LOCAL,
+                glm::value_ptr(gizmo_matrix),
+                nullptr,
+                snap_pointer
+            );
 
             if (ImGuizmo::IsUsing())
             {
                 m_is_using_gizmo = true;
-                
+
                 glm::mat4 delta_matrix = gizmo_matrix * glm::inverse(anchor_old_matrix);
 
                 for (VortexModel* model : m_selected_models)
@@ -77,12 +121,12 @@ void VortexGUI::draw_editor_viewport(float deltaTime, VortexCamera* camera)
                     if (!model) continue;
 
                     glm::mat4 final_matrix;
-                    
-                    if (model == anchor) 
+
+                    if (model == anchor)
                     {
                         final_matrix = gizmo_matrix;
-                    } 
-                    else 
+                    }
+                    else
                     {
                         final_matrix = delta_matrix * model->get_model_matrix();
                     }
@@ -123,14 +167,14 @@ void VortexGUI::handle_picking(VortexCamera* camera, ImVec2 image_pos)
     if (ImGui::IsWindowHovered() && VortexMouse::get_button_down("LEFT") && !ImGuizmo::IsOver())
     {
         ImVec2 mousePos = ImGui::GetMousePos();
-        
+
         float mouseX = mousePos.x - image_pos.x;
         float mouseY = mousePos.y - image_pos.y;
 
         if (mouseX >= 0.0f && mouseX <= scene_width && mouseY >= 0.0f && mouseY <= scene_height)
         {
             float ndcX = (2.0f * mouseX) / scene_width - 1.0f;
-            float ndcY = 1.0f - (2.0f * mouseY) / scene_height; 
+            float ndcY = 1.0f - (2.0f * mouseY) / scene_height;
 
             glm::mat4 invProj = glm::inverse(camera->getProjectionMatrix());
             glm::mat4 invView = glm::inverse(camera->getViewMatrix());

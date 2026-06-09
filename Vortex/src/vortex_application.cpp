@@ -160,6 +160,7 @@ void VortexApplication::window_close_callback(GLFWwindow* window)
 void VortexApplication::check_key_press()
 {
     if (is_playing_splash) return;
+    if (current_state == EngineState::PROJECT_HUB) return;
 
     if (current_state == EngineState::EDITOR)
     {
@@ -227,34 +228,8 @@ void VortexApplication::check_key_press()
 
     if (VortexKeyboard::get_key_down("ESCAPE"))
     {
-        if (current_state == EngineState::PLAY)
-        {
-            VORTEX_INFO("[ENGINE] Exiting Play Mode...");
-
-            current_state = EngineState::EDITOR;
-            VortexGUI::show_inspector = true;
-            VortexGUI::show_camera_info = true;
-            VortexGUI::show_creator_window = true;
-            VortexGUI::show_engine_stats = true;
-            VortexGUI::show_terminal = true;
-            VortexGUI::show_skybox_post_process_options = true;
-
-            show_mouse(true);
-
-            camera = editor_camera;
-
-            VortexUIManager::cleanup();
-
-            VortexObjectManager::clear_scene();
-            VortexGUI::m_selected_models.clear();
-
-            std::string project_name = VortexGUI::m_new_project_name;
-            VortexProject::take_snapshot(SnapshotState::LOAD, this, "temp_playmode_backup_" + project_name);
-        }
-        else
-        {
-            request_exit();
-        }
+        if (current_state == EngineState::PLAY) exit_play_mode();
+        else request_exit();
     }
 }
 
@@ -312,11 +287,19 @@ VortexApplication::VortexApplication(std::string window_name)
     editor_camera = new VortexCamera(glm::vec3(15.0f, 2.0f, 1.0f));
     editor_camera->look_at(glm::vec3(0.0f, 2.0f, 0.0f));
     camera = editor_camera;
+    render_camera = editor_camera;
 
     glfwWindowHint(GLFW_VISIBLE, GLFW_FALSE);
     glfwWindowHint(GLFW_STENCIL_BITS, 8);
 
-    window = glfwCreateWindow(static_cast<int>(default_window_width), static_cast<int>(default_window_height), this->window_name.c_str(), nullptr, nullptr);
+    window = glfwCreateWindow(
+        static_cast<int>(default_window_width),
+        static_cast<int>(default_window_height),
+        this->window_name.c_str(),
+        nullptr,
+        nullptr
+    );
+
     if (window == nullptr)
     {
         VORTEX_ERROR("Failed to create GLFW window");
@@ -383,6 +366,12 @@ VortexApplication::VortexApplication(std::string window_name)
         this->camera->set_aspect_ratio(aspect_ratio);
     }
 
+    if (this->render_camera)
+    {
+        float aspect_ratio = static_cast<float>(start_width) / static_cast<float>(start_height);
+        this->render_camera->set_aspect_ratio(aspect_ratio);
+    }
+
     VortexGUI::init(this, start_width, start_height);
 }
 
@@ -415,6 +404,7 @@ VortexApplication::~VortexApplication()
     window = nullptr;
     camera = nullptr;
     editor_camera = nullptr;
+    render_camera = nullptr;
     post_processor = nullptr;
     skybox = nullptr;
     environment_grid = nullptr;
@@ -570,11 +560,9 @@ void VortexApplication::run(std::function<void()> draw_callback)
                 editor_camera->check_camera_movement(deltaTime);
             }
 
-            if (VortexGUI::scene_height > 0)
+            if (current_state == EngineState::PLAY)
             {
-                float target_aspect = VortexGUI::scene_width / VortexGUI::scene_height;
-                if (camera) camera->set_aspect_ratio(target_aspect);
-                if (editor_camera) editor_camera->set_aspect_ratio(target_aspect);
+                VortexObjectManager::update(deltaTime);
             }
 
             if (VortexGUI::viewport_width > 0.0f && VortexGUI::viewport_height > 0.0f &&
@@ -584,54 +572,90 @@ void VortexApplication::run(std::function<void()> draw_callback)
                     static_cast<int>(VortexGUI::viewport_width),
                     static_cast<int>(VortexGUI::viewport_height)
                 );
+            }
+
+            if (VortexGUI::render_viewport_width > 0.0f && VortexGUI::render_viewport_height > 0.0f &&
+            (VortexGUI::render_viewport_height != VortexGUI::render_scene_height || VortexGUI::render_viewport_width != VortexGUI::render_scene_width))
+            {
+                VortexGUI::resize_render_scene_fbo(
+                    static_cast<int>(VortexGUI::render_viewport_width),
+                    static_cast<int>(VortexGUI::render_viewport_height)
+                );
 
                 if (post_processor) post_processor->resize(
-                    static_cast<int>(VortexGUI::scene_width),
-                    static_cast<int>(VortexGUI::scene_height)
+                    static_cast<int>(VortexGUI::render_scene_width),
+                    static_cast<int>(VortexGUI::render_scene_height)
                 );
             }
 
-            if (post_processor)
-            {
-                post_processor->begin();
-            }
-            else
+            // First pass (Scene View)
+            if (VortexGUI::is_scene_view_visible && VortexGUI::draw_scene_viewport)
             {
                 VortexGUI::bind_framebuffer();
-            }
 
-            glViewport(0, 0, static_cast<GLsizei>(VortexGUI::scene_width), static_cast<GLsizei>(VortexGUI::scene_height));
-
-            if (!skybox) glClearColor(0.1f, 0.1f, 0.15f, 1.0f);
-
-            glStencilMask(0xFF);
-            glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
-
-            if (skybox) skybox->draw(camera);
-
-            if (current_state == EngineState::PLAY) VortexObjectManager::update(deltaTime);
-
-            draw_callback();
-
-            VortexObjectManager::draw(*camera, show_wireframe);
-            VortexObjectManager::check_object_status();
-
-            VortexDebugRenderer::get().render(camera);
-
-            if (current_state == EngineState::EDITOR)
-            {
-                environment_grid->draw(*camera);
-            }
-
-            if (post_processor)
-            {
-                post_processor->end();
-                VortexGUI::bind_framebuffer();
                 glViewport(0, 0, static_cast<GLsizei>(VortexGUI::scene_width), static_cast<GLsizei>(VortexGUI::scene_height));
-                glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-                post_processor->draw(currentFrame);
+
+                if (VortexGUI::scene_height > 0 && editor_camera)
+                {
+                    editor_camera->set_aspect_ratio(VortexGUI::scene_width / VortexGUI::scene_height);
+                }
+
+                if (!skybox) glClearColor(0.1f, 0.1f, 0.15f, 1.0f);
+
+                glStencilMask(0xFF);
+                glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
+
+                if (skybox) skybox->draw(editor_camera);
+                draw_callback();
+
+                VortexObjectManager::draw(*editor_camera, show_wireframe, false);
+                VortexObjectManager::check_object_status();
+
+                VortexDebugRenderer::get().render(editor_camera);
+
+                if (current_state == EngineState::EDITOR)
+                {
+                    environment_grid->draw(*editor_camera);
+                }
             }
 
+            // Second Pass (Render View)
+            if (VortexGUI::is_render_view_visible && VortexGUI::show_render_scene_viewport)
+            {
+                if (post_processor)
+                {
+                    post_processor->begin();
+                }
+                else
+                {
+                    VortexGUI::bind_render_framebuffer();
+                }
+
+                glViewport(0, 0, static_cast<GLsizei>(VortexGUI::render_scene_width), static_cast<GLsizei>(VortexGUI::render_scene_height));
+
+                if (VortexGUI::render_scene_height > 0 && camera)
+                {
+                    render_camera->set_aspect_ratio(VortexGUI::render_scene_width / VortexGUI::render_scene_height);
+                }
+
+                if (!skybox) glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
+                glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
+
+                if (skybox) skybox->draw(render_camera);
+
+                VortexObjectManager::draw(*render_camera, false, true);
+
+                if (post_processor)
+                {
+                    post_processor->end();
+                    VortexGUI::bind_render_framebuffer();
+                    glViewport(0, 0, static_cast<GLsizei>(VortexGUI::render_scene_width), static_cast<GLsizei>(VortexGUI::render_scene_height));
+                    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+                    post_processor->draw(currentFrame);
+                }
+            }
+
+            // Third pass (IMGUI View)
             VortexUIManager::render_ui();
 
             glBindFramebuffer(GL_FRAMEBUFFER, 0);
@@ -654,6 +678,8 @@ void VortexApplication::run(std::function<void()> draw_callback)
             VortexGUI::draw_terminal();
             VortexGUI::draw_compiler_modal();
             VortexGUI::draw_exit_modal();
+
+            VortexGUI::draw_editor_render_viewport(deltaTime, render_camera);
             VortexGUI::draw_editor_viewport(deltaTime, camera);
         }
 
@@ -680,7 +706,13 @@ void VortexApplication::set_post_processor(PostProcessor *post_processor)
     if (this->post_processor) delete this->post_processor;
 
     this->post_processor = post_processor;
-    if (this->post_processor) this->post_processor->resize(static_cast<int>(VortexGUI::scene_width), static_cast<int>(VortexGUI::scene_height));
+    if (this->post_processor)
+    {
+        this->post_processor->resize(
+            static_cast<int>(VortexGUI::render_scene_width),
+            static_cast<int>(VortexGUI::render_scene_height)
+        );
+    }
 }
 
 void VortexApplication::set_skybox(VortexSkybox *skybox)
@@ -831,6 +863,14 @@ void VortexApplication::enter_play_mode()
     VortexGUI::show_engine_stats = false;
     VortexGUI::show_terminal = false;
     VortexGUI::show_skybox_post_process_options = false;
+    VortexGUI::draw_scene_viewport = false;
+
+    VortexGUI::show_render_scene_viewport = true;
+    if (!VortexGUI::render_scene_fbo_initialized)
+    {
+        VortexGUI::setup_render_scene_fbo(VortexGUI::render_scene_width, VortexGUI::render_scene_height);
+        VortexGUI::render_scene_fbo_initialized = true;
+    }
 
     for (VortexModel* model : VortexGUI::m_selected_models)
     {
@@ -845,6 +885,32 @@ void VortexApplication::enter_play_mode()
             script->on_start();
         }
     }
+}
+
+void VortexApplication::exit_play_mode()
+{
+    VORTEX_INFO("[ENGINE] Exiting Play Mode...");
+
+    current_state = EngineState::EDITOR;
+    VortexGUI::show_inspector = true;
+    VortexGUI::show_camera_info = true;
+    VortexGUI::show_creator_window = true;
+    VortexGUI::show_engine_stats = true;
+    VortexGUI::show_terminal = true;
+    VortexGUI::show_skybox_post_process_options = true;
+    VortexGUI::draw_scene_viewport = true;
+
+    show_mouse(true);
+
+    camera = editor_camera;
+
+    VortexUIManager::cleanup();
+
+    VortexObjectManager::clear_scene();
+    VortexGUI::m_selected_models.clear();
+
+    std::string project_name = VortexGUI::m_new_project_name;
+    VortexProject::take_snapshot(SnapshotState::LOAD, this, "temp_playmode_backup_" + project_name);
 }
 
 void VortexApplication::trigger_compile()

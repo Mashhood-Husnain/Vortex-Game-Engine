@@ -41,7 +41,7 @@ namespace GLOBAL
         };
 
         inline constexpr float SKYBOX_VERTICES[] = {
-            // positions          
+            // positions
             -1.0f,  1.0f, -1.0f,
             -1.0f, -1.0f, -1.0f,
             1.0f, -1.0f, -1.0f,

@@ -22,8 +22,8 @@ void VortexProject::save_project(Snapshot *snapshot)
         j_model["position"] = {model->transform.position.x, model->transform.position.y, model->transform.position.z};
         j_model["orientation"] = {
             model->transform.orientation.w,
-            model->transform.orientation.x, 
-            model->transform.orientation.y, 
+            model->transform.orientation.x,
+            model->transform.orientation.y,
             model->transform.orientation.z
         };
         j_model["scale"] = {model->transform.scale.x, model->transform.scale.y, model->transform.scale.z};
@@ -204,7 +204,7 @@ void VortexProject::load_project(Snapshot *snapshot)
         {
             new_model->show_collider = j_model["show_collider"];
         }
-        
+
         if (j_model.contains("collider_scale"))
         {
             new_model->collider_scale = glm::vec3(j_model["collider_scale"][0], j_model["collider_scale"][1], j_model["collider_scale"][2]);
@@ -233,8 +233,8 @@ void VortexProject::load_project(Snapshot *snapshot)
         {
             new_model->rigidbody = new VortexRigidbody();
             new_model->rigidbody->vortexGameObject = new_model;
-            new_model->rigidbody->vortexTransform = &new_model->transform; 
-            
+            new_model->rigidbody->vortexTransform = &new_model->transform;
+
             new_model->rigidbody->deserialize(j_model["rigidbody"]);
         }
 
@@ -266,6 +266,8 @@ void VortexProject::load_project(Snapshot *snapshot)
     snapshot->m_selected_skybox_idx = save_data["m_selected_skybox_idx"];
     snapshot->m_selected_shader_idx = save_data["m_selected_shader_idx"];
 
+    VortexGUI::sync_loaded_environment();
+
     if (save_data.contains("camera") && snapshot->window->get_editor_camera())
     {
         VortexCamera * editor_cam = snapshot->window->get_editor_camera();
@@ -292,7 +294,7 @@ void VortexProject::load_project(Snapshot *snapshot)
 
 bool VortexProject::check_save_state(Snapshot *snapshot)
 {
-    std::string filepath = SAVE_DIRECTORY + "/" + snapshot->project_name + ".vtx"; 
+    std::string filepath = SAVE_DIRECTORY + "/" + snapshot->project_name + ".vtx";
 
     std::string decrypted_data = VortexEncrypt::read_decrypted(filepath);
 
@@ -318,14 +320,14 @@ bool VortexProject::check_save_state(Snapshot *snapshot)
     std::vector<std::string> live_empty_folders = snapshot->explicit_empty_folders;
     std::vector<std::string> saved_empty_folders = {"Scene"};
 
-    if (saved_data.contains("empty_folders")) 
+    if (saved_data.contains("empty_folders"))
     {
         saved_empty_folders = saved_data["empty_folders"].get<std::vector<std::string>>();
     }
-    
+
     if (live_empty_folders.size() != saved_empty_folders.size()) return false;
 
-    for (size_t i = 0; i < live_empty_folders.size(); i++) 
+    for (size_t i = 0; i < live_empty_folders.size(); i++)
     {
         if (live_empty_folders[i] != saved_empty_folders[i]) return false;
     }
@@ -343,7 +345,7 @@ bool VortexProject::check_save_state(Snapshot *snapshot)
 
         std::string live_folder = model->folder.empty() ? "Scene" : model->folder;
         std::string saved_folder = saved_model.contains("folder") ? saved_model["folder"] : "Scene";
-        
+
         if (live_folder != saved_folder) return false;
 
         if (!float_equals(saved_model["position"][0], model->transform.position.x) ||
@@ -360,7 +362,7 @@ bool VortexProject::check_save_state(Snapshot *snapshot)
             !float_equals(saved_model["orientation"][3], model->transform.orientation.z)) return false;
 
         if (saved_model.contains("show_collider") && saved_model["show_collider"] != model->show_collider) return false;
-        
+
         if (saved_model.contains("collider_scale"))
         {
             if (!float_equals(saved_model["collider_scale"][0], model->collider_scale.x) ||
@@ -376,7 +378,7 @@ bool VortexProject::check_save_state(Snapshot *snapshot)
         {
             json live_rb_data;
             model->rigidbody->serialize(live_rb_data);
-            
+
             if (saved_model["rigidbody"] != live_rb_data) return false;
         }
 
@@ -389,26 +391,26 @@ bool VortexProject::check_save_state(Snapshot *snapshot)
             json live_light_data;
             model->light->serialize(live_light_data);
             json& saved_light = saved_model["light"];
-            
+
             if (!float_equals(saved_light["color"][0], model->light->color.x) ||
                 !float_equals(saved_light["color"][1], model->light->color.y) ||
                 !float_equals(saved_light["color"][2], model->light->color.z)) return false;
-                
+
             if (!float_equals(saved_light["intensity"], model->light->intensity)) return false;
             if (!float_equals(saved_light["ambient_strength"], model->light->ambient_strength)) return false;
         }
 
         if (saved_model.contains("scripts") && saved_model["scripts"].size() != model->script_names.size()) return false;
-    
+
         if (saved_model.contains("script_data"))
         {
             for (size_t s = 0; s < model->script_names.size(); s++)
             {
                 std::string s_name = model->script_names[s];
-                
+
                 json live_script_data = json::object();
                 model->behaviours[s]->serialize(live_script_data);
-                
+
                 if (saved_model["script_data"].contains(s_name))
                 {
                     if (saved_model["script_data"][s_name] != live_script_data) return false;
@@ -430,7 +432,7 @@ bool VortexProject::check_save_state(Snapshot *snapshot)
         if (saved_ps["max_particles"] != ps->max_particles) return false;
     }
 
-    return true; 
+    return true;
 }
 
 void VortexProject::take_snapshot(SnapshotState state, VortexApplication *window, std::string project_name)

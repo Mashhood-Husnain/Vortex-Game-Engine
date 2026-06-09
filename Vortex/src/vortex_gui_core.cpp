@@ -20,6 +20,8 @@ bool VortexGUI::show_creator_window = true;
 bool VortexGUI::show_engine_stats = true;
 bool VortexGUI::show_terminal = false;
 bool VortexGUI::show_skybox_post_process_options = true;
+bool VortexGUI::draw_scene_viewport = true;
+bool VortexGUI::show_render_scene_viewport = false;
 
 std::set<VortexModel*> VortexGUI::m_selected_models = {nullptr};
 
@@ -30,9 +32,17 @@ std::string VortexGUI::_renderer_ = "";
 
 float VortexGUI::scene_width = 1920.0f;
 float VortexGUI::scene_height = 1080.0f;
+float VortexGUI::render_scene_width = 1920.0f;
+float VortexGUI::render_scene_height = 1080.0f;
 
 float VortexGUI::viewport_width = 1920;
 float VortexGUI::viewport_height = 1080;
+
+float VortexGUI::render_viewport_width = 1920;
+float VortexGUI::render_viewport_height = 1080;
+
+bool VortexGUI::scene_fbo_initialized = true;
+bool VortexGUI::render_scene_fbo_initialized = false;
 
 std::set<VortexModel*> VortexGUI::m_processed_models = {nullptr};
 std::set<ParticleSystem*> VortexGUI::m_processed_ps = {nullptr};
@@ -45,6 +55,10 @@ unsigned int VortexGUI::scene_fbo = 0;
 unsigned int VortexGUI::scene_rbo = 0;
 unsigned int VortexGUI::scene_texture = 0;
 
+unsigned int VortexGUI::render_scene_fbo = 0;
+unsigned int VortexGUI::render_scene_rbo = 0;
+unsigned int VortexGUI::render_scene_texture = 0;
+
 ImGuizmo::OPERATION VortexGUI::m_current_op = ImGuizmo::TRANSLATE;
 bool VortexGUI::m_is_using_gizmo = false;
 
@@ -56,9 +70,12 @@ std::vector<std::vector<std::string>> VortexGUI::m_skybox_files = {{}};
 std::vector<std::string> VortexGUI::m_skybox_display_names = {};
 bool VortexGUI::m_skybox_loaded = false;
 
+bool VortexGUI::is_scene_view_visible = true;
+bool VortexGUI::is_render_view_visible = false;
+
 VortexGUI::VortexGUI()
 {
-    
+
 }
 
 void VortexGUI::init(VortexApplication *_app, int width, int height)
@@ -76,13 +93,13 @@ void VortexGUI::init(VortexApplication *_app, int width, int height)
     style.FramePadding = ImVec2(6.0f, 4.0f);
     style.ItemSpacing = ImVec2(8.0f, 4.0f);
     style.ItemInnerSpacing = ImVec2(6.0f, 4.0f);
-    
+
     style.WindowRounding = 6.0f;
     style.FrameRounding = 4.0f;
     style.PopupRounding = 6.0f;
     style.ScrollbarRounding = 4.0f;
     style.GrabRounding = 4.0f;
-    
+
     style.WindowBorderSize = 0.0f;
     style.FrameBorderSize = 0.0f;
     style.PopupBorderSize = 1.0f;
@@ -93,28 +110,28 @@ void VortexGUI::init(VortexApplication *_app, int width, int height)
     colors[ImGuiCol_ChildBg]        = ImVec4(0.12f, 0.12f, 0.13f, 1.00f);
     colors[ImGuiCol_PopupBg]        = ImVec4(0.10f, 0.10f, 0.11f, 0.98f);
     colors[ImGuiCol_Border]         = ImVec4(0.18f, 0.18f, 0.19f, 1.00f);
-    
+
     colors[ImGuiCol_FrameBg]        = ImVec4(0.15f, 0.15f, 0.16f, 1.00f);
     colors[ImGuiCol_FrameBgHovered] = ImVec4(0.20f, 0.20f, 0.22f, 1.00f);
     colors[ImGuiCol_FrameBgActive]  = ImVec4(0.24f, 0.24f, 0.26f, 1.00f);
     colors[ImGuiCol_TitleBg]        = ImVec4(0.08f, 0.08f, 0.09f, 1.00f);
     colors[ImGuiCol_TitleBgActive]  = ImVec4(0.08f, 0.08f, 0.09f, 1.00f);
-    
-    colors[ImGuiCol_Header]         = ImVec4(0.20f, 0.20f, 0.22f, 0.00f); 
+
+    colors[ImGuiCol_Header]         = ImVec4(0.20f, 0.20f, 0.22f, 0.00f);
     colors[ImGuiCol_HeaderHovered]  = ImVec4(0.22f, 0.22f, 0.24f, 1.00f);
     colors[ImGuiCol_HeaderActive]   = ImVec4(0.25f, 0.25f, 0.27f, 1.00f);
-    
+
     colors[ImGuiCol_Button]         = ImVec4(0.18f, 0.18f, 0.19f, 1.00f);
     colors[ImGuiCol_ButtonHovered]  = ImVec4(0.24f, 0.24f, 0.26f, 1.00f);
     colors[ImGuiCol_ButtonActive]   = ImVec4(0.28f, 0.28f, 0.30f, 1.00f);
-    
+
     colors[ImGuiCol_CheckMark]      = ImVec4(0.60f, 0.60f, 0.62f, 1.00f);
     colors[ImGuiCol_SliderGrab]     = ImVec4(0.40f, 0.40f, 0.42f, 1.00f);
     colors[ImGuiCol_SliderGrabActive]= ImVec4(0.60f, 0.60f, 0.62f, 1.00f);
-    
+
     colors[ImGuiCol_Text]           = ImVec4(0.85f, 0.85f, 0.88f, 1.00f);
     colors[ImGuiCol_TextDisabled]   = ImVec4(0.45f, 0.45f, 0.48f, 1.00f);
-    
+
     colors[ImGuiCol_Separator]      = ImVec4(0.18f, 0.18f, 0.19f, 1.00f);
     colors[ImGuiCol_SeparatorHovered]=ImVec4(0.22f, 0.22f, 0.24f, 1.00f);
 
@@ -147,7 +164,7 @@ void VortexGUI::draw_exit_modal()
 
     ImGui::PushStyleColor(ImGuiCol_PopupBg, ImVec4(0.12f, 0.12f, 0.14f, 1.00f));
     ImGui::OpenPopup("Exit Vortex Engine");
-    
+
     app->show_mouse(true);
 
     ImVec2 center = ImGui::GetMainViewport()->GetCenter();
@@ -161,7 +178,7 @@ void VortexGUI::draw_exit_modal()
         {
             ImGui::TextColored(ImVec4(1.0f, 0.3f, 0.3f, 1.0f), "Warning: You have unsaved changes!");
             ImGui::Text("Are you sure you want to exit? Unsaved progress will be lost.");
-            
+
             ImGui::Spacing();
             ImGui::Separator();
             ImGui::Spacing();
@@ -180,17 +197,17 @@ void VortexGUI::draw_exit_modal()
                 ImGui::CloseCurrentPopup();
                 glfwSetWindowShouldClose(app->get_window_ptr(), GLFW_TRUE);
             }
-            
+
             ImGui::SameLine();
-            
+
             if (ImGui::Button("Exit Without Saving", ImVec2(160, 30)))
             {
                 ImGui::CloseCurrentPopup();
                 glfwSetWindowShouldClose(app->get_window_ptr(), GLFW_TRUE);
             }
-            
+
             ImGui::SameLine();
-            
+
             if (ImGui::Button("Cancel", ImVec2(100, 30)))
             {
                 ImGui::CloseCurrentPopup();
@@ -201,7 +218,7 @@ void VortexGUI::draw_exit_modal()
         {
             ImGui::Text("Project is saved.");
             ImGui::Text("Are you sure you want to exit Vortex Engine?");
-            
+
             ImGui::Spacing();
             ImGui::Separator();
             ImGui::Spacing();
@@ -211,16 +228,16 @@ void VortexGUI::draw_exit_modal()
                 ImGui::CloseCurrentPopup();
                 glfwSetWindowShouldClose(app->get_window_ptr(), GLFW_TRUE);
             }
-            
+
             ImGui::SameLine();
-            
+
             if (ImGui::Button("Cancel", ImVec2(120, 30)))
             {
                 ImGui::CloseCurrentPopup();
                 app->toggle_exit_modal(false);
             }
         }
-        
+
         ImGui::Spacing();
         ImGui::EndPopup();
     }
@@ -248,16 +265,34 @@ void VortexGUI::clean_up()
         scene_texture = 0;
     }
 
+    if (render_scene_texture != 0)
+    {
+        glDeleteTextures(1, &render_scene_texture);
+        render_scene_texture = 0;
+    }
+
     if (scene_rbo != 0)
     {
         glDeleteRenderbuffers(1, &scene_rbo);
         scene_rbo = 0;
     }
 
+    if (render_scene_rbo != 0)
+    {
+        glDeleteRenderbuffers(1, &render_scene_rbo);
+        render_scene_rbo = 0;
+    }
+
     if (scene_fbo != 0)
     {
-        glDeleteFramebuffers(1, &scene_fbo);
+        glDeleteRenderbuffers(1, &scene_rbo);
         scene_fbo = 0;
+    }
+
+    if (render_scene_fbo != 0)
+    {
+        glDeleteFramebuffers(1, &render_scene_fbo);
+        render_scene_fbo = 0;
     }
 
     m_shaders_loaded = false;

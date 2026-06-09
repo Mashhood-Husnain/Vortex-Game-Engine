@@ -112,7 +112,7 @@ public:
     std::string model_name = "";
 
     std::string folder = "Scene";
-    
+
     Transform transform = {
         .position = glm::vec3(0.0f),
         .orientation = glm::quat(1.0f, 0.0f, 0.0f, 0.0f),
@@ -143,7 +143,7 @@ public:
     std::vector<bool> active_parts;
 
     VortexModel(const std::string& path, VortexApplication *window, const std::string& loaded_name = "");
-    void draw(const VortexShader &shader, VortexCamera &camera, bool wireframe);
+    void draw(const VortexShader &shader, VortexCamera &camera, bool wireframe, bool use_scene_lights = true);
     std::vector<VortexModel_Object>& get_objects();
 
     void add_behaviour(const std::string &script_name, VortexMonoBehaviour *script);
@@ -157,7 +157,7 @@ public:
     glm::vec3 get_world_bounds_min();
     glm::vec3 get_world_bounds_max();
     std::vector<glm::vec3> get_world_bounds_min_max();
-    
+
     ~VortexModel();
 
     VortexMonoBehaviour* get_behaviour(const std::string& script_name);

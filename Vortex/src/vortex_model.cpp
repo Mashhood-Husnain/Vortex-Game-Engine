@@ -41,7 +41,7 @@ VortexModel::VortexModel(const std::string& path, VortexApplication *window, con
                 int parsed_id = std::stoi(model_name.substr(last_underscore + 1));
                 if (parsed_id >= VortexAssetManager::spawn_counts[base_name])
                 {
-                    VortexAssetManager::spawn_counts[base_name] = parsed_id + 1; 
+                    VortexAssetManager::spawn_counts[base_name] = parsed_id + 1;
                 }
             }
             catch (...) {}
@@ -59,10 +59,10 @@ VortexModel::VortexModel(const std::string& path, VortexApplication *window, con
 
 glm::mat4 VortexModel::get_model_matrix()
 {
-    if (transform.position != m_last_pos || 
-        transform.orientation != m_last_rot || 
-        transform.scale    != m_last_scale || 
-        m_is_dirty) 
+    if (transform.position != m_last_pos ||
+        transform.orientation != m_last_rot ||
+        transform.scale    != m_last_scale ||
+        m_is_dirty)
     {
         m_cached_matrix = glm::mat4(1.0f);
         m_cached_matrix = glm::translate(m_cached_matrix, transform.position);
@@ -74,7 +74,7 @@ glm::mat4 VortexModel::get_model_matrix()
         m_last_pos   = transform.position;
         m_last_rot   = transform.orientation;
         m_last_scale = transform.scale;
-        
+
         m_is_dirty = false;
     }
 
@@ -86,7 +86,7 @@ void VortexModel::set_model_matrix(glm::mat4 matrix)
     model_matrix = matrix;
 }
 
-void VortexModel::draw(const VortexShader &shader, VortexCamera &camera, bool wireframe)
+void VortexModel::draw(const VortexShader &shader, VortexCamera &camera, bool wireframe, bool use_scene_lights)
 {
     const VortexShader *active_shader = &shader;
 
@@ -115,22 +115,26 @@ void VortexModel::draw(const VortexShader &shader, VortexCamera &camera, bool wi
         glm::vec3 l_colors[MAX_LIGHTS];
         float l_ambients[MAX_LIGHTS];
 
-        for (VortexModel *scene_model : VortexObjectManager::active_models)
+        if (use_scene_lights)
         {
-            if (scene_model->is_active && scene_model->light)
+            for (VortexModel *scene_model : VortexObjectManager::active_models)
             {
-                l_positions[light_count] = scene_model->transform.position;
-                l_colors[light_count] = scene_model->light->color * scene_model->light->intensity;
-                l_ambients[light_count] = scene_model->light->ambient_strength;
+                if (scene_model->is_active && scene_model->light)
+                {
+                    l_positions[light_count] = scene_model->transform.position;
+                    l_colors[light_count] = scene_model->light->color * scene_model->light->intensity;
+                    l_ambients[light_count] = scene_model->light->ambient_strength;
 
-                light_count++;
-                if (light_count >= MAX_LIGHTS) break;
+                    light_count++;
+                    if (light_count >= MAX_LIGHTS) break;
+                }
             }
         }
 
         if (app->get_state() == EngineState::EDITOR && light_count == 0)
         {
-            l_positions[0] = camera.get_position();
+            l_positions[0] = glm::vec3(10.0f, 50.0f, 20.0f);
+
             l_colors[0] = glm::vec3(1.0f);
             l_ambients[0] = 0.5f;
 
@@ -203,7 +207,7 @@ void VortexModel::draw(const VortexShader &shader, VortexCamera &camera, bool wi
         if (obj.vertex_count == 0) continue;
 
         glm::mat4 local_model_matrix = glm::translate(base_matrix, obj.transform.position);
-        local_model_matrix *= glm::mat4_cast(obj.transform.orientation);        
+        local_model_matrix *= glm::mat4_cast(obj.transform.orientation);
         local_model_matrix = glm::scale(local_model_matrix, obj.transform.scale);
 
         active_shader->setMat4("model", local_model_matrix);
@@ -270,7 +274,7 @@ void align_on_top(VortexModel& top_obj, const VortexModel& bottom_obj)
 {
     float bottom_surface = bottom_obj.transform.position.y + (bottom_obj.shared_data->model_height * bottom_obj.transform.scale.y / 2.0f);
     float top_half_height = (top_obj.shared_data->model_height * top_obj.transform.scale.y) / 2.0f;
-    
+
     top_obj.transform.position.y = bottom_surface + top_half_height;
 }
 
@@ -341,7 +345,7 @@ glm::vec3 VortexModel::get_world_bounds_max()
     };
 
     glm::vec3 world_max = glm::vec3(-1e10f);
-    
+
     for (int i = 0; i < 8; ++i)
     {
         glm::vec3 transformed = glm::vec3(model_matrix * glm::vec4(corners[i], 1.0f));

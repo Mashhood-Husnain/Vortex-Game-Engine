@@ -90,6 +90,7 @@ private:
 
     VortexCamera *camera = nullptr;
     VortexCamera *editor_camera = nullptr;
+    VortexCamera *render_camera = nullptr;
     PostProcessor *post_processor = nullptr;
     VortexSkybox *skybox = nullptr;
     VortexGrid *environment_grid = nullptr;
@@ -127,6 +128,7 @@ public:
     void request_exit();
 
     void enter_play_mode();
+    void exit_play_mode();
     void trigger_compile();
 
     GLFWwindow* get_window_ptr() const;

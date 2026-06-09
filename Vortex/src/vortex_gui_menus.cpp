@@ -18,7 +18,7 @@ void VortexGUI::draw_main_menu_bar()
 
                 app->set_state(EngineState::PROJECT_HUB);
             }
-            
+
             if (ImGui::MenuItem("Open Project", "Ctrl+O"))
             {
                 if (strlen(m_new_project_name) > 0)
@@ -63,7 +63,7 @@ void VortexGUI::draw_main_menu_bar()
             {
                 app->enter_play_mode();
             }
-            
+
             if (ImGui::MenuItem("Compile", "Ctrl+C"))
             {
                 app->trigger_compile();
@@ -79,6 +79,31 @@ void VortexGUI::draw_main_menu_bar()
             ImGui::MenuItem("Engine Stats", NULL, &show_engine_stats);
             ImGui::MenuItem("Terminal Output", NULL, &show_terminal);
             ImGui::MenuItem("Skybox/Post-Process", NULL, &show_skybox_post_process_options);
+
+            ImGui::MenuItem("Scene View", NULL, &draw_scene_viewport);
+            if (draw_scene_viewport && !scene_fbo_initialized)
+            {
+                setup_scene_fbo(scene_width, scene_height);
+                scene_fbo_initialized = true;
+            }
+            else if (!draw_scene_viewport && scene_fbo_initialized)
+            {
+                destroy_scene();
+                scene_fbo_initialized = false;
+            }
+
+            ImGui::MenuItem("Render View", NULL, &show_render_scene_viewport);
+            if (show_render_scene_viewport && !render_scene_fbo_initialized)
+            {
+                setup_render_scene_fbo(render_scene_width, render_scene_height);
+                render_scene_fbo_initialized = true;
+            }
+            else if (!show_render_scene_viewport && render_scene_fbo_initialized)
+            {
+                destroy_render_scene();
+                render_scene_fbo_initialized = false;
+            }
+
             ImGui::EndMenu();
         }
 
@@ -109,7 +134,7 @@ void VortexGUI::draw_project_hub()
     ImGui::Spacing();
 
     ImGui::BeginChild("ProjectList", ImVec2(0, -ImGui::GetFrameHeightWithSpacing()), true);
-    
+
     bool found_valid_project = false;
     static bool show_overwrite_error = false;
     bool selected_project = false;
@@ -128,7 +153,7 @@ void VortexGUI::draw_project_hub()
                 }
 
                 found_valid_project = true;
-                
+
                 ImGui::PushStyleVar(ImGuiStyleVar_ItemSpacing, ImVec2(0, 8));
 
                 float available_width = ImGui::GetContentRegionAvail().x;
@@ -159,7 +184,7 @@ void VortexGUI::draw_project_hub()
                 if (ImGui::Button(("X##del_" + project_name).c_str(), ImVec2(delete_btn_width, 30)))
                 {
                     vortex_strncpy(m_project_to_delete, sizeof(m_project_to_delete), project_name.c_str());
-                    
+
                     open_delete_modal = true;
                 }
 
@@ -168,7 +193,7 @@ void VortexGUI::draw_project_hub()
             }
         }
     }
-    
+
     if (!found_valid_project)
     {
         ImGui::TextDisabled("No existing projects found.");
@@ -184,14 +209,14 @@ void VortexGUI::draw_project_hub()
     ImGui::TextDisabled("Project Name");
     ImGui::SetNextItemWidth(-FLT_MIN);
     ImGui::InputText("##NewProjectName", m_new_project_name, IM_ARRAYSIZE(m_new_project_name));
-    
+
     ImGui::Spacing();
     ImGui::Spacing();
 
     ImGui::PushStyleColor(ImGuiCol_Button, ImVec4(0.2f, 0.6f, 0.3f, 1.0f));
     ImGui::PushStyleColor(ImGuiCol_ButtonHovered, ImVec4(0.3f, 0.7f, 0.4f, 1.0f));
     ImGui::PushStyleColor(ImGuiCol_ButtonActive, ImVec4(0.2f, 0.5f, 0.2f, 1.0f));
-    
+
     if (ImGui::Button("Create Project", ImVec2(-FLT_MIN, 40)))
     {
         if (strlen(m_new_project_name) > 0)
@@ -205,7 +230,7 @@ void VortexGUI::draw_project_hub()
             else
             {
                 show_overwrite_error = false;
-                
+
                 VortexObjectManager::clear_scene();
                 VortexGUI::m_selected_models.clear();
                 VortexGUI::explicit_empty_folders = {"Scene"};
@@ -238,14 +263,14 @@ void VortexGUI::draw_project_hub()
     {
         ImGui::Text("Are you sure you want to delete '%s'?", m_project_to_delete);
         ImGui::TextColored(ImVec4(1.0f, 0.4f, 0.4f, 1.0f), "This action cannot be undone!");
-        
+
         ImGui::Separator();
         ImGui::Spacing();
 
         if (ImGui::Button("Yes, Delete", ImVec2(120, 0)))
         {
             std::string path_to_delete = VortexProject::SAVE_DIRECTORY + "/" + std::string(m_project_to_delete) + ".vtx";
-            
+
             try
             {
                 std::filesystem::remove(path_to_delete);
@@ -262,7 +287,7 @@ void VortexGUI::draw_project_hub()
 
         ImGui::SetItemDefaultFocus();
         ImGui::SameLine();
-        
+
         if (ImGui::Button("Cancel", ImVec2(120, 0)))
         {
             memset(m_project_to_delete, 0, sizeof(m_project_to_delete));
@@ -286,7 +311,7 @@ void VortexGUI::draw_project_hub()
         }
 
         std::string new_window_title = title_str + " -> " + m_new_project_name;
-        
+
         glfwSetWindowTitle(app->get_window_ptr(), new_window_title.c_str());
     }
 }

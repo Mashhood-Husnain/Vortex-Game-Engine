@@ -54,11 +54,11 @@ void VortexObjectManager::clean_up()
     pending_models.clear();
 
     for (ParticleSystem* ps : active_particlesystems) delete ps;
-    active_particlesystems.clear(); 
-    
+    active_particlesystems.clear();
+
     delete model_shader;
     model_shader = nullptr;
-    
+
     delete collider_shader;
     collider_shader = nullptr;
 
@@ -88,13 +88,13 @@ void VortexObjectManager::update(float deltaTime)
         for (VortexModel* new_model : pending_models)
         {
             active_models.push_back(new_model);
-            
+
             for (VortexMonoBehaviour* script : new_model->behaviours)
             {
                 script->on_start();
             }
         }
-        pending_models.clear(); 
+        pending_models.clear();
     }
 
     for (ParticleSystem *ps : active_particlesystems)
@@ -103,7 +103,7 @@ void VortexObjectManager::update(float deltaTime)
     }
 }
 
-void VortexObjectManager::draw(VortexCamera &camera, bool show_wireframe)
+void VortexObjectManager::draw(VortexCamera &camera, bool show_wireframe, bool is_render_pass)
 {
     Frustum cam_frustum = camera.get_frustum();
     glm::vec3 camera_pos = camera.get_position();
@@ -149,7 +149,7 @@ void VortexObjectManager::draw(VortexCamera &camera, bool show_wireframe)
         if (!is_camera_inside && !VortexPhysics::aabb_in_frustum(min_bound, max_bound, cam_frustum))
         {
             model->is_visible = true;
-            continue; 
+            continue;
         }
 
         GLuint available = 0;
@@ -159,8 +159,8 @@ void VortexObjectManager::draw(VortexCamera &camera, bool show_wireframe)
         {
             GLuint passed = 0;
             glGetQueryObjectuiv(model->occlusion_query, GL_QUERY_RESULT, &passed);
-            
-            model->is_visible = (passed > 0); 
+
+            model->is_visible = (passed > 0);
         }
 
         if (model->is_visible || is_camera_inside)
@@ -181,7 +181,7 @@ void VortexObjectManager::draw(VortexCamera &camera, bool show_wireframe)
             }
             else
             {
-                model->draw(*model_shader, camera, show_wireframe);
+                model->draw(*model_shader, camera, show_wireframe, is_render_pass);
             }
 
             if (model->is_selected)
@@ -236,28 +236,31 @@ void VortexObjectManager::draw(VortexCamera &camera, bool show_wireframe)
         }
     }
 
-    glEnable(GL_STENCIL_TEST);
-    glStencilFunc(GL_NOTEQUAL, 1, 0xFF);
-    glStencilMask(0x00);
-    glDisable(GL_DEPTH_TEST);
-
-    outline_shader->use();
-    outline_shader->setMat4("view", camera.getViewMatrix());
-    outline_shader->setMat4("projection", camera.getProjectionMatrix());
-
-    outline_shader->setVec3("outline_color", glm::vec3(1.0f, 0.6f, 0.0f));
-    outline_shader->setFloat("outline_thickness", 0.05f);
-
-    for (VortexModel *model : active_models)
+    if (!is_render_pass)
     {
-        if (model->is_active && model->is_selected)
-        {
-            model->draw(*outline_shader, camera, false); 
-        }
-    }
+        glEnable(GL_STENCIL_TEST);
+        glStencilFunc(GL_NOTEQUAL, 1, 0xFF);
+        glStencilMask(0x00);
+        glDisable(GL_DEPTH_TEST);
 
-    glEnable(GL_DEPTH_TEST);
-    glDisable(GL_STENCIL_TEST);
+        outline_shader->use();
+        outline_shader->setMat4("view", camera.getViewMatrix());
+        outline_shader->setMat4("projection", camera.getProjectionMatrix());
+
+        outline_shader->setVec3("outline_color", glm::vec3(1.0f, 0.6f, 0.0f));
+        outline_shader->setFloat("outline_thickness", 0.05f);
+
+        for (VortexModel *model : active_models)
+        {
+            if (model->is_active && model->is_selected)
+            {
+                model->draw(*outline_shader, camera, false);
+            }
+        }
+
+        glEnable(GL_DEPTH_TEST);
+        glDisable(GL_STENCIL_TEST);
+    }
 
     glDisable(GL_CULL_FACE);
 

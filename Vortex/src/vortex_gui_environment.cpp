@@ -6,7 +6,7 @@ void VortexGUI::refresh_shader_list()
     m_shader_files.clear();
     m_display_names.clear();
 
-    m_shader_files.push_back(""); 
+    m_shader_files.push_back("");
     m_display_names.push_back("None (Standard)");
 
     namespace fs = std::filesystem;
@@ -17,15 +17,15 @@ void VortexGUI::refresh_shader_list()
         for (const auto& entry : fs::directory_iterator(path))
         {
             std::string filename = entry.path().filename().string();
-            
+
             if (filename.rfind("post_process_", 0) == 0 && entry.path().extension() == ".frag")
             {
                 m_shader_files.push_back(filename);
-                
+
                 std::string display = filename.substr(13);
                 size_t lastdot = display.find_last_of(".");
                 if (lastdot != std::string::npos) display = display.substr(0, lastdot);
-                
+
                 m_display_names.push_back(display);
             }
         }
@@ -57,7 +57,7 @@ void VortexGUI::post_process_options()
     {
         ImGui::Spacing();
         ImGui::TextDisabled("Active Screen Effect");
-        
+
         ImGui::SetNextItemWidth(-FLT_MIN);
         if (ImGui::Combo("##Effect", &m_selected_shader_idx, VortexGuiLambda::DataGetter, static_cast<void*>(&m_display_names), static_cast<int>(m_display_names.size())))
         {
@@ -66,11 +66,11 @@ void VortexGUI::post_process_options()
 
         ImGui::Spacing();
 
-        if (ImGui::Button("Refresh Shaders", ImVec2(-1, 28))) 
+        if (ImGui::Button("Refresh Shaders", ImVec2(-1, 28)))
         {
             m_shaders_loaded = false;
         }
-        
+
         ImGui::Spacing();
     }
 
@@ -123,7 +123,7 @@ void VortexGUI::gui_set_skybox()
 }
 
 void VortexGUI::skybox_options()
-{   
+{
     if (!show_skybox_post_process_options) return;
     if (!m_skybox_loaded) refresh_skybox_list();
 
@@ -140,7 +140,7 @@ void VortexGUI::skybox_options()
         else
         {
             ImGui::TextDisabled("Active Environment");
-            
+
             ImGui::SetNextItemWidth(-FLT_MIN);
             if (ImGui::Combo("##Environment", &m_selected_skybox_idx, VortexGuiLambda::DataGetter, static_cast<void*>(&m_skybox_display_names), static_cast<int>(m_skybox_display_names.size())))
             {
@@ -150,13 +150,40 @@ void VortexGUI::skybox_options()
 
         ImGui::Spacing();
 
-        if (ImGui::Button("Refresh Skyboxes", ImVec2(-1, 28))) 
+        if (ImGui::Button("Refresh Skyboxes", ImVec2(-1, 28)))
         {
             m_skybox_loaded = false;
         }
-        
+
         ImGui::Spacing();
     }
 
     ImGui::End();
+}
+
+
+void VortexGUI::sync_loaded_environment()
+{
+    if (!m_skybox_loaded) refresh_skybox_list();
+    if (!m_shaders_loaded) refresh_shader_list();
+
+    if (m_selected_skybox_idx >= 0 && m_selected_skybox_idx < m_skybox_files.size())
+    {
+        gui_set_skybox();
+    }
+    else
+    {
+        m_selected_skybox_idx = 0;
+        gui_set_skybox();
+    }
+
+    if (m_selected_shader_idx >= 0 && m_selected_shader_idx < m_shader_files.size())
+    {
+        gui_set_post_processor();
+    }
+    else
+    {
+        m_selected_shader_idx = 0;
+        gui_set_post_processor();
+    }
 }
