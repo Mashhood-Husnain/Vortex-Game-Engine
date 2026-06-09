@@ -6,6 +6,7 @@ void VortexGUI::draw_editor_render_viewport(float deltaTime, VortexCamera *camer
 {
     if (!show_render_scene_viewport) return;
 
+    // TODO: automatically take up all available space (when scene view is not active)
     ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(0.0f, 0.0f));
     if (app->get_state() == EngineState::PLAY)
     {
@@ -47,14 +48,23 @@ void VortexGUI::draw_editor_viewport(float deltaTime, VortexCamera* camera)
     viewport_width = viewportPanelSize.x;
     viewport_height = viewportPanelSize.y;
 
-    ImVec2 image_render_pos = ImGui::GetCursorScreenPos();
+    ImVec2 windowPos = ImGui::GetWindowPos();
+    ImVec2 contentMin = ImGui::GetWindowContentRegionMin();
+    float absoluteX = windowPos.x + contentMin.x;
+    float absoluteY = windowPos.y + contentMin.y;
 
-    ImGui::Image((void*)(intptr_t)scene_texture, ImVec2(scene_width, scene_height), ImVec2(0, 1), ImVec2(1, 0));
+    ImGui::Image((void*)(intptr_t)scene_texture, ImVec2(viewport_width, viewport_height), ImVec2(0, 1), ImVec2(1, 0));
 
     if (app->get_state() == EngineState::EDITOR)
     {
         handle_shortcuts();
-        handle_picking(camera, image_render_pos);
+
+        if (viewport_height > 0.0f)
+        {
+            camera->set_aspect_ratio(viewport_width / viewport_height);
+        }
+
+        handle_picking(camera, ImVec2(absoluteX, absoluteY));
 
         ImGuizmo::BeginFrame();
 
@@ -75,16 +85,7 @@ void VortexGUI::draw_editor_viewport(float deltaTime, VortexCamera* camera)
             ImGuizmo::SetOrthographic(false);
             ImGuizmo::SetDrawlist();
 
-            ImVec2 windowPos = ImGui::GetWindowPos();
-            ImVec2 contentMin = ImGui::GetWindowContentRegionMin();
-            ImVec2 contentMax = ImGui::GetWindowContentRegionMax();
-
-            float viewportX = windowPos.x + contentMin.x;
-            float viewportY = windowPos.y + contentMin.y;
-            float viewportWidth = contentMax.x - contentMin.x;
-            float viewportHeight = contentMax.y - contentMin.y;
-
-            ImGuizmo::SetRect(image_render_pos.x, image_render_pos.y, scene_width, scene_height);
+            ImGuizmo::SetRect(absoluteX, absoluteY, viewport_width, viewport_height);
 
             glm::mat4 view = camera->getViewMatrix();
             glm::mat4 projection = camera->getProjectionMatrix();
@@ -171,7 +172,7 @@ void VortexGUI::handle_picking(VortexCamera* camera, ImVec2 image_pos)
         float mouseX = mousePos.x - image_pos.x;
         float mouseY = mousePos.y - image_pos.y;
 
-        if (mouseX >= 0.0f && mouseX <= scene_width && mouseY >= 0.0f && mouseY <= scene_height)
+        if (mouseX >= 0.0f && mouseX <= viewport_width && mouseY >= 0.0f && mouseY <= viewport_height)
         {
             float ndcX = (2.0f * mouseX) / scene_width - 1.0f;
             float ndcY = 1.0f - (2.0f * mouseY) / scene_height;

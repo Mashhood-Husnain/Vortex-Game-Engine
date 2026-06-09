@@ -680,7 +680,7 @@ void VortexApplication::run(std::function<void()> draw_callback)
             VortexGUI::draw_exit_modal();
 
             VortexGUI::draw_editor_render_viewport(deltaTime, render_camera);
-            VortexGUI::draw_editor_viewport(deltaTime, camera);
+            VortexGUI::draw_editor_viewport(deltaTime, editor_camera);
         }
 
         if (is_playing_splash)

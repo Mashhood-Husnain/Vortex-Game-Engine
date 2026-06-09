@@ -31,15 +31,15 @@ uniform float quadraticFalloff;
 uniform vec3 u_fogColor; // temp fog color
 uniform float u_fogDensity; // temp fog density
 
-const vec2 poissonDisk[16] = vec2[]( 
-   vec2( -0.94201624, -0.39906216 ), vec2( 0.94558609, -0.76890725 ), 
-   vec2( -0.09418410, -0.92938870 ), vec2( 0.34495938, 0.29387760 ), 
-   vec2( -0.91588581, 0.45771432 ), vec2( -0.81544232, -0.87912464 ), 
-   vec2( -0.38277543, 0.27676845 ), vec2( 0.97484398, 0.75648379 ), 
-   vec2( 0.44323325, -0.97511554 ), vec2( 0.53742981, -0.47373420 ), 
-   vec2( -0.65476066, -0.05113977 ), vec2( -0.43095612, -0.81619640 ), 
-   vec2( 0.48720372, -0.03590583 ), vec2( -0.21140315, -0.17570340 ), 
-   vec2( 0.73030536, 0.61286690 ), vec2( -0.08405104, 0.87169447 ) 
+const vec2 poissonDisk[16] = vec2[](
+   vec2( -0.94201624, -0.39906216 ), vec2( 0.94558609, -0.76890725 ),
+   vec2( -0.09418410, -0.92938870 ), vec2( 0.34495938, 0.29387760 ),
+   vec2( -0.91588581, 0.45771432 ), vec2( -0.81544232, -0.87912464 ),
+   vec2( -0.38277543, 0.27676845 ), vec2( 0.97484398, 0.75648379 ),
+   vec2( 0.44323325, -0.97511554 ), vec2( 0.53742981, -0.47373420 ),
+   vec2( -0.65476066, -0.05113977 ), vec2( -0.43095612, -0.81619640 ),
+   vec2( 0.48720372, -0.03590583 ), vec2( -0.21140315, -0.17570340 ),
+   vec2( 0.73030536, 0.61286690 ), vec2( -0.08405104, 0.87169447 )
 );
 
 float random(vec2 uv) {
@@ -55,20 +55,20 @@ float ShadowCalculation(vec4 fragPosLightSpace, vec3 normal, vec3 lightDir)
 
     float cosTheta = dot(normal, lightDir);
     float bias = max(0.0005 * (1.0 - cosTheta), 0.00005);
-    
+
     vec3 shiftedPos = projCoords + (normal * 0.0008);
 
     float shadow = 0.0;
     vec2 texelSize = 1.0 / textureSize(shadowMap, 0);
 
-    float angle = random(FragPos.xy) * 6.283185; 
+    float angle = random(FragPos.xy) * 6.283185;
     float s = sin(angle);
     float c = cos(angle);
     mat2 rotation = mat2(c, -s, s, c);
 
     for (int i = 0; i < 16; i++)
     {
-        vec2 offset = (rotation * poissonDisk[i]) * texelSize * 1.5; 
+        vec2 offset = (rotation * poissonDisk[i]) * texelSize * 1.5;
         float pcfDepth = texture(shadowMap, shiftedPos.xy + offset).r;
         shadow += shiftedPos.z - bias > pcfDepth ? 1.0 : 0.0;
     }
@@ -96,7 +96,7 @@ void main()
     {
         metallic = texture(u_metallicMap, TexCoords).r;
     }
-    
+
     vec3 norm = normalize(Normal);
     vec3 viewDir = normalize(viewPos - FragPos);
 

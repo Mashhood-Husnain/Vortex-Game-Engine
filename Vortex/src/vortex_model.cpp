@@ -130,8 +130,7 @@ void VortexModel::draw(const VortexShader &shader, VortexCamera &camera, bool wi
                 }
             }
         }
-
-        if (app->get_state() == EngineState::EDITOR && light_count == 0)
+        else
         {
             l_positions[0] = glm::vec3(10.0f, 50.0f, 20.0f);
 
