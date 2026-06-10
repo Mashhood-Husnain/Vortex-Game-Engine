@@ -43,6 +43,18 @@ std::string ActionTransform::get_name() const
     return "Transform Model";
 }
 
+std::string ActionTransform::get_details() const
+{
+    VortexModelDetailsDict model_details = {
+        .name = m_target ? m_target->model_name : "Destroyed Model",
+        .position = m_new_pos,
+        .orientation = m_new_rot,
+        .scale = m_new_scale
+    };
+
+    return vortex_ModelDetailsDictToString(model_details);
+}
+
 ActionCreate::ActionCreate(VortexModel *model)
 {
     m_target = model;
@@ -83,6 +95,11 @@ std::string ActionCreate::get_name() const
     return "Create Model";
 }
 
+std::string ActionCreate::get_details() const
+{
+    return std::string("{") + "Name: " + m_target->model_name + "}";
+}
+
 ActionDelete::ActionDelete(VortexModel *model)
 {
     m_target = model;
@@ -121,6 +138,11 @@ void ActionDelete::redo()
 std::string ActionDelete::get_name() const
 {
     return "Delete Model";
+}
+
+std::string ActionDelete::get_details() const
+{
+    return std::string("{") + "Name: " + m_target->model_name + "}";
 }
 
 void ActionManager::push_action(EditorAction *action)

@@ -9,6 +9,7 @@
 #include "vortex_model.hpp"
 #include "vortex_objectmanager.hpp"
 #include "vortex_application.hpp"
+#include "vortex_util.hpp"
 
 class EditorAction
 {
@@ -18,6 +19,7 @@ public:
     virtual void redo() = 0;
 
     virtual std::string get_name() const = 0;
+    virtual std::string get_details() const = 0;
 };
 
 class ActionTransform : public EditorAction
@@ -43,6 +45,7 @@ public:
     void redo() override;
 
     std::string get_name() const override;
+    std::string get_details() const override;
 };
 
 class ActionCreate : public EditorAction
@@ -57,6 +60,7 @@ public:
     void redo() override;
 
     std::string get_name() const override;
+    std::string get_details() const override;
 };
 
 class ActionDelete : public EditorAction
@@ -71,6 +75,7 @@ public:
     void redo() override;
 
     std::string get_name() const override;
+    std::string get_details() const override;
 };
 
 class ActionManager

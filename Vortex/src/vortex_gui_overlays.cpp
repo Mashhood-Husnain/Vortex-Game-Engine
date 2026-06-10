@@ -214,7 +214,7 @@ void VortexGUI::draw_stack_history_window()
     ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(0.4f, 0.4f, 0.4f, 1.0f));
     for (auto it = redo_stack.begin(); it != redo_stack.end(); ++it)
     {
-        ImGui::Text("  %s", (*it)->get_name().c_str());
+        ImGui::Text("  %s %s", (*it)->get_name().c_str(), (*it)->get_details().c_str());
     }
     ImGui::PopStyleColor();
 
@@ -224,7 +224,7 @@ void VortexGUI::draw_stack_history_window()
 
     for (auto it = undo_stack.rbegin(); it != undo_stack.rend(); ++it)
     {
-        ImGui::Text("  %s", (*it)->get_name().c_str());
+        ImGui::Text("  %s %s", (*it)->get_name().c_str(), (*it)->get_details().c_str());
     }
 
     if (ImGui::GetScrollY() >= ImGui::GetScrollMaxY())

@@ -182,9 +182,9 @@ void VortexGUI::handle_shortcuts()
 {
     if (ImGui::IsWindowFocused())
     {
-        if (VortexKeyboard::get_key_down("T")) m_current_op = ImGuizmo::TRANSLATE;
-        if (VortexKeyboard::get_key_down("R")) m_current_op = ImGuizmo::ROTATE;
-        if (VortexKeyboard::get_key_down("Y")) m_current_op = ImGuizmo::SCALE;
+        if (VortexKeyboard::get_key_down("T") && !VortexKeyboard::get_key("LEFTCONTROL")) m_current_op = ImGuizmo::TRANSLATE;
+        if (VortexKeyboard::get_key_down("R") && !VortexKeyboard::get_key("LEFTCONTROL")) m_current_op = ImGuizmo::ROTATE;
+        if (VortexKeyboard::get_key_down("Y") && !VortexKeyboard::get_key("LEFTCONTROL")) m_current_op = ImGuizmo::SCALE;
         if (VortexKeyboard::get_key_down("LEFTALT")) snap_to_floor();
     }
 }
