@@ -8,6 +8,8 @@
 
 #include "vortex_application.hpp"
 
+bool VortexApplication::has_unsaved_changes = false;
+
 void VortexApplication::load_splash_screen()
 {
     if (!enable_splash_screen)
@@ -170,14 +172,24 @@ void VortexApplication::check_key_press()
             change_window_size();
         }
 
-        if (VortexKeyboard::get_key_down("Z")) show_wireframe = !show_wireframe;
+        if (VortexKeyboard::get_key_down("Z") && !VortexKeyboard::get_key("LEFTCONTROL")) show_wireframe = !show_wireframe;
         if (VortexKeyboard::get_key_down("M")) show_mouse(!show_mouse_cursor);
 
         if (VortexKeyboard::get_key("LEFTCONTROL"))
         {
             if (VortexKeyboard::get_key_down("P")) VortexGUI::show_terminal = !VortexGUI::show_terminal;
+            if (VortexKeyboard::get_key_down("I")) VortexGUI::show_inspector = !VortexGUI::show_inspector;
+            if (VortexKeyboard::get_key_down("X")) VortexGUI::show_camera_info = !VortexGUI::show_camera_info;
+            if (VortexKeyboard::get_key_down("W")) VortexGUI::show_creator_window = !VortexGUI::show_creator_window;
+            if (VortexKeyboard::get_key_down("E")) VortexGUI::show_engine_stats = !VortexGUI::show_engine_stats;
+            if (VortexKeyboard::get_key_down("O")) VortexGUI::show_skybox_post_process_options = !VortexGUI::show_skybox_post_process_options;
+            if (VortexKeyboard::get_key_down("H")) VortexGUI::show_stack_history_window = !VortexGUI::show_stack_history_window;
+
             if (VortexKeyboard::get_key_down("R")) enter_play_mode();
             if (VortexKeyboard::get_key_down("C")) trigger_compile();
+
+            if (VortexKeyboard::get_key_down("Z") && !VortexGUI::is_using_gizmo) ActionManager::undo();
+            if (VortexKeyboard::get_key_down("Y") && !VortexGUI::is_using_gizmo) ActionManager::redo();
 
             if (VortexKeyboard::get_key_down("S"))
             {
@@ -197,6 +209,8 @@ void VortexApplication::check_key_press()
                     newly_cloned_models.push_back(cloned_model);
 
                     current_model->is_selected = false;
+
+                    ActionManager::push_action(new ActionCreate(cloned_model));
                 }
 
                 VortexGUI::m_selected_models.clear();
@@ -213,8 +227,12 @@ void VortexApplication::check_key_press()
         {
             for (VortexModel *model : VortexGUI::m_selected_models)
             {
-                model->should_destroy = true;
                 model->is_selected = false;
+
+                ActionDelete *delete_command = new ActionDelete(model);
+                delete_command->redo();
+
+                ActionManager::push_action(delete_command);
             }
 
             VortexGUI::m_selected_models.clear();
@@ -589,7 +607,7 @@ void VortexApplication::run(std::function<void()> draw_callback)
             }
 
             // First pass (Scene View)
-            if (VortexGUI::is_scene_view_visible && VortexGUI::draw_scene_viewport)
+            if (VortexGUI::is_scene_view_visible && VortexGUI::show_scene_viewport)
             {
                 VortexGUI::bind_framebuffer();
 
@@ -676,6 +694,7 @@ void VortexApplication::run(std::function<void()> draw_callback)
             VortexGUI::creator_window();
             VortexGUI::scene_inspector();
             VortexGUI::draw_terminal();
+            VortexGUI::draw_stack_history_window();
             VortexGUI::draw_compiler_modal();
             VortexGUI::draw_exit_modal();
 
@@ -863,7 +882,7 @@ void VortexApplication::enter_play_mode()
     VortexGUI::show_engine_stats = false;
     VortexGUI::show_terminal = false;
     VortexGUI::show_skybox_post_process_options = false;
-    VortexGUI::draw_scene_viewport = false;
+    VortexGUI::show_scene_viewport = false;
 
     VortexGUI::show_render_scene_viewport = true;
     if (!VortexGUI::render_scene_fbo_initialized)
@@ -898,7 +917,7 @@ void VortexApplication::exit_play_mode()
     VortexGUI::show_engine_stats = true;
     VortexGUI::show_terminal = true;
     VortexGUI::show_skybox_post_process_options = true;
-    VortexGUI::draw_scene_viewport = true;
+    VortexGUI::show_scene_viewport = true;
 
     show_mouse(true);
 

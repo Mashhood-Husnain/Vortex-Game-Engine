@@ -73,20 +73,21 @@ void VortexGUI::draw_main_menu_bar()
 
         if (ImGui::BeginMenu("Window"))
         {
-            ImGui::MenuItem("Scene Inspector", NULL, &show_inspector);
-            ImGui::MenuItem("Camera Info", NULL, &show_camera_info);
-            ImGui::MenuItem("Creator Window", NULL, &show_creator_window);
-            ImGui::MenuItem("Engine Stats", NULL, &show_engine_stats);
-            ImGui::MenuItem("Terminal Output", NULL, &show_terminal);
-            ImGui::MenuItem("Skybox/Post-Process", NULL, &show_skybox_post_process_options);
+            ImGui::MenuItem("Scene Inspector", "Ctrl+I", &show_inspector);
+            ImGui::MenuItem("Camera Info", "Ctrl+X", &show_camera_info);
+            ImGui::MenuItem("Creator Window", "Ctrl+W", &show_creator_window);
+            ImGui::MenuItem("Engine Stats", "Ctrl+E", &show_engine_stats);
+            ImGui::MenuItem("Terminal Output", "Ctrl+P", &show_terminal);
+            ImGui::MenuItem("Skybox/Post-Process", "Ctrl+O", &show_skybox_post_process_options);
+            ImGui::MenuItem("Action Stack History", "Ctrl+H", &show_stack_history_window);
 
-            ImGui::MenuItem("Scene View", NULL, &draw_scene_viewport);
-            if (draw_scene_viewport && !scene_fbo_initialized)
+            ImGui::MenuItem("Scene View", NULL, &show_scene_viewport);
+            if (show_scene_viewport && !scene_fbo_initialized)
             {
                 setup_scene_fbo(scene_width, scene_height);
                 scene_fbo_initialized = true;
             }
-            else if (!draw_scene_viewport && scene_fbo_initialized)
+            else if (!show_scene_viewport && scene_fbo_initialized)
             {
                 destroy_scene();
                 scene_fbo_initialized = false;

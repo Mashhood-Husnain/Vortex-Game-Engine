@@ -21,6 +21,8 @@
 #include <atomic>
 #include <cstdio>
 
+#include "vortex_actions.hpp"
+
 #include "util/vortex_engine_stats.hpp"
 #include "util/vortex_logs.hpp"
 #include "util/vortex_util.hpp"
@@ -164,8 +166,9 @@ public:
     static bool show_engine_stats;
     static bool show_terminal;
     static bool show_skybox_post_process_options;
-    static bool draw_scene_viewport;
+    static bool show_scene_viewport;
     static bool show_render_scene_viewport;
+    static bool show_stack_history_window;
 
     static int m_selected_skybox_idx;
     static int m_selected_shader_idx;
@@ -177,6 +180,8 @@ public:
 
     static bool is_scene_view_visible;
     static bool is_render_view_visible;
+
+    static bool is_using_gizmo;
 
     VortexGUI();
 
@@ -216,6 +221,8 @@ public:
 
     static void draw_terminal();
     static void draw_compiler_modal();
+
+    static void draw_stack_history_window();
 
     static void clean_up();
 };

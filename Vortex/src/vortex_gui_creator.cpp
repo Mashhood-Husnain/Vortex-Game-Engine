@@ -48,14 +48,14 @@ void VortexGUI::creator_window()
                 script_file << "    void on_message(const std::string &message, void *data) override\n    {\n        // Cross-script communication\n    }\n};\n\n";
                 script_file << "VORTEX_REGISTER_SCRIPT(" << class_name << ");\n";
                 script_file.close();
-                
+
                 VORTEX_INFO("[EDITOR] Auto-Generated Script: ", file_path);
             }
         }
 
         if (show_script_error) ImGui::TextColored(ImVec4(0.9f, 0.3f, 0.3f, 1.0f), "Error: Script already exists!");
         if (show_script_success) ImGui::TextColored(ImVec4(0.3f, 0.8f, 0.4f, 1.0f), "Generated! Hot-reload to compile.");
-        
+
         ImGui::Spacing();
     }
 
@@ -71,7 +71,7 @@ void VortexGUI::creator_window()
         ImGui::TextDisabled("System Name");
         ImGui::SetNextItemWidth(-FLT_MIN);
         ImGui::InputText("##SystemName", new_ps_name, IM_ARRAYSIZE(new_ps_name));
-        
+
         ImGui::TextDisabled("Max Capacity");
         ImGui::SetNextItemWidth(-FLT_MIN);
         VortexGuiLambda::ClampedInputInt("##MaxCap", &new_ps_max, 10000, 50000, 100, 1000000);
@@ -107,7 +107,7 @@ void VortexGUI::creator_window()
             ImGui::Spacing();
             ImGui::TextColored(ImVec4(0.9f, 0.3f, 0.3f, 1.0f), "System with this name already exists!");
         }
-        
+
         ImGui::Spacing();
     }
 
@@ -120,7 +120,7 @@ void VortexGUI::creator_window()
         ImGui::PushStyleColor(ImGuiCol_Button, ImVec4(0.2f, 0.2f, 0.22f, 1.0f));
         ImGui::PushStyleColor(ImGuiCol_ButtonHovered, ImVec4(0.25f, 0.25f, 0.27f, 1.0f));
         ImGui::PushStyleColor(ImGuiCol_ButtonActive, ImVec4(0.3f, 0.3f, 0.32f, 1.0f));
-        
+
         if (ImGui::Button("Refresh Assets Folder", ImVec2(-1, 24)) || !m_models_scanned)
         {
             m_available_model_names.clear();
@@ -144,9 +144,9 @@ void VortexGUI::creator_window()
         ImGui::PopStyleColor(3);
 
         ImGui::Spacing();
-        
+
         ImGui::PushStyleColor(ImGuiCol_ChildBg, ImVec4(0.06f, 0.06f, 0.07f, 1.0f));
-        
+
         ImVec2 child_size = ImVec2(0.0f, ImGui::GetContentRegionAvail().y - 5.0f);
         ImGui::BeginChild("ModelBrowser", child_size, true, ImGuiWindowFlags_AlwaysVerticalScrollbar);
 
@@ -168,10 +168,12 @@ void VortexGUI::creator_window()
                 if (ImGui::Button(m_available_model_names[i].c_str(), ImVec2(-1, button_height)))
                 {
                     VortexModel *new_model = new VortexModel(m_available_model_paths[i].c_str(), app);
-                    
-                    new_model->folder = "Scene"; 
-                    
+
+                    new_model->folder = "Scene";
+
                     VortexObjectManager::active_models.push_back(new_model);
+
+                    ActionManager::push_action(new ActionCreate(new_model));
                 }
             }
             ImGui::PopStyleColor(3);

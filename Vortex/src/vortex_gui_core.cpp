@@ -20,8 +20,9 @@ bool VortexGUI::show_creator_window = true;
 bool VortexGUI::show_engine_stats = true;
 bool VortexGUI::show_terminal = false;
 bool VortexGUI::show_skybox_post_process_options = true;
-bool VortexGUI::draw_scene_viewport = true;
+bool VortexGUI::show_scene_viewport = true;
 bool VortexGUI::show_render_scene_viewport = false;
+bool VortexGUI::show_stack_history_window = false;
 
 std::set<VortexModel*> VortexGUI::m_selected_models = {nullptr};
 
@@ -72,6 +73,8 @@ bool VortexGUI::m_skybox_loaded = false;
 
 bool VortexGUI::is_scene_view_visible = true;
 bool VortexGUI::is_render_view_visible = false;
+
+bool VortexGUI::is_using_gizmo = false;
 
 VortexGUI::VortexGUI()
 {

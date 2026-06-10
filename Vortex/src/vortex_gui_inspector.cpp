@@ -23,7 +23,7 @@ void VortexGUI::scene_inspector()
             explicit_empty_folders.push_back(path);
         }
     }
-    
+
     ImGui::Spacing();
     ImGui::Separator();
     ImGui::Spacing();
@@ -36,12 +36,12 @@ void VortexGUI::scene_inspector()
         std::string part;
         FolderNode* current = &root;
 
-        while (std::getline(ss, part, '/')) 
+        while (std::getline(ss, part, '/'))
         {
             if (part.empty()) continue;
             current = &(current->subfolders[part]);
         }
-        
+
         if (model) current->models.push_back(model);
     };
 
@@ -62,9 +62,9 @@ void VortexGUI::scene_inspector()
         bool folder_open = ImGui::TreeNodeEx(name.c_str(), ImGuiTreeNodeFlags_Framed | ImGuiTreeNodeFlags_DefaultOpen);
         ImGui::PopStyleColor();
 
-        if (ImGui::BeginPopupContextItem()) 
+        if (ImGui::BeginPopupContextItem())
         {
-            if (name == "Scene") 
+            if (name == "Scene")
             {
                 ImGui::TextDisabled("Default folder cannot be deleted.");
             }
@@ -75,7 +75,7 @@ void VortexGUI::scene_inspector()
                 {
                     for (VortexModel* m : VortexObjectManager::active_models)
                     {
-                        if (m->folder.find(current_path) == 0) 
+                        if (m->folder.find(current_path) == 0)
                         {
                             m->folder = "Scene";
                         }
@@ -86,7 +86,7 @@ void VortexGUI::scene_inspector()
 
                     ImGui::PopStyleColor();
                     ImGui::EndPopup();
-                    
+
                     if (folder_open) ImGui::TreePop();
                     return;
                 }
@@ -100,7 +100,7 @@ void VortexGUI::scene_inspector()
             if (const ImGuiPayload* payload = ImGui::AcceptDragDropPayload("MODEL_NODE"))
             {
                 VortexModel* dragged_model = *(VortexModel**)payload->Data;
-                
+
                 if (m_selected_models.find(dragged_model) != m_selected_models.end())
                 {
                     for (VortexModel* m : m_selected_models) m->folder = current_path;
@@ -160,12 +160,12 @@ void VortexGUI::inspect_model(VortexModel* model)
 
     m_processed_models.insert(model);
     ImGuiTreeNodeFlags sub_header_flags = ImGuiTreeNodeFlags_Framed | ImGuiTreeNodeFlags_NoTreePushOnOpen;
-    
+
     std::string header_id = model->model_name + "###" + std::to_string((uintptr_t)model);
     bool is_currently_selected = (m_selected_models.find(model) != m_selected_models.end());
-    
+
     if (is_currently_selected)
-    {            
+    {
         ImGui::PushStyleColor(ImGuiCol_Header, ImVec4(0.25f, 0.35f, 0.45f, 0.60f));
         ImGui::PushStyleColor(ImGuiCol_HeaderHovered, ImVec4(0.30f, 0.40f, 0.50f, 0.80f));
         ImGui::PushStyleColor(ImGuiCol_HeaderActive, ImVec4(0.35f, 0.45f, 0.55f, 1.00f));
@@ -204,7 +204,7 @@ void VortexGUI::inspect_model(VortexModel* model)
         }
     }
 
-    if (is_currently_selected) ImGui::PopStyleColor(3); 
+    if (is_currently_selected) ImGui::PopStyleColor(3);
 
     if (ImGui::BeginDragDropSource(ImGuiDragDropFlags_SourceAllowNullID))
     {
@@ -239,7 +239,7 @@ void VortexGUI::draw_model_info_panel(VortexModel* model, int flags)
     if (ImGui::TreeNodeEx("|__ Model Info", flags))
     {
         ImGui::Indent(10.0f); ImGui::Spacing();
-        
+
         ImGui::TextDisabled("Object Name");
         char name_buffer[256];
         memset(name_buffer, 0, sizeof(name_buffer));
@@ -247,11 +247,11 @@ void VortexGUI::draw_model_info_panel(VortexModel* model, int flags)
 
         ImGui::SetNextItemWidth(-FLT_MIN);
         if (ImGui::InputText("##ObjectName", name_buffer, IM_ARRAYSIZE(name_buffer))) model->model_name = std::string(name_buffer);
-        
+
         ImGui::Spacing();
         ImGui::TextDisabled("Source File:"); ImGui::SameLine(); ImGui::TextWrapped("%s", model->file_path.c_str());
         ImGui::TextDisabled("Sub-Objects: %zu", model->shared_data->objects.size());
-        
+
         ImGui::Spacing(); ImGui::Unindent(10.0f);
     }
     ImGui::Spacing();
@@ -275,13 +275,13 @@ void VortexGUI::draw_model_components_panel(VortexModel* model, int flags)
                 ImGui::Checkbox("Is Kinematic", &model->rigidbody->is_kinematic);
                 ImGui::Checkbox("Gravity", &model->rigidbody->gravity);
                 if (model->rigidbody->gravity) ImGui::DragFloat("Gravity Value", &model->rigidbody->gravity_value, 0.1f);
-                
+
                 ImGui::Spacing(); ImGui::SetCursorPosX(ImGui::GetWindowContentRegionMax().x - 70.0f);
                 ImGui::PushStyleColor(ImGuiCol_Button, ImVec4(0.4f, 0.15f, 0.15f, 0.8f));
                 ImGui::PushStyleColor(ImGuiCol_ButtonHovered, ImVec4(0.6f, 0.2f, 0.2f, 1.0f));
                 if (ImGui::Button("Remove##RB", ImVec2(70, 0))) { delete model->rigidbody; model->rigidbody = nullptr; }
                 ImGui::PopStyleColor(2);
-                
+
                 ImGui::Spacing(); ImGui::Unindent(10.0f);
             }
         }
@@ -298,13 +298,13 @@ void VortexGUI::draw_model_components_panel(VortexModel* model, int flags)
                 ImGui::ColorEdit3("Light Color", &model->light->color.x);
                 ImGui::DragFloat("Intensity", &model->light->intensity, 0.05f, 0.0f, 100.0f);
                 ImGui::DragFloat("Ambient Strength", &model->light->ambient_strength, 0.01f, 0.0f, 1.0f);
-                
+
                 ImGui::Spacing(); ImGui::SetCursorPosX(ImGui::GetWindowContentRegionMax().x - 70.0f);
                 ImGui::PushStyleColor(ImGuiCol_Button, ImVec4(0.4f, 0.15f, 0.15f, 0.8f));
                 ImGui::PushStyleColor(ImGuiCol_ButtonHovered, ImVec4(0.6f, 0.2f, 0.2f, 1.0f));
                 if (ImGui::Button("Remove##Light", ImVec2(70, 0))) { delete model->light; model->light = nullptr; }
                 ImGui::PopStyleColor(2);
-                
+
                 ImGui::Spacing(); ImGui::Unindent(10.0f);
             }
         }
@@ -342,13 +342,13 @@ void VortexGUI::draw_model_components_panel(VortexModel* model, int flags)
                             if (ImGui::InputText(var.name.c_str(), buffer, IM_ARRAYSIZE(buffer))) *str_ptr = std::string(buffer);
                         }
                     }
-                    
+
                     ImGui::Spacing(); ImGui::SetCursorPosX(ImGui::GetWindowContentRegionMax().x - 70.0f);
                     ImGui::PushStyleColor(ImGuiCol_Button, ImVec4(0.4f, 0.15f, 0.15f, 0.8f));
                     ImGui::PushStyleColor(ImGuiCol_ButtonHovered, ImVec4(0.6f, 0.2f, 0.2f, 1.0f));
                     if (ImGui::Button("Remove", ImVec2(70, 0))) script_to_delete = static_cast<int>(i);
                     ImGui::PopStyleColor(2);
-                    
+
                     ImGui::Spacing(); ImGui::Unindent(10.0f);
                 }
                 ImGui::PopID();
@@ -375,7 +375,7 @@ void VortexGUI::draw_model_components_panel(VortexModel* model, int flags)
             {
                 model->rigidbody = new VortexRigidbody();
                 model->rigidbody->vortexGameObject = model;
-                model->rigidbody->vortexTransform = &model->transform; 
+                model->rigidbody->vortexTransform = &model->transform;
             }
             if (model->get_componant<VortexLight>() == nullptr && ImGui::Selectable("Vortex Light"))
             {
@@ -415,19 +415,19 @@ void VortexGUI::draw_model_transform_panel(VortexModel* model, int flags)
     if (ImGui::TreeNodeEx("|__ Physics & Transform", flags))
     {
         ImGui::Indent(10.0f); ImGui::Spacing();
-        
+
         ImGui::Checkbox("Show Physics Collider", &model->show_collider);
         if (model->show_collider)
         {
             ImGui::Indent(10.0f); ImGui::Spacing();
             ImGui::DragFloat3("Collider Bounds", &model->collider_scale.x, 0.01f, 0.01f, 10.0f);
-            
+
             float collider_uniform_scale = model->collider_scale.x;
             if (ImGui::SliderFloat("Uniform Bounds", &collider_uniform_scale, 0.001f, 10.0f)) model->collider_scale = glm::vec3(collider_uniform_scale);
-            
+
             ImGui::Spacing();
             if (ImGui::Button("Reset Collider Size", ImVec2(-1, 24))) model->collider_scale = glm::vec3(1.0f);
-            
+
             ImGui::Spacing(); ImGui::Unindent(10.0f);
         }
 
@@ -479,11 +479,16 @@ void VortexGUI::draw_model_actions(VortexModel* model)
     if (ImGui::Button("Duplicate Model", ImVec2(-1, 32)))
     {
         VortexModel* cloned_model = model->clone();
+
+        ActionCreate* create_command = new ActionCreate(cloned_model);
+        create_command->redo();
+        ActionManager::push_action(create_command);
+
         VortexObjectManager::active_models.push_back(cloned_model);
 
         for (auto* m : m_selected_models) m->is_selected = false;
         m_selected_models.clear();
-        
+
         cloned_model->is_selected = true;
         m_selected_models.insert(cloned_model);
     }
@@ -494,12 +499,15 @@ void VortexGUI::draw_model_actions(VortexModel* model)
     ImGui::PushStyleColor(ImGuiCol_Button, ImVec4(0.60f, 0.20f, 0.20f, 0.80f));
     ImGui::PushStyleColor(ImGuiCol_ButtonHovered, ImVec4(0.70f, 0.25f, 0.25f, 1.00f));
     ImGui::PushStyleColor(ImGuiCol_ButtonActive, ImVec4(0.80f, 0.30f, 0.30f, 1.00f));
-    
+
     if (ImGui::Button("Delete Model", ImVec2(-1, 32)))
     {
-        model->should_destroy = true;
         model->is_selected = false;
         m_selected_models.erase(model);
+
+        ActionDelete *delete_command = new ActionDelete(model);
+        delete_command->redo();
+        ActionManager::push_action(delete_command);
     }
     ImGui::PopStyleColor(3);
 }
@@ -517,7 +525,7 @@ void VortexGUI::inspect_particle_system(ParticleSystem *ps)
     {
         ImGui::PushID(ps);
         ImGui::Indent(12.0f); ImGui::Spacing();
-        
+
         if (ImGui::TreeNodeEx("|__ Emitters", sub_header_flags))
         {
             ImGui::Indent(10.0f); ImGui::Spacing();
@@ -529,7 +537,7 @@ void VortexGUI::inspect_particle_system(ParticleSystem *ps)
                 if (settings.enabled)
                 {
                     ImGui::Indent(10.0f); ImGui::Spacing();
-                    
+
                     ImGui::DragFloat3("Position", &settings.position.x, 0.1f);
                     VortexGuiLambda::ClampedInputInt("Spawn Rate", &settings.spawn_rate, 100, 500, 0, ps->max_particles);
                     VortexGuiLambda::ClampedInputFloat("Size", &settings.size, 0.1f, 1.0f, 0.05f, 5.0f);
@@ -550,7 +558,7 @@ void VortexGUI::inspect_particle_system(ParticleSystem *ps)
 
                     ImGui::Spacing(); ImGui::ColorEdit4("Color", glm::value_ptr(settings.color));
                     ImGui::Spacing();
-                    
+
                     if (ImGui::TreeNodeEx("Point Gravity"))
                     {
                         ImGui::Checkbox("Use Point Gravity", &settings.use_point_gravity);
@@ -570,7 +578,7 @@ void VortexGUI::inspect_particle_system(ParticleSystem *ps)
         }
 
         ImGui::Spacing();
-        
+
         if (ImGui::TreeNodeEx("|__ Stats", sub_header_flags))
         {
             ImGui::Indent(10.0f); ImGui::Spacing();

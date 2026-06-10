@@ -39,7 +39,7 @@ void VortexGUI::draw_editor_render_viewport(float deltaTime, VortexCamera *camer
 
 void VortexGUI::draw_editor_viewport(float deltaTime, VortexCamera* camera)
 {
-    if (!draw_scene_viewport) return;
+    if (!show_scene_viewport) return;
 
     ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(0.0f, 0.0f));
     is_scene_view_visible = ImGui::Begin("Scene View");
@@ -65,6 +65,11 @@ void VortexGUI::draw_editor_viewport(float deltaTime, VortexCamera* camera)
         }
 
         handle_picking(camera, ImVec2(absoluteX, absoluteY));
+
+        static bool was_using_gizmo = false;
+        static glm::vec3 start_pos;
+        static glm::quat start_rot;
+        static glm::vec3 start_scale;
 
         ImGuizmo::BeginFrame();
 
@@ -111,10 +116,17 @@ void VortexGUI::draw_editor_viewport(float deltaTime, VortexCamera* camera)
                 snap_pointer
             );
 
-            if (ImGuizmo::IsUsing())
-            {
-                m_is_using_gizmo = true;
+            is_using_gizmo = ImGuizmo::IsUsing();
 
+            if (is_using_gizmo && !was_using_gizmo)
+            {
+                start_pos   = anchor->transform.position;
+                start_rot   = anchor->transform.orientation;
+                start_scale = anchor->transform.scale;
+            }
+
+            if (is_using_gizmo)
+            {
                 glm::mat4 delta_matrix = gizmo_matrix * glm::inverse(anchor_old_matrix);
 
                 for (VortexModel* model : m_selected_models)
@@ -141,10 +153,24 @@ void VortexGUI::draw_editor_viewport(float deltaTime, VortexCamera* camera)
                     model->set_model_matrix(final_matrix);
                 }
             }
-            else
+
+            if (!is_using_gizmo && was_using_gizmo)
             {
-                m_is_using_gizmo = false;
+                if (start_pos != anchor->transform.position ||
+                    start_rot != anchor->transform.orientation ||
+                    start_scale != anchor->transform.scale)
+                {
+                    ActionManager::push_action(new ActionTransform(
+                        anchor,
+                        start_pos,   anchor->transform.position,
+                        start_rot,   anchor->transform.orientation,
+                        start_scale, anchor->transform.scale
+                    ));
+                }
             }
+
+            was_using_gizmo = is_using_gizmo;
+            m_is_using_gizmo = is_using_gizmo;
         }
     }
 

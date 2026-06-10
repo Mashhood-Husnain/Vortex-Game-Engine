@@ -131,8 +131,16 @@ When you launch the engine, you will start in Editor Mode attached to the defaul
 | **TAB** | Toggle Engine Stats view in Play Mode (this binding only works in Play Mode)|
 | **LEFT CTRL + Mouse Drag** | Snap selected model to grid |
 | **LEFT CTRL + P** | Toggle Engine Terminal |
+| **LEFT CTRL + I** | Toggle Scene Inspector |
+| **LEFT CTRL + X** | Toggle Camera Info |
+| **LEFT CTRL + W** | Toggle Creator Window |
+| **LEFT CTRL + E** | Toggle Engine Stats |
+| **LEFT CTRL + O** | Toggle skybox/post-process Options |
+| **LEFT CTRL + H** | Toggle Stack History |
 | **LEFT CTRL + S** | Save the Current Project |
 | **LEFT CTRL + D** | Duplicate Current Selected Model(s) |
+| **LEFT CTRL + Z** | Undo Changes |
+| **LEFT CTRL + Y** | Redo Changes |
 | **LEFT CTRL + R** | Enter Play Mode |
 | **LEFT CTRL + C** | Compile Scripts |
 | **LEFT ALT** | Snap selected model to the ground |

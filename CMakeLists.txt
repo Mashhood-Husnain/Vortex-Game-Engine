@@ -17,9 +17,9 @@ endif()
 
 if(UNIX AND NOT APPLE)
     find_package(PkgConfig REQUIRED)
-    
+
     pkg_check_modules(VORTEX_LINUX_DEPS x11 xrandr xinerama xcursor xi xkbcommon)
-    
+
     if(NOT VORTEX_LINUX_DEPS_FOUND)
         message(FATAL_ERROR "\n[VORTEX ENGINE] Missing required Linux graphics headers!\n"
                             "Please run the included setup script: ./setup_linux.sh\n"
@@ -88,7 +88,7 @@ endforeach()
 # ----------------------------
 # EXECUTABLE
 # ----------------------------
-add_executable(engine 
+add_executable(engine
     Vortex/world/world.cpp
 
     Vortex/src/vortex_application.cpp
@@ -122,7 +122,8 @@ add_executable(engine
     Vortex/src/vortex_canvas.cpp
     Vortex/src/vortex_debugrenderer.cpp
     Vortex/src/vortex_light.cpp
-    
+    Vortex/src/vortex_actions.cpp
+
     Vortex/src/util/vortex_save_load.cpp
     Vortex/src/util/vortex_save_load_encryption.cpp
     Vortex/src/util/vortex_nvml.cpp
@@ -142,7 +143,7 @@ add_library(VortexGame SHARED
 
 target_link_libraries(VortexGame engine)
 
-set_target_properties(VortexGame PROPERTIES 
+set_target_properties(VortexGame PROPERTIES
     LIBRARY_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}"
     RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}"
 )
@@ -150,7 +151,7 @@ set_target_properties(VortexGame PROPERTIES
 # ----------------------------
 # INCLUDE DIRECTORIES
 # ----------------------------
-target_include_directories(engine PUBLIC 
+target_include_directories(engine PUBLIC
     Vortex/include
     Vortex/include/util
     vendor/glm
@@ -168,7 +169,7 @@ target_include_directories(engine PUBLIC
 # ----------------------------
 find_package(Threads REQUIRED)
 
-target_link_libraries(engine 
+target_link_libraries(engine
     glfw
     glad
     stb_image

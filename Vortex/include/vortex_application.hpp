@@ -36,6 +36,7 @@
 #include "vortex_objectmanager.hpp"
 #include "vortex_uimanager.hpp"
 #include "vortex_debugrenderer.hpp"
+#include "vortex_actions.hpp"
 
 #include "util/vortex_global_vars.hpp"
 #include "util/vortex_save_load.hpp"
@@ -84,7 +85,7 @@ private:
 
     EngineState current_state = EngineState::PROJECT_HUB;
     bool show_exit_modal = false;
-    bool has_unsaved_changes = false;
+    static bool has_unsaved_changes;
     bool show_wireframe = false;
     bool show_mouse_cursor = true;
 
@@ -151,6 +152,6 @@ public:
     void toggle_wireframe(bool enable);
     void toggle_exit_modal(bool show);
 
-    void mark_unsaved_changes();
-    void clear_unsaved_changes();
+    static void mark_unsaved_changes();
+    static void clear_unsaved_changes();
 };

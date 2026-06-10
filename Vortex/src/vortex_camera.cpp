@@ -67,10 +67,12 @@ void VortexCamera::processMouseMovement(float xoffset, float yoffset)
 
 void VortexCamera::check_camera_movement(float deltaTime)
 {
+    if (VortexKeyboard::get_key("LEFTCONTROL")) return;
+
     if (VortexKeyboard::get_key("W")) processKeyboard("FORWARD", deltaTime);
     if (VortexKeyboard::get_key("S")) processKeyboard("BACKWARD", deltaTime);
     if (VortexKeyboard::get_key("A")) processKeyboard("LEFT", deltaTime);
-    if (VortexKeyboard::get_key("D") && !VortexKeyboard::get_key_down("LEFTCONTROL")) processKeyboard("RIGHT", deltaTime);
+    if (VortexKeyboard::get_key("D")) processKeyboard("RIGHT", deltaTime);
     if (VortexKeyboard::get_key("Q")) processKeyboard("UP", deltaTime);
     if (VortexKeyboard::get_key("E")) processKeyboard("DOWN", deltaTime);
 }
@@ -94,16 +96,16 @@ glm::vec3 VortexCamera::get_ray_from_mouse(glm::vec2 mouse_pos, VortexApplicatio
 {
     float x = (2.0f * mouse_pos.x) / app->get_width() - 1.0f;
     float y = 1.0f - (2.0f * mouse_pos.y) / app->get_height();
-    
+
     glm::vec4 ray_clip = glm::vec4(x, y, -1.0f, 1.0f);
-    
+
     glm::mat4 invProjection = glm::inverse(getProjectionMatrix());
     glm::vec4 ray_eye = invProjection * ray_clip;
     ray_eye = glm::vec4(ray_eye.x, ray_eye.y, -1.0f, 0.0f);
-    
+
     glm::mat4 invView = glm::inverse(getViewMatrix());
     glm::vec3 ray_world = glm::vec3(invView * ray_eye);
-    
+
     return glm::normalize(ray_world);
 }
 
