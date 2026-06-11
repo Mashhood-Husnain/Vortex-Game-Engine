@@ -133,6 +133,12 @@ void VortexApplication::framebuffer_size_callback(GLFWwindow* window, int width,
 
 void VortexApplication::request_exit()
 {
+    if (current_state == EngineState::PROJECT_HUB)
+    {
+        glfwSetWindowShouldClose(window, GLFW_TRUE);
+        return;
+    }
+
     std::string project_name = std::string(VortexGUI::m_new_project_name);
     Snapshot snapshot = {
         project_name,
@@ -250,6 +256,7 @@ void VortexApplication::check_key_press()
             if (VortexKeyboard::get_key_down("W")) VortexGUI::show_creator_window = !VortexGUI::show_creator_window;
             if (VortexKeyboard::get_key_down("E")) VortexGUI::show_engine_stats = !VortexGUI::show_engine_stats;
             if (VortexKeyboard::get_key_down("H")) VortexGUI::show_stack_history_window = !VortexGUI::show_stack_history_window;
+            if (VortexKeyboard::get_key_down("A")) VortexGUI::show_asset_browser = !VortexGUI::show_asset_browser;
 
             if (VortexKeyboard::get_key_down("C")) trigger_compile();
             if (VortexKeyboard::get_key_down("D")) duplicate_models();
@@ -705,6 +712,7 @@ void VortexApplication::run(std::function<void()> draw_callback)
 
             VortexGUI::build_dockspace();
             VortexGUI::draw_main_menu_bar();
+            VortexGUI::draw_asset_browser();
             VortexGUI::engine_stats();
             VortexGUI::camera_info(camera);
             VortexGUI::post_process_options();
@@ -1019,6 +1027,8 @@ GLFWwindow* VortexApplication::get_window_ptr() const { return window; }
 float VortexApplication::get_delta_time() const { return deltaTime; }
 float VortexApplication::get_width() const { return default_window_width; }
 float VortexApplication::get_height() const { return default_window_height; }
+
+bool VortexApplication::is_mouse_visible() { return show_mouse_cursor; }
 
 EngineState VortexApplication::get_state() const { return current_state; }
 bool VortexApplication::is_wireframe_enabled() const { return show_wireframe; }

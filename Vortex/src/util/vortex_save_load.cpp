@@ -10,6 +10,11 @@ void VortexProject::save_project(Snapshot *snapshot)
         folder_name = folder_name.substr(prefix.length());
     }
 
+    if (!std::filesystem::exists(SAVE_DIRECTORY))
+    {
+        std::filesystem::create_directory(SAVE_DIRECTORY);
+    }
+
     std::string project_save_dir = SAVE_DIRECTORY + "/" + folder_name;
     if (!std::filesystem::exists(project_save_dir))
     {

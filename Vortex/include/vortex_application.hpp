@@ -126,6 +126,7 @@ public:
     void set_post_processor(PostProcessor *post_processor);
     void set_skybox(VortexSkybox *skybox);
     void show_mouse(bool status);
+    bool is_mouse_visible();
     void request_exit();
 
     void enter_play_mode();

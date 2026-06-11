@@ -5,6 +5,10 @@
 
 #include <thread>
 #include <cstdlib>
+#include <stb_image.h>
+
+GLuint VortexGUI::folder_icon_tex = 0;
+GLuint VortexGUI::file_icon_tex = 0;
 
 VortexApplication *VortexGUI::app = nullptr;
 
@@ -15,14 +19,15 @@ char VortexGUI::m_new_project_name[128] = "";
 char VortexGUI::m_project_to_delete[128] = "";
 
 bool VortexGUI::show_inspector = true;
-bool VortexGUI::show_camera_info = true;
+bool VortexGUI::show_camera_info = false;
 bool VortexGUI::show_creator_window = true;
-bool VortexGUI::show_engine_stats = true;
+bool VortexGUI::show_engine_stats = false;
 bool VortexGUI::show_terminal = false;
 bool VortexGUI::show_skybox_post_process_options = true;
 bool VortexGUI::show_scene_viewport = true;
 bool VortexGUI::show_render_scene_viewport = false;
 bool VortexGUI::show_stack_history_window = false;
+bool VortexGUI::show_asset_browser = true;
 
 std::set<VortexModel*> VortexGUI::m_selected_models = {nullptr};
 
@@ -143,6 +148,9 @@ void VortexGUI::init(VortexApplication *_app, int width, int height)
 
     ImGui_ImplGlfw_InitForOpenGL(app->get_window_ptr(), true);
     ImGui_ImplOpenGL3_Init("#version 330");
+
+    folder_icon_tex = load_editor_icon("assets/images/icons/folder.png");
+    file_icon_tex = load_editor_icon("assets/images/icons/file.png");
 }
 
 void VortexGUI::update()
@@ -245,6 +253,31 @@ void VortexGUI::draw_exit_modal()
         ImGui::EndPopup();
     }
     ImGui::PopStyleColor();
+}
+
+GLuint VortexGUI::load_editor_icon(const char* file_path)
+{
+    int width, height, channels;
+    unsigned char *data = stbi_load(file_path, &width, &height, &channels, 4);
+    if (!data)
+    {
+        VORTEX_WARN("[GUI] Failed to load editor icon: ", file_path);
+        return 0;
+    }
+
+    GLuint texture_id;
+    glGenTextures(1, &texture_id);
+    glBindTexture(GL_TEXTURE_2D, texture_id);
+
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, width, height, 0, GL_RGBA, GL_UNSIGNED_BYTE, data);
+
+    stbi_image_free(data);
+    return texture_id;
 }
 
 void VortexGUI::clean_up()

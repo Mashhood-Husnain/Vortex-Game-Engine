@@ -136,12 +136,16 @@ When you launch the engine, you will start in Editor Mode attached to the defaul
 | **LEFT CTRL + W** | Toggle Creator Window |
 | **LEFT CTRL + E** | Toggle Engine Stats |
 | **LEFT CTRL + O** | Toggle skybox/post-process Options |
+| **LEFT CTRL + SHIFT + O** | Open Existing Project in Project Hub |
+| **LEFT CTRL + SHIFT + N** | Open New Project in Project Hub |
 | **LEFT CTRL + H** | Toggle Stack History |
 | **LEFT CTRL + S** | Save the Current Project |
+| **LEFT CTRL + SHIFT + S** | Open Scene View |
 | **LEFT CTRL + D** | Duplicate Current Selected Model(s) |
 | **LEFT CTRL + Z** | Undo Changes |
 | **LEFT CTRL + Y** | Redo Changes |
 | **LEFT CTRL + R** | Enter Play Mode |
+| **LEFT CTRL + SHIFT + R** | Open Render View |
 | **LEFT CTRL + C** | Compile Scripts |
 | **LEFT ALT** | Snap selected model to the ground |
 | **Right Mouse Click (on folder)** | Options for Folders |

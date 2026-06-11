@@ -23,9 +23,10 @@
 
 #include "vortex_actions.hpp"
 
-#include "util/vortex_engine_stats.hpp"
-#include "util/vortex_logs.hpp"
-#include "util/vortex_util.hpp"
+#include "vortex_engine_stats.hpp"
+#include "vortex_logs.hpp"
+#include "vortex_util.hpp"
+#include "vortex_keyboard.hpp"
 
 class VortexApplication;
 class VortexModel;
@@ -94,6 +95,9 @@ struct FolderNode
 
 class VortexGUI
 {
+    static GLuint folder_icon_tex;
+    static GLuint file_icon_tex;
+
     static VortexApplication *app;
 
     static std::set<VortexModel*> m_processed_models;
@@ -138,6 +142,8 @@ class VortexGUI
     static void setup_scene_fbo(int width, int height);
     static void destroy_scene();
     static void destroy_render_scene();
+
+    static GLuint load_editor_icon(const char* file_path);
 public:
     static void setup_render_scene_fbo(int width, int height);
 
@@ -169,6 +175,7 @@ public:
     static bool show_scene_viewport;
     static bool show_render_scene_viewport;
     static bool show_stack_history_window;
+    static bool show_asset_browser;
 
     static int m_selected_skybox_idx;
     static int m_selected_shader_idx;
@@ -225,6 +232,8 @@ public:
     static void draw_compiler_modal();
 
     static void draw_stack_history_window();
+
+    static void draw_asset_browser();
 
     static void clean_up();
 };

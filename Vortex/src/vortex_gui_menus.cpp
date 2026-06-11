@@ -90,6 +90,7 @@ void VortexGUI::draw_main_menu_bar()
             ImGui::MenuItem("Terminal Output", "Ctrl+P", &show_terminal);
             ImGui::MenuItem("Skybox/Post-Process", "Ctrl+O", &show_skybox_post_process_options);
             ImGui::MenuItem("Action Stack History", "Ctrl+H", &show_stack_history_window);
+            ImGui::MenuItem("Asset Browser", "Ctrl+A", &show_asset_browser);
 
             ImGui::MenuItem("Scene View", "Ctrl+Shift+S", &show_scene_viewport);
             if (show_scene_viewport && !scene_fbo_initialized)
