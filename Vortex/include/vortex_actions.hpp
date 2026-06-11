@@ -10,6 +10,7 @@
 #include "vortex_objectmanager.hpp"
 #include "vortex_application.hpp"
 #include "vortex_util.hpp"
+#include "vortex_logs.hpp"
 
 class EditorAction
 {
@@ -40,6 +41,7 @@ public:
         glm::quat old_rot, glm::quat new_rot,
         glm::vec3 old_scale, glm::vec3 new_scale
     );
+    ~ActionTransform() override;
 
     void undo() override;
     void redo() override;
@@ -91,4 +93,6 @@ public:
 
     static const std::deque<EditorAction*> &get_undo_stack();
     static const std::deque<EditorAction*> &get_redo_stack();
+
+    static void clear_stack_history();
 };

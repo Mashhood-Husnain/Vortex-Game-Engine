@@ -207,6 +207,8 @@ public:
 
     static void draw_main_menu_bar();
     static void draw_project_hub();
+    static void project_hub_open_project();
+    static void project_hub_new_project();
 
     static void creator_window();
     static void camera_info(VortexCamera *camera);

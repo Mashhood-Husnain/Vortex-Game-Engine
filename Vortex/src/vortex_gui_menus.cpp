@@ -2,31 +2,41 @@
 #include "vortex_application.hpp"
 #include "vortex_save_load.hpp"
 
+void VortexGUI::project_hub_open_project()
+{
+    if (strlen(m_new_project_name) > 0)
+    {
+        VortexProject::take_snapshot(SnapshotState::SAVE, app, m_new_project_name);
+    }
+
+    app->set_state(EngineState::PROJECT_HUB);
+}
+
+void VortexGUI::project_hub_new_project()
+{
+    if (strlen(m_new_project_name) > 0)
+    {
+        VortexProject::take_snapshot(SnapshotState::SAVE, app, m_new_project_name);
+    }
+    memset(m_new_project_name, 0, sizeof(m_new_project_name));
+
+    app->set_state(EngineState::PROJECT_HUB);
+}
+
 void VortexGUI::draw_main_menu_bar()
 {
     if (ImGui::BeginMainMenuBar())
     {
         if (ImGui::BeginMenu("File"))
         {
-            if (ImGui::MenuItem("New Project", "Ctrl+N"))
+            if (ImGui::MenuItem("New Project", "Ctrl+Shift+N"))
             {
-                if (strlen(m_new_project_name) > 0)
-                {
-                    VortexProject::take_snapshot(SnapshotState::SAVE, app, m_new_project_name);
-                }
-                memset(m_new_project_name, 0, sizeof(m_new_project_name));
-
-                app->set_state(EngineState::PROJECT_HUB);
+                project_hub_new_project();
             }
 
-            if (ImGui::MenuItem("Open Project", "Ctrl+O"))
+            if (ImGui::MenuItem("Open Project", "Ctrl+Shift+O"))
             {
-                if (strlen(m_new_project_name) > 0)
-                {
-                    VortexProject::take_snapshot(SnapshotState::SAVE, app, m_new_project_name);
-                }
-
-                app->set_state(EngineState::PROJECT_HUB);
+                project_hub_open_project();
             }
 
             ImGui::Separator();
@@ -81,7 +91,7 @@ void VortexGUI::draw_main_menu_bar()
             ImGui::MenuItem("Skybox/Post-Process", "Ctrl+O", &show_skybox_post_process_options);
             ImGui::MenuItem("Action Stack History", "Ctrl+H", &show_stack_history_window);
 
-            ImGui::MenuItem("Scene View", NULL, &show_scene_viewport);
+            ImGui::MenuItem("Scene View", "Ctrl+Shift+S", &show_scene_viewport);
             if (show_scene_viewport && !scene_fbo_initialized)
             {
                 setup_scene_fbo(scene_width, scene_height);
@@ -93,7 +103,7 @@ void VortexGUI::draw_main_menu_bar()
                 scene_fbo_initialized = false;
             }
 
-            ImGui::MenuItem("Render View", NULL, &show_render_scene_viewport);
+            ImGui::MenuItem("Render View", "Ctrl+Shift+R", &show_render_scene_viewport);
             if (show_render_scene_viewport && !render_scene_fbo_initialized)
             {
                 setup_render_scene_fbo(render_scene_width, render_scene_height);
@@ -160,6 +170,8 @@ void VortexGUI::draw_project_hub()
 
             VortexObjectManager::clear_scene();
             VortexGUI::m_selected_models.clear();
+            ActionManager::clear_stack_history();
+
             VortexGUI::explicit_empty_folders = {"Scene"};
 
             VortexProject::take_snapshot(SnapshotState::LOAD, app, m_new_project_name);

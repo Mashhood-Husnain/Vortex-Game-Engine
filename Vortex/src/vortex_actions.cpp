@@ -22,6 +22,14 @@ ActionTransform::ActionTransform(
     m_new_scale = new_scale;
 }
 
+ActionTransform::~ActionTransform()
+{
+    if (m_target)
+    {
+        m_target = nullptr;
+    }
+}
+
 void ActionTransform::undo()
 {
     m_target->transform.position = m_old_pos;
@@ -66,6 +74,7 @@ ActionCreate::~ActionCreate()
     if (!m_is_in_scene && m_target)
     {
         delete m_target;
+        m_target = nullptr;
     }
 }
 
@@ -111,6 +120,7 @@ ActionDelete::~ActionDelete()
     if (m_is_deleted && m_target)
     {
         delete m_target;
+        m_target = nullptr;
     }
 }
 
@@ -193,4 +203,21 @@ const std::deque<EditorAction*> &ActionManager::get_undo_stack()
 const std::deque<EditorAction*> &ActionManager::get_redo_stack()
 {
     return redo_stack;
+}
+
+void ActionManager::clear_stack_history()
+{
+    for (EditorAction *action : undo_stack)
+    {
+        delete action;
+    }
+    undo_stack.clear();
+
+    for (EditorAction *action : redo_stack)
+    {
+        delete action;
+    }
+    redo_stack.clear();
+
+    VORTEX_INFO("[Action Manager] Deleting Action Stack History...");
 }
