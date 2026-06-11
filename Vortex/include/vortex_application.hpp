@@ -22,7 +22,7 @@
 
 #include "vortex_camera.hpp"
 #include "vortex_shaders.hpp"
-#include "vortex_shadowmanager.hpp"
+// #include "vortex_shadowmanager.hpp"
 #include "vortex_gui.hpp"
 #include "vortex_postprocessor.hpp"
 #include "vortex_skybox.hpp"
@@ -95,7 +95,7 @@ private:
     PostProcessor *post_processor = nullptr;
     VortexSkybox *skybox = nullptr;
     VortexGrid *environment_grid = nullptr;
-    ShadowManager *shadow_manager = nullptr;
+    // ShadowManager *shadow_manager = nullptr;
 
     VortexShader *worldaxis_shader = nullptr;
     unsigned int world_axisVAO;
@@ -144,7 +144,7 @@ public:
 
     VortexCamera *get_camera() const;
     VortexCamera *get_editor_camera() const;
-    ShadowManager *get_shadow_manager() const;
+    // ShadowManager *get_shadow_manager() const;
 
     void set_camera(VortexCamera *camera);
 

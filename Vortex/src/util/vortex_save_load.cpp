@@ -3,9 +3,53 @@
 
 void VortexProject::save_project(Snapshot *snapshot)
 {
-    if (!std::filesystem::exists(SAVE_DIRECTORY))
+    std::string prefix = "temp_playmode_backup_";
+    std::string folder_name = snapshot->project_name;
+    if (folder_name.rfind(prefix, 0) == 0)
     {
-        std::filesystem::create_directory(SAVE_DIRECTORY);
+        folder_name = folder_name.substr(prefix.length());
+    }
+
+    std::string project_save_dir = SAVE_DIRECTORY + "/" + folder_name;
+    if (!std::filesystem::exists(project_save_dir))
+    {
+        std::filesystem::create_directory(project_save_dir);
+    }
+
+    std::string project_asset_dir = project_save_dir + "/" + ASSET_DIR_SCRIPTS;
+    if (!std::filesystem::exists(project_asset_dir))
+    {
+        std::filesystem::create_directory(project_asset_dir);
+    }
+
+    std::string project_audio_dir = project_save_dir + "/" + ASSET_DIR_AUDIO;
+    if (!std::filesystem::exists(project_audio_dir))
+    {
+        std::filesystem::create_directory(project_audio_dir);
+    }
+
+    std::string project_models_dir = project_save_dir + "/" + ASSET_DIR_MODELS;
+    if (!std::filesystem::exists(project_models_dir))
+    {
+        std::filesystem::create_directory(project_models_dir);
+    }
+
+    std::string project_models_obj_dir = project_models_dir + "/" + ASSET_DIR_MODELS_OBJ;
+    if (!std::filesystem::exists(project_models_obj_dir))
+    {
+        std::filesystem::create_directory(project_models_obj_dir);
+    }
+
+    std::string project_models_mtl_dir = project_models_dir + "/" + ASSET_DIR_MODELS_MTL;
+    if (!std::filesystem::exists(project_models_mtl_dir))
+    {
+        std::filesystem::create_directory(project_models_mtl_dir);
+    }
+
+    std::string project_models_mtl_textures_dir = project_models_mtl_dir + "/" + ASSET_DIR_MODELS_MTL_TEXTURES;
+    if (!std::filesystem::exists(project_models_mtl_textures_dir))
+    {
+        std::filesystem::create_directory(project_models_mtl_textures_dir);
     }
 
     json save_data;
@@ -97,7 +141,7 @@ void VortexProject::save_project(Snapshot *snapshot)
         save_data["camera"]["pitch"] = snapshot->window->get_editor_camera()->get_pitch();
     }
 
-    std::string file_path = SAVE_DIRECTORY + "/" + snapshot->project_name + ".vtx";
+    std::string file_path = project_save_dir + "/" + snapshot->project_name + ".vtx";
 
     std::string json_string = save_data.dump(4);
     VortexEncrypt::write_encrypted(file_path, json_string);
@@ -105,36 +149,44 @@ void VortexProject::save_project(Snapshot *snapshot)
     VORTEX_INFO("[PROJECT] Successfully saved to: ", file_path);
 }
 
-std::vector<std::string> VortexProject::search_save_files(const std::string &file_name)
+std::vector<std::string> VortexProject::get_project_names()
 {
     const std::string base_path = SAVE_DIRECTORY + "/";
-
-    if (!file_name.empty())
-    {
-        std::string file_path = base_path + file_name + ".vtx";
-        if (!std::filesystem::exists(file_path)) return {};
-
-        return {file_path};
-    }
+    const std::string prefix = "temp_playmode_backup_";
 
     if (!std::filesystem::exists(base_path)) return {};
 
-    std::vector<std::string> save_files;
+    std::vector<std::string> project_names;
 
-    for (const auto &entry  : std::filesystem::directory_iterator(base_path))
+    for (const auto& entry : std::filesystem::directory_iterator(base_path))
     {
-        if (entry.is_regular_file() && entry.path().extension() == ".vtx")
+        if (!entry.is_directory()) continue;
+
+        std::string folder_name = entry.path().filename().string();
+
+        if (folder_name.rfind(prefix, 0) == 0) continue;
+
+        std::filesystem::path project_file = entry.path() / (folder_name + ".vtx");
+
+        if (std::filesystem::exists(project_file))
         {
-            save_files.push_back(entry.path().string());
+            project_names.push_back(folder_name);
         }
     }
 
-    return save_files;
+    return project_names;
 }
 
 void VortexProject::load_project(Snapshot *snapshot)
 {
-    std::string file_path = SAVE_DIRECTORY + "/" + snapshot->project_name + ".vtx";
+    std::string prefix = "temp_playmode_backup_";
+    std::string folder_name = snapshot->project_name;
+    if (folder_name.rfind(prefix, 0) == 0)
+    {
+        folder_name = folder_name.substr(prefix.length());
+    }
+
+    std::string file_path = SAVE_DIRECTORY + "/" + folder_name + "/" + snapshot->project_name  + ".vtx";
     if (!std::filesystem::exists(file_path))
     {
         VORTEX_WARN("[PROJECT ERROR] Save file not found: ", file_path);
@@ -294,7 +346,14 @@ void VortexProject::load_project(Snapshot *snapshot)
 
 bool VortexProject::check_save_state(Snapshot *snapshot)
 {
-    std::string filepath = SAVE_DIRECTORY + "/" + snapshot->project_name + ".vtx";
+    std::string prefix = "temp_playmode_backup_";
+    std::string folder_name = snapshot->project_name;
+    if (folder_name.rfind(prefix, 0) == 0)
+    {
+        folder_name = folder_name.substr(prefix.length());
+    }
+
+    std::string filepath = SAVE_DIRECTORY + "/" + folder_name + "/" + snapshot->project_name + ".vtx";
 
     std::string decrypted_data = VortexEncrypt::read_decrypted(filepath);
 
@@ -471,16 +530,22 @@ void VortexProject::clean_playmode_backups()
 
     try
     {
-        for (const auto& entry : std::filesystem::directory_iterator(target_dir))
+        for (const auto& project_dir : std::filesystem::directory_iterator(target_dir))
         {
-            if (entry.is_regular_file())
+            if (project_dir.is_directory())
             {
-                std::string filename = entry.path().filename().string();
-
-                if (filename.rfind(prefix, 0) == 0)
+                for (const auto& file_entry : std::filesystem::directory_iterator(project_dir.path()))
                 {
-                    std::filesystem::remove(entry.path());
-                    deleted_count++;
+                    if (file_entry.is_regular_file())
+                    {
+                        std::string filename = file_entry.path().filename().string();
+
+                        if (filename.rfind(prefix, 0) == 0)
+                        {
+                            std::filesystem::remove(file_entry.path());
+                            deleted_count++;
+                        }
+                    }
                 }
             }
         }

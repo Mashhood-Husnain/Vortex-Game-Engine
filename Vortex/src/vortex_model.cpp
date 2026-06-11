@@ -90,16 +90,16 @@ void VortexModel::draw(const VortexShader &shader, VortexCamera &camera, bool wi
 {
     const VortexShader *active_shader = &shader;
 
-    if (app->get_shadow_manager()->is_active)
-    {
-        active_shader = app->get_shadow_manager()->shadow_shader;
-    }
+    // if (app->get_shadow_manager()->is_active)
+    // {
+    //     active_shader = app->get_shadow_manager()->shadow_shader;
+    // }
 
     active_shader->use();
 
-    if (app->get_shadow_manager()->is_active)
+    if (/*app->get_shadow_manager()->is_active*/ false)
     {
-        active_shader->setMat4("lightSpaceMatrix", app->get_shadow_manager()->light_space_matrix);
+        // active_shader->setMat4("lightSpaceMatrix", app->get_shadow_manager()->light_space_matrix);
     }
     else
     {
@@ -178,10 +178,10 @@ void VortexModel::draw(const VortexShader &shader, VortexCamera &camera, bool wi
         glBindTexture(GL_TEXTURE_2D, shared_data->metallic_id);
         active_shader->setInt("u_metallicMap", 2);
 
-        glActiveTexture(GL_TEXTURE3);
-        glBindTexture(GL_TEXTURE_2D, app->get_shadow_manager()->shadow_map);
-        active_shader->setInt("shadowMap", 3);
-        active_shader->setMat4("lightSpaceMatrix", app->get_shadow_manager()->light_space_matrix);
+        // glActiveTexture(GL_TEXTURE3);
+        // glBindTexture(GL_TEXTURE_2D, app->get_shadow_manager()->shadow_map);
+        // active_shader->setInt("shadowMap", 3);
+        // active_shader->setMat4("lightSpaceMatrix", app->get_shadow_manager()->light_space_matrix);
     }
 
     // rendering wireframe

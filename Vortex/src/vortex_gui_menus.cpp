@@ -140,59 +140,50 @@ void VortexGUI::draw_project_hub()
     static bool show_overwrite_error = false;
     bool selected_project = false;
 
-    if (std::filesystem::exists(VortexProject::SAVE_DIRECTORY) && std::filesystem::is_directory(VortexProject::SAVE_DIRECTORY))
+    std::vector<std::string> project_files = VortexProject::get_project_names();
+    if (!project_files.empty())
     {
-        for (const auto& entry : std::filesystem::directory_iterator(VortexProject::SAVE_DIRECTORY))
+        found_valid_project = true;
+    }
+
+    for (std::string project_name : project_files)
+    {
+        ImGui::PushStyleVar(ImGuiStyleVar_ItemSpacing, ImVec2(0, 8));
+
+        float available_width = ImGui::GetContentRegionAvail().x;
+        float delete_btn_width = 30.0f;
+        float selectable_width = available_width - delete_btn_width - 8.0f;
+
+        if (ImGui::Selectable((project_name + "##" + project_name).c_str(), false, 0, ImVec2(selectable_width, 30)))
         {
-            if (entry.path().extension() == ".vtx")
-            {
-                std::string project_name = entry.path().stem().string();
+            vortex_strncpy(m_new_project_name, sizeof(m_new_project_name), project_name.c_str());
 
-                if (project_name.rfind("temp_playmode_backup_", 0) == 0)
-                {
-                    continue;
-                }
+            VortexObjectManager::clear_scene();
+            VortexGUI::m_selected_models.clear();
+            VortexGUI::explicit_empty_folders = {"Scene"};
 
-                found_valid_project = true;
+            VortexProject::take_snapshot(SnapshotState::LOAD, app, m_new_project_name);
 
-                ImGui::PushStyleVar(ImGuiStyleVar_ItemSpacing, ImVec2(0, 8));
+            app->set_state(EngineState::EDITOR);
 
-                float available_width = ImGui::GetContentRegionAvail().x;
-                float delete_btn_width = 30.0f;
-                float selectable_width = available_width - delete_btn_width - 8.0f;
-
-                if (ImGui::Selectable((project_name + "##" + project_name).c_str(), false, 0, ImVec2(selectable_width, 30)))
-                {
-                    vortex_strncpy(m_new_project_name, sizeof(m_new_project_name), project_name.c_str());
-
-                    VortexObjectManager::clear_scene();
-                    VortexGUI::m_selected_models.clear();
-                    VortexGUI::explicit_empty_folders = {"Scene"};
-
-                    VortexProject::take_snapshot(SnapshotState::LOAD, app, m_new_project_name);
-
-                    app->set_state(EngineState::EDITOR);
-
-                    selected_project = true;
-                }
-
-                ImGui::SameLine(selectable_width + 8.0f);
-
-                ImGui::PushStyleColor(ImGuiCol_Button, ImVec4(0.8f, 0.2f, 0.2f, 0.7f));
-                ImGui::PushStyleColor(ImGuiCol_ButtonHovered, ImVec4(1.0f, 0.3f, 0.3f, 1.0f));
-                ImGui::PushStyleColor(ImGuiCol_ButtonActive, ImVec4(0.6f, 0.1f, 0.1f, 1.0f));
-
-                if (ImGui::Button(("X##del_" + project_name).c_str(), ImVec2(delete_btn_width, 30)))
-                {
-                    vortex_strncpy(m_project_to_delete, sizeof(m_project_to_delete), project_name.c_str());
-
-                    open_delete_modal = true;
-                }
-
-                ImGui::PopStyleColor(3);
-                ImGui::PopStyleVar();
-            }
+            selected_project = true;
         }
+
+        ImGui::SameLine(selectable_width + 8.0f);
+
+        ImGui::PushStyleColor(ImGuiCol_Button, ImVec4(0.8f, 0.2f, 0.2f, 0.7f));
+        ImGui::PushStyleColor(ImGuiCol_ButtonHovered, ImVec4(1.0f, 0.3f, 0.3f, 1.0f));
+        ImGui::PushStyleColor(ImGuiCol_ButtonActive, ImVec4(0.6f, 0.1f, 0.1f, 1.0f));
+
+        if (ImGui::Button(("X##del_" + project_name).c_str(), ImVec2(delete_btn_width, 30)))
+        {
+            vortex_strncpy(m_project_to_delete, sizeof(m_project_to_delete), project_name.c_str());
+
+            open_delete_modal = true;
+        }
+
+        ImGui::PopStyleColor(3);
+        ImGui::PopStyleVar();
     }
 
     if (!found_valid_project)
@@ -222,7 +213,7 @@ void VortexGUI::draw_project_hub()
     {
         if (strlen(m_new_project_name) > 0)
         {
-            std::string target_path = VortexProject::SAVE_DIRECTORY + "/" + std::string(m_new_project_name) + ".vtx";
+            std::string target_path = VortexProject::SAVE_DIRECTORY + "/" + std::string(m_new_project_name);
 
             if (std::filesystem::exists(target_path))
             {
@@ -270,16 +261,16 @@ void VortexGUI::draw_project_hub()
 
         if (ImGui::Button("Yes, Delete", ImVec2(120, 0)))
         {
-            std::string path_to_delete = VortexProject::SAVE_DIRECTORY + "/" + std::string(m_project_to_delete) + ".vtx";
+            std::string path_to_delete = VortexProject::SAVE_DIRECTORY + "/" + std::string(m_project_to_delete);
 
             try
             {
-                std::filesystem::remove(path_to_delete);
-                VORTEX_INFO("[PROJECT] Successfully deleted: ", path_to_delete);
+                std::filesystem::remove_all(path_to_delete);
+                VORTEX_INFO("[PROJECT] Successfully deleted folder: ", path_to_delete);
             }
             catch (const std::filesystem::filesystem_error& e)
             {
-                VORTEX_ERROR("[PROJECT ERROR] Failed to delete project: ", e.what());
+                VORTEX_ERROR("[PROJECT ERROR] Failed to delete project folder: ", e.what());
             }
 
             memset(m_project_to_delete, 0, sizeof(m_project_to_delete));

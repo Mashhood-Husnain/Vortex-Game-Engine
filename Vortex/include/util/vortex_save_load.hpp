@@ -40,7 +40,15 @@ class VortexProject
 {
 public:
     inline static const std::string SAVE_DIRECTORY = "saves";
-    static std::vector<std::string> search_save_files(const std::string &file_name="");
+    inline static const std::string ASSET_DIR_SCRIPTS = "Scripts";
+    inline static const std::string ASSET_DIR_AUDIO = "Audio";
+    inline static const std::string ASSET_DIR_MODELS = "Models";
+    inline static const std::string ASSET_DIR_MODELS_OBJ = "obj";
+    inline static const std::string ASSET_DIR_MODELS_MTL = "mtl";
+    inline static const std::string ASSET_DIR_MODELS_MTL_TEXTURES = "textures";
+
+    static std::vector<std::string> get_project_names();
+
     static void save_project(Snapshot *snapshot);
     static void load_project(Snapshot *snapshot);
     static bool check_save_state(Snapshot *snapshot);

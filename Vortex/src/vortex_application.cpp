@@ -358,7 +358,7 @@ VortexApplication::VortexApplication(std::string window_name)
     worldaxis_shader = new VortexShader("shaders/world_axis.vert", "shaders/world_axis.frag");
     setup_world_axis_buffers();
 
-    shadow_manager = new ShadowManager();
+    // shadow_manager = new ShadowManager();
     environment_grid = new VortexGrid();
 
     VortexObjectManager::init();
@@ -396,7 +396,7 @@ VortexApplication::VortexApplication(std::string window_name)
 VortexApplication::~VortexApplication()
 {
     delete worldaxis_shader;
-    delete shadow_manager;
+    // delete shadow_manager;
     delete skybox;
     delete environment_grid;
     delete editor_camera;
@@ -418,7 +418,7 @@ VortexApplication::~VortexApplication()
     }
 
     worldaxis_shader = nullptr;
-    shadow_manager = nullptr;
+    // shadow_manager = nullptr;
     window = nullptr;
     camera = nullptr;
     editor_camera = nullptr;
@@ -1009,7 +1009,7 @@ bool VortexApplication::has_unsaved() const { return has_unsaved_changes; }
 
 VortexCamera *VortexApplication::get_camera() const { return camera; }
 VortexCamera *VortexApplication::get_editor_camera() const { return editor_camera; }
-ShadowManager *VortexApplication::get_shadow_manager() const { return shadow_manager; }
+// ShadowManager *VortexApplication::get_shadow_manager() const { return shadow_manager; }
 
 void VortexApplication::set_camera(VortexCamera *camera) { this->camera = camera; }
 
