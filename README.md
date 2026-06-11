@@ -14,7 +14,7 @@ Vortex Engine is a personal project currently in its early development stages. I
 While many core features are working, the engine is actively evolving. Many standard features, including complex lighting and a scene hierarchy are on the roadmap. This project follows a bottom-up approach to ensure a fast, efficient, and highly optimized base for future implementations.
 
 ## Prerequisites
-Vortex Engine is currently built for Linux (Ubuntu/Debian).
+Vortex Engine is currently built for Linux (Ubuntu/Debian) and has Window support (might be buggy! :-) ).
 
 ## Installation and Building
 
@@ -130,6 +130,7 @@ When you launch the engine, you will start in Editor Mode attached to the defaul
 | **Y** | Toggle for Scaling object |
 | **TAB** | Toggle Engine Stats view in Play Mode (this binding only works in Play Mode)|
 | **LEFT CTRL + Mouse Drag** | Snap selected model to grid |
+| **LEFT CTRL + F** | Toggle File viewer |
 | **LEFT CTRL + P** | Toggle Engine Terminal |
 | **LEFT CTRL + I** | Toggle Scene Inspector |
 | **LEFT CTRL + X** | Toggle Camera Info |
@@ -138,15 +139,17 @@ When you launch the engine, you will start in Editor Mode attached to the defaul
 | **LEFT CTRL + O** | Toggle skybox/post-process Options |
 | **LEFT CTRL + SHIFT + O** | Open Existing Project in Project Hub |
 | **LEFT CTRL + SHIFT + N** | Open New Project in Project Hub |
-| **LEFT CTRL + H** | Toggle Stack History |
+| **LEFT CTRL + H** | Toggle Action Stack History |
 | **LEFT CTRL + S** | Save the Current Project |
-| **LEFT CTRL + SHIFT + S** | Open Scene View |
+| **LEFT CTRL + SHIFT + S** | Toggle Scene View |
 | **LEFT CTRL + D** | Duplicate Current Selected Model(s) |
 | **LEFT CTRL + Z** | Undo Changes |
 | **LEFT CTRL + Y** | Redo Changes |
 | **LEFT CTRL + R** | Enter Play Mode |
-| **LEFT CTRL + SHIFT + R** | Open Render View |
+| **LEFT CTRL + SHIFT + R** | Toggle Render View |
 | **LEFT CTRL + C** | Compile Scripts |
+| **LEFT CTRL + A** | Toggle Asset Browser |
+| **LEFT CTRL + SHIFT + I** | Toggle Engine Settings Window |
 | **LEFT ALT** | Snap selected model to the ground |
 | **Right Mouse Click (on folder)** | Options for Folders |
 | **DEL** | Deletes Selected Model(s) |

@@ -2,6 +2,7 @@
 
 #include <algorithm>
 #include <cctype>
+#include <fstream>
 
 void VortexGUI::draw_asset_browser()
 {
@@ -53,20 +54,14 @@ void VortexGUI::draw_asset_browser()
     ImGui::Spacing();
 
     std::vector<std::filesystem::directory_entry> directory_entries;
+    std::string settings_filename = std::string(m_new_project_name) + "_settings.json";
     if (std::filesystem::exists(current_path))
     {
         for (const auto& entry : std::filesystem::directory_iterator(current_path))
         {
-            std::string filename = entry.path().filename().string();
-
-            if (current_path == base_project_path)
+            if (entry.path().extension() == ".vtx" || entry.path().filename().string() == settings_filename)
             {
-                if (filename != VortexProject::ASSET_DIR_AUDIO &&
-                    filename != VortexProject::ASSET_DIR_MODELS &&
-                    filename != VortexProject::ASSET_DIR_SCRIPTS)
-                {
-                    continue;
-                }
+                continue;
             }
 
             directory_entries.push_back(entry);
@@ -116,6 +111,9 @@ void VortexGUI::draw_asset_browser()
 
     ImGui::Columns(column_count, 0, false);
 
+    static bool show_delete_modal = false;
+    static char item_to_delete[512] = "";
+
     for (const auto& entry : directory_entries)
     {
         std::string filename = entry.path().filename().string();
@@ -150,7 +148,48 @@ void VortexGUI::draw_asset_browser()
                 ImVec2(thumbnail_size, thumbnail_size)
             );
 
+            if (ImGui::IsItemHovered() && ImGui::IsMouseDoubleClicked(ImGuiMouseButton_Left))
+            {
+                open_file_in_viewer(entry.path().string());
+            }
+
             ImGui::PopStyleColor(3);
+        }
+
+        if (ImGui::BeginPopupContextItem(("Context##" + filename).c_str()))
+        {
+            if (entry.is_regular_file())
+            {
+                if (ImGui::MenuItem("Open in External Editor"))
+                {
+                    if (strlen(preferred_ide_path) > 0)
+                    {
+                        std::string cmd;
+                        std::string file_path = entry.path().string();
+
+                        #if defined(_WIN32) || defined(_WIN64)
+                            cmd = "start \"\" \"" + std::string(preferred_ide_path) + "\" \"" + file_path + "\"";
+                        #else
+                            cmd = std::string(preferred_ide_path) + " \"" + file_path + "\" &";
+                        #endif
+
+                        int result = std::system(cmd.c_str());
+                        if (result != 0)
+                        {
+                            VORTEX_WARN("[System] Failed to launch external editor. Check IDE path in settings.");
+                        }
+                    }
+                }
+                ImGui::Separator();
+            }
+
+            if (ImGui::MenuItem("Delete"))
+            {
+                vortex_strncpy(item_to_delete, sizeof(item_to_delete), entry.path().string().c_str());
+                show_delete_modal = true;
+            }
+
+            ImGui::EndPopup();
         }
 
         float text_width = ImGui::CalcTextSize(filename.c_str()).x;
@@ -173,6 +212,88 @@ void VortexGUI::draw_asset_browser()
     ImGui::Columns(1);
 
     current_path = path_to_navigate_to;
+
+    if (ImGui::BeginPopupContextWindow("AssetBrowserContext", ImGuiPopupFlags_MouseButtonRight | ImGuiPopupFlags_NoOpenOverItems))
+    {
+        if (ImGui::MenuItem("Create New File"))
+        {
+            memset(new_item_name, 0, sizeof(new_item_name));
+            pending_creation_path = current_path.string();
+            show_create_file_modal = true;
+        }
+        if (ImGui::MenuItem("Create New Folder"))
+        {
+            memset(new_item_name, 0, sizeof(new_item_name));
+            pending_creation_path = current_path.string();
+            show_create_folder_modal = true;
+        }
+        ImGui::EndPopup();
+    }
+
+    ImVec2 modal_center = ImGui::GetMainViewport()->GetCenter();
+    ImGui::SetNextWindowPos(modal_center, ImGuiCond_Appearing, ImVec2(0.5f, 0.5f));
+
+    if (show_create_file_modal) ImGui::OpenPopup("Create File");
+    if (ImGui::BeginPopupModal("Create File", &show_create_file_modal, ImGuiWindowFlags_AlwaysAutoResize))
+    {
+        ImGui::Text("Enter file name (e.g., script.cpp):");
+        ImGui::InputText("##filename", new_item_name, IM_ARRAYSIZE(new_item_name));
+        if (ImGui::Button("Create", ImVec2(120, 0)))
+        {
+            std::string full_path = pending_creation_path + "/" + new_item_name;
+            std::ofstream new_file(full_path);
+            new_file.close();
+            show_create_file_modal = false;
+        }
+        ImGui::SameLine();
+        if (ImGui::Button("Cancel", ImVec2(120, 0))) show_create_file_modal = false;
+        ImGui::EndPopup();
+    }
+
+    ImGui::SetNextWindowPos(modal_center, ImGuiCond_Appearing, ImVec2(0.5f, 0.5f));
+    if (show_create_folder_modal) ImGui::OpenPopup("Create Folder");
+    if (ImGui::BeginPopupModal("Create Folder", &show_create_folder_modal, ImGuiWindowFlags_AlwaysAutoResize))
+    {
+        ImGui::Text("Enter folder name:");
+        ImGui::InputText("##foldername", new_item_name, IM_ARRAYSIZE(new_item_name));
+        if (ImGui::Button("Create", ImVec2(120, 0)))
+        {
+            std::string full_path = pending_creation_path + "/" + new_item_name;
+            std::filesystem::create_directory(full_path);
+            show_create_folder_modal = false;
+        }
+        ImGui::SameLine();
+        if (ImGui::Button("Cancel", ImVec2(120, 0))) show_create_folder_modal = false;
+        ImGui::EndPopup();
+    }
+
+    ImGui::SetNextWindowPos(modal_center, ImGuiCond_Appearing, ImVec2(0.5f, 0.5f));
+    if (show_delete_modal) ImGui::OpenPopup("Delete Asset");
+    if (ImGui::BeginPopupModal("Delete Asset", &show_delete_modal, ImGuiWindowFlags_AlwaysAutoResize))
+    {
+        ImGui::Text("Are you sure you want to delete this item?");
+        ImGui::TextColored(ImVec4(1.0f, 0.4f, 0.4f, 1.0f), "This action cannot be undone!");
+        ImGui::Separator();
+        ImGui::Spacing();
+
+        if (ImGui::Button("Yes, Delete", ImVec2(120, 0)))
+        {
+            try
+            {
+                std::filesystem::remove_all(item_to_delete);
+                VORTEX_INFO("[ASSET BROWSER] Successfully deleted: ", item_to_delete);
+            }
+            catch (const std::filesystem::filesystem_error& e)
+            {
+                VORTEX_ERROR("[ASSET BROWSER ERROR] Failed to delete item: ", e.what());
+            }
+
+            show_delete_modal = false;
+        }
+        ImGui::SameLine();
+        if (ImGui::Button("Cancel", ImVec2(120, 0))) show_delete_modal = false;
+        ImGui::EndPopup();
+    }
 
     ImGui::End();
 }

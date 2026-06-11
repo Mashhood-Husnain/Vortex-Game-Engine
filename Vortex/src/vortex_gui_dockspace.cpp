@@ -34,6 +34,9 @@ void VortexGUI::build_dockspace()
             // Render View
             ImGui::DockBuilderDockWindow("Render View", dock_main_id);
 
+            // Text view
+            ImGui::DockBuilderDockWindow("File Viewer", dock_main_id);
+
             // Left Region
             ImGui::DockBuilderDockWindow("Scene Inspector", dock_left_top);
             ImGui::DockBuilderDockWindow("SkyBox", dock_left_bottom);

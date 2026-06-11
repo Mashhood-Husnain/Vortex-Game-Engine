@@ -17,6 +17,7 @@ int VortexGUI::m_selected_skybox_idx = 0;
 
 char VortexGUI::m_new_project_name[128] = "";
 char VortexGUI::m_project_to_delete[128] = "";
+char VortexGUI::preferred_ide_path[256] = "";
 
 bool VortexGUI::show_inspector = true;
 bool VortexGUI::show_camera_info = false;
@@ -28,6 +29,17 @@ bool VortexGUI::show_scene_viewport = true;
 bool VortexGUI::show_render_scene_viewport = false;
 bool VortexGUI::show_stack_history_window = false;
 bool VortexGUI::show_asset_browser = true;
+bool VortexGUI::show_settings_window = false;
+bool VortexGUI::show_file_viewer = false;
+
+std::string VortexGUI::current_open_file_path = "";
+std::string VortexGUI::current_file_content = "";
+bool VortexGUI::is_current_file_cpp = false;
+
+bool VortexGUI::show_create_file_modal = false;
+bool VortexGUI::show_create_folder_modal = false;
+char VortexGUI::new_item_name[128] = "";
+std::string VortexGUI::pending_creation_path = "";
 
 std::set<VortexModel*> VortexGUI::m_selected_models = {nullptr};
 

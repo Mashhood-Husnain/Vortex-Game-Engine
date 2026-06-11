@@ -151,7 +151,28 @@ void VortexProject::save_project(Snapshot *snapshot)
     std::string json_string = save_data.dump(4);
     VortexEncrypt::write_encrypted(file_path, json_string);
 
+    if (snapshot->settings_snapshot) save_project_settings(snapshot->settings_snapshot, snapshot->project_name);
+
     VORTEX_INFO("[PROJECT] Successfully saved to: ", file_path);
+}
+
+void VortexProject::save_project_settings(SettingsSnapshot *settings_snapshot, const std::string project_name)
+{
+    if (!settings_snapshot) return;
+    if (project_name.empty() || project_name.find("temp_playmode_backup_") == 0) return;
+
+    std::string path = SAVE_DIRECTORY + "/" + project_name + "/" + project_name + "_settings.json";
+
+    nlohmann::json j;
+    j["preferred_ide_path"] = std::string(settings_snapshot->preferred_ide_path);
+
+    std::ofstream file(path);
+    if (file.is_open())
+    {
+        file << j.dump(4);
+        file.close();
+        VORTEX_INFO("[SETTINGS] Saved project settings: ", path);
+    }
 }
 
 std::vector<std::string> VortexProject::get_project_names()
@@ -346,7 +367,44 @@ void VortexProject::load_project(Snapshot *snapshot)
         }
     }
 
+    if (snapshot->settings_snapshot) load_project_settings(snapshot->settings_snapshot, snapshot->project_name);
+
     VORTEX_INFO("[PROJECT] Successfully loaded ", snapshot->project_name);
+}
+
+void VortexProject::load_project_settings(SettingsSnapshot *settings_snapshot, const std::string project_name)
+{
+    if (!settings_snapshot) return;
+
+    memset(settings_snapshot->preferred_ide_path, 0, 256);
+
+    if (project_name.empty()) return;
+
+    std::string path = SAVE_DIRECTORY + "/" + project_name + "/" + project_name + "_settings.json";
+
+    if (std::filesystem::exists(path))
+    {
+        std::ifstream file(path);
+        if (file.is_open())
+        {
+            nlohmann::json j;
+            try
+            {
+                file >> j;
+                if (j.contains("preferred_ide_path"))
+                {
+                    std::string ide = j["preferred_ide_path"];
+                    vortex_strncpy(settings_snapshot->preferred_ide_path, 256, ide.c_str());
+                }
+                VORTEX_INFO("[SETTINGS] Loaded project settings: ", path);
+            }
+            catch (...)
+            {
+                VORTEX_WARN("[SETTINGS] Corrupted settings JSON: ", path);
+            }
+            file.close();
+        }
+    }
 }
 
 bool VortexProject::check_save_state(Snapshot *snapshot)
@@ -503,6 +561,10 @@ void VortexProject::take_snapshot(SnapshotState state, VortexApplication *window
 {
     if (project_name.empty()) project_name = std::string(VortexGUI::m_new_project_name);
 
+    SettingsSnapshot settings_snapshot = {
+        VortexGUI::preferred_ide_path
+    };
+
     Snapshot snapshot = {
         project_name,
         VortexObjectManager::active_models,
@@ -510,7 +572,8 @@ void VortexProject::take_snapshot(SnapshotState state, VortexApplication *window
         VortexGUI::m_selected_skybox_idx,
         VortexGUI::m_selected_shader_idx,
         VortexGUI::explicit_empty_folders,
-        window
+        window,
+        &settings_snapshot
     };
 
     if (state == SnapshotState::SAVE) VortexProject::save_project(&snapshot);

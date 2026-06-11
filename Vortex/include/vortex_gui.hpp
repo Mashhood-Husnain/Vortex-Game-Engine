@@ -20,6 +20,8 @@
 #include <mutex>
 #include <atomic>
 #include <cstdio>
+#include <sstream>
+#include <cctype>
 
 #include "vortex_actions.hpp"
 
@@ -176,6 +178,19 @@ public:
     static bool show_render_scene_viewport;
     static bool show_stack_history_window;
     static bool show_asset_browser;
+    static bool show_settings_window;
+    static bool show_file_viewer;
+
+    static char preferred_ide_path[256];
+
+    static std::string current_open_file_path;
+    static std::string current_file_content;
+    static bool is_current_file_cpp;
+
+    static bool show_create_file_modal;
+    static bool show_create_folder_modal;
+    static char new_item_name[128];
+    static std::string pending_creation_path;
 
     static int m_selected_skybox_idx;
     static int m_selected_shader_idx;
@@ -234,6 +249,11 @@ public:
     static void draw_stack_history_window();
 
     static void draw_asset_browser();
+
+    static void draw_settings_window();
+
+    static void draw_file_viewer();
+    static void open_file_in_viewer(const std::string &filepath);
 
     static void clean_up();
 };

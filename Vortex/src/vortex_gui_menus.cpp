@@ -61,7 +61,6 @@ void VortexGUI::draw_main_menu_bar()
 
         if (ImGui::BeginMenu("Edit"))
         {
-            // TODO
             ImGui::MenuItem("Undo", "Ctrl+Z");
             ImGui::MenuItem("Redo", "Ctrl+Y");
             ImGui::EndMenu();
@@ -91,6 +90,7 @@ void VortexGUI::draw_main_menu_bar()
             ImGui::MenuItem("Skybox/Post-Process", "Ctrl+O", &show_skybox_post_process_options);
             ImGui::MenuItem("Action Stack History", "Ctrl+H", &show_stack_history_window);
             ImGui::MenuItem("Asset Browser", "Ctrl+A", &show_asset_browser);
+            ImGui::MenuItem("File Viewer", "Ctrl+F", &show_file_viewer);
 
             ImGui::MenuItem("Scene View", "Ctrl+Shift+S", &show_scene_viewport);
             if (show_scene_viewport && !scene_fbo_initialized)
@@ -115,6 +115,13 @@ void VortexGUI::draw_main_menu_bar()
                 destroy_render_scene();
                 render_scene_fbo_initialized = false;
             }
+
+            ImGui::EndMenu();
+        }
+
+        if(ImGui::BeginMenu("Settings"))
+        {
+            ImGui::MenuItem("Open Settings Window", "Ctrl+Shift+I", &show_settings_window);
 
             ImGui::EndMenu();
         }
@@ -320,3 +327,69 @@ void VortexGUI::draw_project_hub()
         glfwSetWindowTitle(app->get_window_ptr(), new_window_title.c_str());
     }
 }
+
+void VortexGUI::open_file_in_viewer(const std::string& filepath)
+{
+    std::ifstream file(filepath);
+    if (file.is_open())
+    {
+        std::stringstream buffer;
+        buffer << file.rdbuf();
+        current_file_content = buffer.str();
+        current_open_file_path = filepath;
+        show_file_viewer = true;
+
+        std::filesystem::path p(filepath);
+        is_current_file_cpp = (p.extension() == ".cpp" || p.extension() == ".hpp" || p.extension() == ".h");
+    }
+    else
+    {
+        VORTEX_ERROR("Could not read file: ", filepath);
+    }
+}
+
+
+void VortexGUI::draw_file_viewer()
+{
+    if (!show_file_viewer) return;
+
+    ImGui::Begin("File Viewer");
+
+    ImGui::TextColored(ImVec4(0.6f, 0.6f, 0.6f, 1.0f), "Viewing: %s", current_open_file_path.c_str());
+    ImGui::Separator();
+
+    ImGui::BeginChild("FileContent", ImVec2(0, 0), true, ImGuiWindowFlags_HorizontalScrollbar);
+
+    if (!is_current_file_cpp)
+    {
+        ImGui::TextUnformatted(current_file_content.c_str());
+    }
+    else
+    {
+        std::istringstream stream(current_file_content);
+        std::string line;
+
+        ImVec4 keyword_color(0.3f, 0.6f, 0.9f, 1.0f);
+        ImVec4 type_color(0.2f, 0.8f, 0.6f, 1.0f);
+        ImVec4 preproc_color(0.8f, 0.4f, 0.8f, 1.0f);
+
+        while (std::getline(stream, line))
+        {
+            if (line.empty()) { ImGui::NewLine(); continue; }
+
+            if (line.find("#include") == 0 || line.find("#pragma") == 0 || line.find("#define") == 0)
+            {
+                ImGui::TextColored(preproc_color, "%s", line.c_str());
+                //TODO: add more colors to different word types
+            }
+            else
+            {
+                ImGui::TextUnformatted(line.c_str());
+            }
+        }
+    }
+
+    ImGui::EndChild();
+    ImGui::End();
+}
+

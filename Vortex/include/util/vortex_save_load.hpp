@@ -25,6 +25,11 @@ enum class SnapshotState
     LOAD
 };
 
+struct SettingsSnapshot
+{
+    char *preferred_ide_path;
+};
+
 struct Snapshot
 {
     std::string &project_name;
@@ -34,6 +39,7 @@ struct Snapshot
     int &m_selected_shader_idx;
     std::vector<std::string> explicit_empty_folders;
     VortexApplication *window;
+    SettingsSnapshot *settings_snapshot;
 };
 
 class VortexProject
@@ -51,6 +57,10 @@ public:
 
     static void save_project(Snapshot *snapshot);
     static void load_project(Snapshot *snapshot);
+
+    static void save_project_settings(SettingsSnapshot *settings_snapshot, const std::string project_name);
+    static void load_project_settings(SettingsSnapshot *settings_snapshot, const std::string project_name);
+
     static bool check_save_state(Snapshot *snapshot);
     static void take_snapshot(SnapshotState state, VortexApplication *window, std::string project_name="");
     static void clean_playmode_backups();
