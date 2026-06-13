@@ -6,6 +6,10 @@
 </p>
 
 <p align="center">
+  <img src="screenshots/vortex_engine_screenshot_1.png" width="800" alt="Vortex Engine Editor Interface">
+</p>
+
+<p align="center">
   <img src="screenshots/vortex_engine_screenshot_2.png" width="800" alt="Vortex Engine Editor Interface">
 </p>
 
@@ -159,9 +163,21 @@ When you launch the engine, you will start in Editor Mode attached to the defaul
 
 
 <p align="center">
-  <img src="screenshots/vortex_engine_screenshot_1.png" width="800" alt="Vortex Engine Editor Interface">
+  <img src="screenshots/vortex_engine_screenshot_3.png" width="800" alt="Vortex Engine Editor Interface">
 </p>
 
 <p align="center">
-  <img src="screenshots/vortex_engine_screenshot_3.png" width="800" alt="Vortex Engine Editor Interface">
+  <img src="screenshots/vortex_engine_screenshot_4.png" width="800" alt="Vortex Engine Editor Interface">
+</p>
+
+<p align="center">
+  <img src="screenshots/vortex_engine_screenshot_5.png" width="800" alt="Vortex Engine Editor Interface">
+</p>
+
+<p align="center">
+  <img src="screenshots/vortex_engine_screenshot_6.png" width="800" alt="Vortex Engine Editor Interface">
+</p>
+
+<p align="center">
+  <img src="screenshots/vortex_engine_gif_1.gif" width="800" alt="Vortex Engine Demo">
 </p>
