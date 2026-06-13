@@ -138,7 +138,7 @@ void VortexGUI::destroy_scene()
 
     if (scene_fbo != 0)
     {
-        glDeleteRenderbuffers(1, &scene_rbo);
+        glDeleteFramebuffers(1, &scene_fbo);
         scene_fbo = 0;
     }
 }

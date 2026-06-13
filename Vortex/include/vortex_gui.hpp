@@ -141,13 +141,12 @@ class VortexGUI
     static void handle_shortcuts();
     static void snap_to_floor();
 
-    static void setup_scene_fbo(int width, int height);
-    static void destroy_scene();
-    static void destroy_render_scene();
-
     static GLuint load_editor_icon(const char* file_path);
 public:
+    static void setup_scene_fbo(int width, int height);
     static void setup_render_scene_fbo(int width, int height);
+    static void destroy_scene();
+    static void destroy_render_scene();
 
     static std::set<VortexModel*> m_selected_models;
     static ImGuizmo::OPERATION m_current_op;
@@ -204,6 +203,7 @@ public:
     static bool is_render_view_visible;
 
     static bool is_using_gizmo;
+    static ImGuizmo::MODE m_current_guizmo_mode;
 
     VortexGUI();
 

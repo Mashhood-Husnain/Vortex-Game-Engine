@@ -122,6 +122,17 @@ void VortexGUI::draw_main_menu_bar()
         if(ImGui::BeginMenu("Settings"))
         {
             ImGui::MenuItem("Open Settings Window", "Ctrl+Shift+I", &show_settings_window);
+            ImGui::Separator();
+
+            if (ImGui::MenuItem("Global Translation", "Ctrl+G", m_current_guizmo_mode == ImGuizmo::WORLD))
+            {
+                m_current_guizmo_mode = ImGuizmo::WORLD;
+            }
+
+            if (ImGui::MenuItem("Local Translation", "Ctrl+L", m_current_guizmo_mode == ImGuizmo::LOCAL))
+            {
+                m_current_guizmo_mode = ImGuizmo::LOCAL;
+            }
 
             ImGui::EndMenu();
         }
@@ -134,7 +145,8 @@ void VortexGUI::draw_project_hub()
 {
     bool open_delete_modal = false;
     ImVec2 center = ImGui::GetMainViewport()->GetCenter();
-    ImGui::SetNextWindowPos(center, ImGuiCond_Appearing, ImVec2(0.5f, 0.5f));
+
+    ImGui::SetNextWindowPos(center, ImGuiCond_Always, ImVec2(0.5f, 0.5f));
     ImGui::SetNextWindowSize(ImVec2(700, 450), ImGuiCond_Appearing);
 
     ImGuiWindowFlags hub_flags = ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoDocking | ImGuiWindowFlags_NoTitleBar;
@@ -353,7 +365,15 @@ void VortexGUI::draw_file_viewer()
 {
     if (!show_file_viewer) return;
 
-    ImGui::Begin("File Viewer");
+    if (!std::filesystem::exists(current_open_file_path))
+    {
+        show_file_viewer = false;
+        current_open_file_path.clear();
+        current_file_content.clear();
+        return;
+    }
+
+    ImGui::Begin("File Viewer", &show_file_viewer);
 
     ImGui::TextColored(ImVec4(0.6f, 0.6f, 0.6f, 1.0f), "Viewing: %s", current_open_file_path.c_str());
     ImGui::Separator();

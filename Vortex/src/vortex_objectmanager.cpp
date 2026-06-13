@@ -139,8 +139,10 @@ void VortexObjectManager::draw(VortexCamera &camera, bool show_wireframe, bool i
         if (!model->is_active) continue;
 
         std::vector<glm::vec3> min_max = model->get_world_bounds_min_max();
-        glm::vec3 min_bound = min_max[0];
-        glm::vec3 max_bound = min_max[1];
+
+        glm::vec3 padding(0.1f, 0.1f, 0.1f);
+        glm::vec3 min_bound = min_max[0] - padding;
+        glm::vec3 max_bound = min_max[1] + padding;
 
         bool is_camera_inside = (camera_pos.x >= min_bound.x && camera_pos.x <= max_bound.x &&
                                  camera_pos.y >= min_bound.y && camera_pos.y <= max_bound.y &&
@@ -211,7 +213,12 @@ void VortexObjectManager::draw(VortexCamera &camera, bool show_wireframe, bool i
         if (!is_camera_inside)
         {
             glm::vec3 center = (min_bound + max_bound) * 0.5f;
+
             glm::vec3 size = (max_bound - min_bound) * 1.02f;
+            size.x = std::max(size.x, 0.15f);
+            size.y = std::max(size.y, 0.15f);
+            size.z = std::max(size.z, 0.15f);
+
             glm::mat4 box_model = glm::translate(glm::mat4(1.0f), center);
             box_model = glm::scale(box_model, size);
 

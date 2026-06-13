@@ -4,10 +4,12 @@ GLFWwindow* VortexKeyboard::s_window = nullptr;
 std::unordered_map<std::string, int> VortexKeyboard::s_key_map;
 std::unordered_map<std::string, bool> VortexKeyboard::s_previous_keys;
 
+bool VortexKeyboard::is_disabled = false;
+
 void VortexKeyboard::init(GLFWwindow* window)
 {
     s_window = window;
-    
+
     if (s_key_map.empty())
     {
         s_key_map = {
@@ -18,7 +20,7 @@ void VortexKeyboard::init(GLFWwindow* window)
             {"Q", GLFW_KEY_Q}, {"R", GLFW_KEY_R}, {"S", GLFW_KEY_S}, {"T", GLFW_KEY_T},
             {"U", GLFW_KEY_U}, {"V", GLFW_KEY_V}, {"W", GLFW_KEY_W}, {"X", GLFW_KEY_X},
             {"Y", GLFW_KEY_Y}, {"Z", GLFW_KEY_Z},
-            
+
             {"SPACE", GLFW_KEY_SPACE},
             {"ENTER", GLFW_KEY_ENTER},
             {"LEFTSHIFT", GLFW_KEY_LEFT_SHIFT},
@@ -37,7 +39,7 @@ void VortexKeyboard::init(GLFWwindow* window)
             {"DELETE", GLFW_KEY_DELETE}
         };
 
-        for (const auto& pair : s_key_map) 
+        for (const auto& pair : s_key_map)
         {
             s_previous_keys[pair.first] = false;
         }
@@ -48,7 +50,7 @@ void VortexKeyboard::update()
 {
     if (!s_window) return;
 
-    for (const auto& pair : s_key_map) 
+    for (const auto& pair : s_key_map)
     {
         s_previous_keys[pair.first] = (glfwGetKey(s_window, pair.second) == GLFW_PRESS);
     }
@@ -62,12 +64,22 @@ bool VortexKeyboard::get_key_down(const std::string& key)
         return false;
     }
 
+    if (ImGui::GetIO().WantTextInput)
+    {
+        is_disabled = true;
+        return false;
+    }
+    else
+    {
+        is_disabled = false;
+    }
+
     auto it = s_key_map.find(key);
     if (it != s_key_map.end())
     {
         bool is_down_now = (glfwGetKey(s_window, it->second) == GLFW_PRESS);
         bool was_down_last_frame = s_previous_keys[key];
-        
+
         return is_down_now && !was_down_last_frame;
     }
 
@@ -78,20 +90,30 @@ bool VortexKeyboard::get_key_down(const std::string& key)
 
 bool VortexKeyboard::get_key(const std::string& key)
 {
-    if (!s_window) 
+    if (!s_window)
     {
         VORTEX_WARN("[INPUT WARNING] Keyboard not initialized! Call VortexKeyboard::init(window) first.");
         return false;
     }
 
+    if (ImGui::GetIO().WantTextInput)
+    {
+        is_disabled = true;
+        return false;
+    }
+    else
+    {
+        is_disabled = false;
+    }
+
     auto it = s_key_map.find(key);
-    
+
     if (it != s_key_map.end())
     {
         return (glfwGetKey(s_window, it->second) == GLFW_PRESS);
     }
 
     VORTEX_WARN("[INPUT WARNING] Key '", key, "' is not recognized!");
-    
+
     return false;
 }

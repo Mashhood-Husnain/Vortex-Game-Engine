@@ -12,7 +12,7 @@ void VortexGUI::draw_settings_window()
 
     ImGuiWindowFlags flags = ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoMove;
 
-    if (ImGui::Begin("Engine Settings", NULL, flags))
+    if (ImGui::Begin("Engine Settings", &show_settings_window, flags))
     {
         float window_width = ImGui::GetContentRegionAvail().x;
         float left_pane_width = window_width * 0.30f;

@@ -87,40 +87,6 @@ void VortexApplication::draw_splash_overlay(float dt)
     );
 }
 
-GLFWmonitor* VortexApplication::get_current_monitor(GLFWwindow* window)
-{
-    int nmonitors;
-    int wx, wy, ww, wh;
-    int mx, my, mw, mh;
-    int overlap, bestoverlap = 0;
-    GLFWmonitor* bestmonitor = nullptr;
-    GLFWmonitor**monitors;
-    const GLFWvidmode* mode;
-
-    glfwGetWindowPos(window, &wx, &wy);
-    glfwGetWindowSize(window, &ww, &wh);
-    monitors = glfwGetMonitors(&nmonitors);
-
-    for (int i = 0; i < nmonitors; i++)
-    {
-        mode = glfwGetVideoMode(monitors[i]);
-        glfwGetMonitorPos(monitors[i], &mx, &my);
-        mw = mode->width;
-        mh = mode->height;
-
-        overlap =
-            std::max(0, std::min(wx+ww, mx+mw) - std::max(wx, mx)) *
-            std::max(0, std::min(wy+wh, my+mh) - std::max(wy, my));
-
-        if (bestoverlap < overlap)
-        {
-            bestoverlap = overlap;
-            bestmonitor = monitors[i];
-        }
-    }
-    return bestmonitor;
-}
-
 void VortexApplication::framebuffer_size_callback(GLFWwindow* window, int width, int height)
 {
     auto* app = static_cast<VortexApplication*>(glfwGetWindowUserPointer(window));
@@ -459,26 +425,44 @@ VortexApplication::~VortexApplication()
 
 void VortexApplication::change_window_size()
 {
-    GLFWmonitor* monitor = get_current_monitor(window);
-    if (!monitor) monitor = glfwGetPrimaryMonitor();
-    const GLFWvidmode* mode = glfwGetVideoMode(monitor);
-
     if (is_fullscreen)
     {
-        if (glfwGetWindowMonitor(window) == nullptr)
+        GLFWmonitor* monitor = glfwGetWindowMonitor(window);
+        if (!monitor)
         {
-            int x, y;
-            glfwGetWindowPos(window, &x, &y);
-            stored_window_width = static_cast<float>(x);
-            stored_window_height = static_cast<float>(y);
+            int window_x, window_y;
+            glfwGetWindowPos(window, &window_x, &window_y);
 
-            int left, top, right, bottom;
-            glfwGetWindowFrameSize(window, &left, &top, &right, &bottom);
+            int width, height;
+            glfwGetWindowSize(window, &width, &height);
+            stored_window_width = static_cast<float>(width);
+            stored_window_height = static_cast<float>(height);
 
-            stored_window_y_pos -= top;
-            stored_window_x_pos -= left;
+            stored_window_x_pos = static_cast<float>(window_x);
+            stored_window_y_pos = static_cast<float>(window_y);
+
+            int monitor_count;
+            GLFWmonitor** monitors = glfwGetMonitors(&monitor_count);
+            monitor = monitors[0];
+
+            for (int i = 0; i < monitor_count; i++)
+            {
+                int mx, my, mw, mh;
+                glfwGetMonitorWorkarea(monitors[i], &mx, &my, &mw, &mh);
+                if (window_x >= mx && window_x < mx + mw && window_y >= my && window_y < my + mh)
+                {
+                    monitor = monitors[i];
+                    break;
+                }
+            }
         }
+
+        const GLFWvidmode* mode = glfwGetVideoMode(monitor);
+
         glfwSetWindowMonitor(window, monitor, 0, 0, mode->width, mode->height, mode->refreshRate);
+
+        default_window_width = static_cast<float>(mode->width);
+        default_window_height = static_cast<float>(mode->height);
     }
     else
     {
@@ -491,15 +475,7 @@ void VortexApplication::change_window_size()
             static_cast<int>(stored_window_height),
             0
         );
-    }
 
-    if (is_fullscreen)
-    {
-        default_window_width = static_cast<float>(mode->width);
-        default_window_height = static_cast<float>(mode->height);
-    }
-    else
-    {
         default_window_width  = stored_window_width;
         default_window_height = stored_window_height;
     }
@@ -619,7 +595,7 @@ void VortexApplication::run(std::function<void()> draw_callback)
                 VortexObjectManager::update(deltaTime);
             }
 
-            if (VortexGUI::viewport_width > 0.0f && VortexGUI::viewport_height > 0.0f &&
+            if (VortexGUI::scene_fbo_initialized && VortexGUI::viewport_width > 0.0f && VortexGUI::viewport_height > 0.0f &&
             (VortexGUI::viewport_height != VortexGUI::scene_height || VortexGUI::viewport_width != VortexGUI::scene_width))
             {
                 VortexGUI::resize_scene_fbo(
@@ -628,7 +604,7 @@ void VortexApplication::run(std::function<void()> draw_callback)
                 );
             }
 
-            if (VortexGUI::render_viewport_width > 0.0f && VortexGUI::render_viewport_height > 0.0f &&
+            if (VortexGUI::render_scene_fbo_initialized && VortexGUI::render_viewport_width > 0.0f && VortexGUI::render_viewport_height > 0.0f &&
             (VortexGUI::render_viewport_height != VortexGUI::render_scene_height || VortexGUI::render_viewport_width != VortexGUI::render_scene_width))
             {
                 VortexGUI::resize_render_scene_fbo(
@@ -645,6 +621,19 @@ void VortexApplication::run(std::function<void()> draw_callback)
             // First pass (Scene View)
             if (VortexGUI::is_scene_view_visible && VortexGUI::show_scene_viewport)
             {
+                if (!VortexGUI::scene_fbo_initialized)
+                {
+                    int safe_w = std::max(1, static_cast<int>(VortexGUI::viewport_width));
+                    int safe_h = std::max(1, static_cast<int>(VortexGUI::viewport_height));
+
+                    VortexGUI::setup_scene_fbo(safe_w, safe_h);
+
+                    VortexGUI::scene_width = safe_w;
+                    VortexGUI::scene_height = safe_h;
+
+                    VortexGUI::scene_fbo_initialized = true;
+                }
+
                 VortexGUI::bind_framebuffer();
 
                 glViewport(0, 0, static_cast<GLsizei>(VortexGUI::scene_width), static_cast<GLsizei>(VortexGUI::scene_height));
@@ -672,10 +661,30 @@ void VortexApplication::run(std::function<void()> draw_callback)
                     environment_grid->draw(*editor_camera);
                 }
             }
+            else if ((!VortexGUI::show_scene_viewport || !VortexGUI::is_scene_view_visible) && VortexGUI::scene_fbo_initialized)
+            {
+                // destroy scene FBO
+
+                VortexGUI::destroy_scene();
+                VortexGUI::scene_fbo_initialized = false;
+            }
 
             // Second Pass (Render View)
             if (VortexGUI::is_render_view_visible && VortexGUI::show_render_scene_viewport)
             {
+                if (!VortexGUI::render_scene_fbo_initialized)
+                {
+                    int safe_w = std::max(1, static_cast<int>(VortexGUI::render_viewport_width));
+                    int safe_h = std::max(1, static_cast<int>(VortexGUI::render_viewport_height));
+
+                    VortexGUI::setup_render_scene_fbo(safe_w, safe_h);
+
+                    VortexGUI::render_scene_width = safe_w;
+                    VortexGUI::render_scene_height = safe_h;
+
+                    VortexGUI::render_scene_fbo_initialized = true;
+                }
+
                 if (post_processor)
                 {
                     post_processor->begin();
@@ -687,7 +696,7 @@ void VortexApplication::run(std::function<void()> draw_callback)
 
                 glViewport(0, 0, static_cast<GLsizei>(VortexGUI::render_scene_width), static_cast<GLsizei>(VortexGUI::render_scene_height));
 
-                if (VortexGUI::render_scene_height > 0 && camera)
+                if (VortexGUI::render_scene_height > 0 && render_camera)
                 {
                     render_camera->set_aspect_ratio(VortexGUI::render_scene_width / VortexGUI::render_scene_height);
                 }
@@ -707,6 +716,13 @@ void VortexApplication::run(std::function<void()> draw_callback)
                     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
                     post_processor->draw(currentFrame);
                 }
+            }
+            else if ((!VortexGUI::show_render_scene_viewport || !VortexGUI::is_render_view_visible) && VortexGUI::render_scene_fbo_initialized)
+            {
+                // destroy render FBO
+
+                VortexGUI::destroy_render_scene();
+                VortexGUI::render_scene_fbo_initialized = false;
             }
 
             // Third pass (IMGUI View)

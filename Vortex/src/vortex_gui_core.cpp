@@ -92,6 +92,7 @@ bool VortexGUI::is_scene_view_visible = true;
 bool VortexGUI::is_render_view_visible = false;
 
 bool VortexGUI::is_using_gizmo = false;
+ImGuizmo::MODE VortexGUI::m_current_guizmo_mode = ImGuizmo::LOCAL;
 
 VortexGUI::VortexGUI()
 {
@@ -157,6 +158,7 @@ void VortexGUI::init(VortexApplication *_app, int width, int height)
 
     app = _app;
     setup_scene_fbo(width, height);
+    scene_fbo_initialized = true;
 
     ImGui_ImplGlfw_InitForOpenGL(app->get_window_ptr(), true);
     ImGui_ImplOpenGL3_Init("#version 330");

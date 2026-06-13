@@ -106,7 +106,6 @@ private:
 
     GLFWcursor *m_invisible_cursor = nullptr;
 
-    GLFWmonitor* get_current_monitor(GLFWwindow* window);
     static void framebuffer_size_callback(GLFWwindow* window, int width, int height);
     static void mouse_callback(GLFWwindow* window, double xposIn, double yposIn);
     static void window_close_callback(GLFWwindow* window);

@@ -374,13 +374,18 @@ void VortexProject::load_project(Snapshot *snapshot)
 
 void VortexProject::load_project_settings(SettingsSnapshot *settings_snapshot, const std::string project_name)
 {
-    if (!settings_snapshot) return;
+    if (!settings_snapshot || project_name.empty()) return;
+
+    std::string prefix = "temp_playmode_backup_";
+    std::string actual_project_name = project_name;
+    if (actual_project_name.rfind(prefix, 0) == 0)
+    {
+        actual_project_name = actual_project_name.substr(prefix.length());
+    }
 
     memset(settings_snapshot->preferred_ide_path, 0, 256);
 
-    if (project_name.empty()) return;
-
-    std::string path = SAVE_DIRECTORY + "/" + project_name + "/" + project_name + "_settings.json";
+    std::string path = SAVE_DIRECTORY + "/" + actual_project_name + "/" + actual_project_name + "_settings.json";
 
     if (std::filesystem::exists(path))
     {
@@ -391,7 +396,8 @@ void VortexProject::load_project_settings(SettingsSnapshot *settings_snapshot, c
             try
             {
                 file >> j;
-                if (j.contains("preferred_ide_path"))
+
+                if (j.contains("preferred_ide_path") && j["preferred_ide_path"].is_string())
                 {
                     std::string ide = j["preferred_ide_path"];
                     vortex_strncpy(settings_snapshot->preferred_ide_path, 256, ide.c_str());

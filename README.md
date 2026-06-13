@@ -149,6 +149,8 @@ When you launch the engine, you will start in Editor Mode attached to the defaul
 | **LEFT CTRL + SHIFT + R** | Toggle Render View |
 | **LEFT CTRL + C** | Compile Scripts |
 | **LEFT CTRL + A** | Toggle Asset Browser |
+| **LEFT CTRL + L** | Turn on Local Object Transformations |
+| **LEFT CTRL + G** | Turn on Global Object Transformations |
 | **LEFT CTRL + SHIFT + I** | Toggle Engine Settings Window |
 | **LEFT ALT** | Snap selected model to the ground |
 | **Right Mouse Click (on folder)** | Options for Folders |
