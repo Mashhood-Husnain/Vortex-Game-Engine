@@ -240,7 +240,7 @@ void VortexGUI::draw_asset_browser()
         ImGui::InputText("##filename", new_item_name, IM_ARRAYSIZE(new_item_name));
         if (ImGui::Button("Create", ImVec2(120, 0)))
         {
-            std::string full_path = pending_creation_path + "/" + new_item_name;
+            std::string full_path = vortex_generatepath(pending_creation_path, new_item_name);
             std::ofstream new_file(full_path);
             new_file.close();
             show_create_file_modal = false;
@@ -258,7 +258,8 @@ void VortexGUI::draw_asset_browser()
         ImGui::InputText("##foldername", new_item_name, IM_ARRAYSIZE(new_item_name));
         if (ImGui::Button("Create", ImVec2(120, 0)))
         {
-            std::string full_path = pending_creation_path + "/" + new_item_name;
+            std::string full_path = vortex_generatepath(pending_creation_path, new_item_name);
+            
             std::filesystem::create_directory(full_path);
             show_create_folder_modal = false;
         }

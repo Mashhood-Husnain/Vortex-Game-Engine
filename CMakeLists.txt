@@ -28,6 +28,16 @@ if(UNIX AND NOT APPLE)
 endif()
 
 # ----------------------------
+# Dynamic Script Path Setup
+# ----------------------------
+if(NOT DEFINED PROJECT_DIR)
+    set(PROJECT_DIR "")
+    message(STATUS "[VORTEX ENGINE] Building Base Engine (No Project Scripts Attached)")
+else()
+    message(STATUS "[VORTEX ENGINE] Compiling user scripts from: ${PROJECT_DIR}")
+endif()
+
+# ----------------------------
 # Vendors
 # ----------------------------
 set(GLFW_BUILD_DOCS OFF CACHE BOOL "" FORCE)
@@ -132,16 +142,22 @@ add_executable(engine
 )
 
 # ----------------------------
-# Get user's custom scripts
+# Get user's custom scripts dynamically
 # ----------------------------
-file(GLOB_RECURSE USER_SCRIPTS CONFIGURE_DEPENDS "Vortex/Game/Scripts/*.cpp")
-
 set_target_properties(engine PROPERTIES ENABLE_EXPORTS TRUE)
 
-add_library(VortexGame SHARED
-    Vortex/src/VortexEngine.cpp
-    ${USER_SCRIPTS}
-)
+add_library(VortexGame SHARED Vortex/src/VortexEngine.cpp)
+
+if(PROJECT_DIR)
+    file(GLOB_RECURSE USER_SCRIPTS CONFIGURE_DEPENDS "${PROJECT_DIR}/*.cpp")
+
+    if(USER_SCRIPTS)
+        message(STATUS "[VORTEX COMPILER] Found user scripts: ${USER_SCRIPTS}")
+        target_sources(VortexGame PRIVATE ${USER_SCRIPTS})
+    else()
+        message(STATUS "[VORTEX COMPILER] No .cpp files found in ${PROJECT_DIR}")
+    endif()
+endif()
 
 target_link_libraries(VortexGame engine)
 

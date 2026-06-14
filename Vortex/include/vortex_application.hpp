@@ -44,6 +44,7 @@
 #include "util/vortex_game_api.hpp"
 #include "util/vortex_game_reloader.hpp"
 #include "util/vortex_script_registry.hpp"
+#include "util/vortex_util.hpp"
 
 class VortexSkybox;
 class VortexGrid;

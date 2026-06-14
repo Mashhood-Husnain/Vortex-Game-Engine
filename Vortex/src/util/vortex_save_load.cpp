@@ -15,43 +15,43 @@ void VortexProject::save_project(Snapshot *snapshot)
         std::filesystem::create_directory(SAVE_DIRECTORY);
     }
 
-    std::string project_save_dir = SAVE_DIRECTORY + "/" + folder_name;
+    std::string project_save_dir = vortex_generatepath(SAVE_DIRECTORY, folder_name);
     if (!std::filesystem::exists(project_save_dir))
     {
         std::filesystem::create_directory(project_save_dir);
     }
 
-    std::string project_asset_dir = project_save_dir + "/" + ASSET_DIR_SCRIPTS;
+    std::string project_asset_dir = vortex_generatepath(project_save_dir, ASSET_DIR_SCRIPTS);
     if (!std::filesystem::exists(project_asset_dir))
     {
         std::filesystem::create_directory(project_asset_dir);
     }
 
-    std::string project_audio_dir = project_save_dir + "/" + ASSET_DIR_AUDIO;
+    std::string project_audio_dir = vortex_generatepath(project_save_dir, ASSET_DIR_AUDIO);
     if (!std::filesystem::exists(project_audio_dir))
     {
         std::filesystem::create_directory(project_audio_dir);
     }
 
-    std::string project_models_dir = project_save_dir + "/" + ASSET_DIR_MODELS;
+    std::string project_models_dir = vortex_generatepath(project_save_dir, ASSET_DIR_MODELS);
     if (!std::filesystem::exists(project_models_dir))
     {
         std::filesystem::create_directory(project_models_dir);
     }
 
-    std::string project_models_obj_dir = project_models_dir + "/" + ASSET_DIR_MODELS_OBJ;
+    std::string project_models_obj_dir = vortex_generatepath(project_models_dir, ASSET_DIR_MODELS_OBJ);
     if (!std::filesystem::exists(project_models_obj_dir))
     {
         std::filesystem::create_directory(project_models_obj_dir);
     }
 
-    std::string project_models_mtl_dir = project_models_dir + "/" + ASSET_DIR_MODELS_MTL;
+    std::string project_models_mtl_dir = vortex_generatepath(project_models_dir, ASSET_DIR_MODELS_MTL);
     if (!std::filesystem::exists(project_models_mtl_dir))
     {
         std::filesystem::create_directory(project_models_mtl_dir);
     }
 
-    std::string project_models_mtl_textures_dir = project_models_mtl_dir + "/" + ASSET_DIR_MODELS_MTL_TEXTURES;
+    std::string project_models_mtl_textures_dir = vortex_generatepath(project_models_mtl_dir, ASSET_DIR_MODELS_MTL_TEXTURES);
     if (!std::filesystem::exists(project_models_mtl_textures_dir))
     {
         std::filesystem::create_directory(project_models_mtl_textures_dir);
@@ -146,7 +146,7 @@ void VortexProject::save_project(Snapshot *snapshot)
         save_data["camera"]["pitch"] = snapshot->window->get_editor_camera()->get_pitch();
     }
 
-    std::string file_path = project_save_dir + "/" + snapshot->project_name + ".vtx";
+    std::string file_path = vortex_generatepath(project_save_dir, snapshot->project_name + ".vtx");
 
     std::string json_string = save_data.dump(4);
     VortexEncrypt::write_encrypted(file_path, json_string);
@@ -161,7 +161,7 @@ void VortexProject::save_project_settings(SettingsSnapshot *settings_snapshot, c
     if (!settings_snapshot) return;
     if (project_name.empty() || project_name.find("temp_playmode_backup_") == 0) return;
 
-    std::string path = SAVE_DIRECTORY + "/" + project_name + "/" + project_name + "_settings.json";
+    std::string path = vortex_generatepath(SAVE_DIRECTORY, project_name, project_name + "_settings.json");
 
     nlohmann::json j;
     j["preferred_ide_path"] = std::string(settings_snapshot->preferred_ide_path);
@@ -212,7 +212,7 @@ void VortexProject::load_project(Snapshot *snapshot)
         folder_name = folder_name.substr(prefix.length());
     }
 
-    std::string file_path = SAVE_DIRECTORY + "/" + folder_name + "/" + snapshot->project_name  + ".vtx";
+    std::string file_path = vortex_generatepath(SAVE_DIRECTORY, folder_name, snapshot->project_name  + ".vtx");
     if (!std::filesystem::exists(file_path))
     {
         VORTEX_WARN("[PROJECT ERROR] Save file not found: ", file_path);
@@ -385,7 +385,7 @@ void VortexProject::load_project_settings(SettingsSnapshot *settings_snapshot, c
 
     memset(settings_snapshot->preferred_ide_path, 0, 256);
 
-    std::string path = SAVE_DIRECTORY + "/" + actual_project_name + "/" + actual_project_name + "_settings.json";
+    std::string path = vortex_generatepath(SAVE_DIRECTORY, actual_project_name, actual_project_name + "_settings.json");
 
     if (std::filesystem::exists(path))
     {
@@ -422,7 +422,7 @@ bool VortexProject::check_save_state(Snapshot *snapshot)
         folder_name = folder_name.substr(prefix.length());
     }
 
-    std::string filepath = SAVE_DIRECTORY + "/" + folder_name + "/" + snapshot->project_name + ".vtx";
+    std::string filepath = vortex_generatepath(SAVE_DIRECTORY, folder_name, snapshot->project_name + ".vtx");
 
     std::string decrypted_data = VortexEncrypt::read_decrypted(filepath);
 

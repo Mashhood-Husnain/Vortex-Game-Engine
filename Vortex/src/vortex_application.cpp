@@ -1003,7 +1003,15 @@ void VortexApplication::trigger_compile()
         CompilerState::status_text = "Starting CMake Build...";
     }
 
-    std::thread([]()
+    std::string project_script_dir = vortex_generatepath(
+        VortexProject::SAVE_DIRECTORY,
+        VortexGUI::m_new_project_name,
+        VortexProject::ASSET_DIR_SCRIPTS
+    );
+
+    std::string absolute_script_dir = std::filesystem::absolute(project_script_dir).string();
+
+    std::thread([absolute_script_dir]()
     {
         #ifdef _WIN32
             #define POPEN _popen
@@ -1013,7 +1021,12 @@ void VortexApplication::trigger_compile()
             #define PCLOSE pclose
         #endif
 
-        FILE* pipe = POPEN("make VortexGame 2>&1", "r");
+        std::string safe_path = absolute_script_dir;
+        std::replace(safe_path.begin(), safe_path.end(), '\\', '/');
+
+        std::string compile_cmd = "cmake -DPROJECT_DIR=\"" + safe_path + "\" .. && make VortexGame 2>&1";
+
+        FILE* pipe = POPEN(compile_cmd.c_str(), "r");
 
         if (pipe)
         {

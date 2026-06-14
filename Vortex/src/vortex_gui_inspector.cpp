@@ -117,7 +117,7 @@ void VortexGUI::scene_inspector()
         {
             for (auto& [sub_name, sub_node] : node.subfolders)
             {
-                std::string next_path = current_path.empty() ? sub_name : current_path + "/" + sub_name;
+                std::string next_path = current_path.empty() ? sub_name : vortex_generatepath(current_path, sub_name);
                 draw_node(sub_name, sub_node, next_path);
             }
 

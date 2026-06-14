@@ -18,7 +18,7 @@ extern "C"
             ScriptRegistry::get().register_script(script.name, script.factory);
             VORTEX_INFO("[GAME] Registered Script: ", script.name);
         }
-        
+
         pending.clear();
     }
 

@@ -5,6 +5,7 @@
 #include <glm/gtx/quaternion.hpp>
 #include <sstream>
 #include <iomanip>
+#include <filesystem>
 
 struct VortexModelDetailsDict
 {
@@ -64,4 +65,14 @@ inline std::string vortex_ModelDetailsDictToString(const VortexModelDetailsDict 
         "    Rot: " + str_orient + "\n\t" +
         "    Scale: " + str_scale +
     "\n  }";
+}
+
+template<typename... Args>
+inline std::string vortex_generatepath(const Args&... parts)
+{
+    std::filesystem::path path;
+
+    ((path /= parts), ...);
+
+    return path.string();
 }

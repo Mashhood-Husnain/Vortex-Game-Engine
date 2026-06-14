@@ -197,6 +197,7 @@ void VortexGUI::draw_project_hub()
             VortexProject::take_snapshot(SnapshotState::LOAD, app, m_new_project_name);
 
             app->set_state(EngineState::EDITOR);
+            app->trigger_compile();
 
             selected_project = true;
         }
@@ -245,7 +246,7 @@ void VortexGUI::draw_project_hub()
     {
         if (strlen(m_new_project_name) > 0)
         {
-            std::string target_path = VortexProject::SAVE_DIRECTORY + "/" + std::string(m_new_project_name);
+            std::string target_path = vortex_generatepath(VortexProject::SAVE_DIRECTORY, m_new_project_name);
 
             if (std::filesystem::exists(target_path))
             {
@@ -262,6 +263,7 @@ void VortexGUI::draw_project_hub()
                 VortexProject::take_snapshot(SnapshotState::SAVE, app, m_new_project_name);
 
                 app->set_state(EngineState::EDITOR);
+                app->trigger_compile();
 
                 selected_project = true;
             }
@@ -293,7 +295,7 @@ void VortexGUI::draw_project_hub()
 
         if (ImGui::Button("Yes, Delete", ImVec2(120, 0)))
         {
-            std::string path_to_delete = VortexProject::SAVE_DIRECTORY + "/" + std::string(m_project_to_delete);
+            std::string path_to_delete = vortex_generatepath(VortexProject::SAVE_DIRECTORY, m_project_to_delete);
 
             try
             {
