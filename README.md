@@ -82,7 +82,7 @@ First, copy the icon to your system's icon folder:
 
 ```bash
 mkdir -p ~/.local/share/icons
-cp ../Vortex/assets/branding/vortex_icon.png ~/.local/share/icons/vortex_icon.png
+cp ../Vortex/assets/images/branding/vortex_icon.png ~/.local/share/icons/vortex_icon.png
 ```
 
 Next, create the .desktop file:

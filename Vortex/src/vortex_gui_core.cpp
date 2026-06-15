@@ -8,7 +8,15 @@
 #include <stb_image.h>
 
 GLuint VortexGUI::folder_icon_tex = 0;
+GLuint VortexGUI::folder_full_icon_tex;
+
 GLuint VortexGUI::file_icon_tex = 0;
+GLuint VortexGUI::file_cpp_icon_tex = 0;
+GLuint VortexGUI::file_hpp_icon_tex = 0;
+GLuint VortexGUI::file_mtl_icon_tex = 0;
+GLuint VortexGUI::file_obj_icon_tex = 0;
+GLuint VortexGUI::file_png_icon_tex = 0;
+GLuint VortexGUI::file_txt_icon_tex = 0;
 
 VortexApplication *VortexGUI::app = nullptr;
 
@@ -164,7 +172,15 @@ void VortexGUI::init(VortexApplication *_app, int width, int height)
     ImGui_ImplOpenGL3_Init("#version 330");
 
     folder_icon_tex = load_editor_icon("assets/images/icons/folder.png");
+    folder_full_icon_tex = load_editor_icon("assets/images/icons/folder_full.png");
+
     file_icon_tex = load_editor_icon("assets/images/icons/file.png");
+    file_cpp_icon_tex = load_editor_icon("assets/images/icons/file_cpp.png");
+    file_hpp_icon_tex = load_editor_icon("assets/images/icons/file_hpp.png");
+    file_mtl_icon_tex = load_editor_icon("assets/images/icons/file_mtl.png");
+    file_obj_icon_tex = load_editor_icon("assets/images/icons/file_obj.png");
+    file_png_icon_tex = load_editor_icon("assets/images/icons/file_png.png");
+    file_txt_icon_tex = load_editor_icon("assets/images/icons/file_txt.png");
 }
 
 void VortexGUI::update()
@@ -344,6 +360,17 @@ void VortexGUI::clean_up()
         glDeleteFramebuffers(1, &render_scene_fbo);
         render_scene_fbo = 0;
     }
+
+    glDeleteTextures(1, &folder_icon_tex);
+    glDeleteTextures(1, &folder_full_icon_tex);
+
+    glDeleteTextures(1, &file_icon_tex);
+    glDeleteTextures(1, &file_cpp_icon_tex);
+    glDeleteTextures(1, &file_hpp_icon_tex);
+    glDeleteTextures(1, &file_mtl_icon_tex);
+    glDeleteTextures(1, &file_obj_icon_tex);
+    glDeleteTextures(1, &file_png_icon_tex);
+    glDeleteTextures(1, &file_txt_icon_tex);
 
     m_shaders_loaded = false;
     m_skybox_loaded = false;

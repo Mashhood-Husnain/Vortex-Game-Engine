@@ -98,7 +98,14 @@ struct FolderNode
 class VortexGUI
 {
     static GLuint folder_icon_tex;
+    static GLuint folder_full_icon_tex;
     static GLuint file_icon_tex;
+    static GLuint file_cpp_icon_tex;
+    static GLuint file_hpp_icon_tex;
+    static GLuint file_mtl_icon_tex;
+    static GLuint file_obj_icon_tex;
+    static GLuint file_png_icon_tex;
+    static GLuint file_txt_icon_tex;
 
     static VortexApplication *app;
 
@@ -142,6 +149,9 @@ class VortexGUI
     static void snap_to_floor();
 
     static GLuint load_editor_icon(const char* file_path);
+    static GLuint return_file_icon_tex(const std::string &ext_name);
+    static GLuint return_folder_icon_tex(const std::filesystem::directory_entry &entry);
+
 public:
     static void setup_scene_fbo(int width, int height);
     static void setup_render_scene_fbo(int width, int height);

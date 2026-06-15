@@ -19,7 +19,7 @@ void VortexApplication::load_splash_screen()
     }
 
     int channels;
-    unsigned char* data = stbi_load("assets/branding/vortex_logo.png", &splash_width, &splash_height, &channels, 4);
+    unsigned char* data = stbi_load("assets/images/branding/vortex_logo.png", &splash_width, &splash_height, &channels, 4);
 
     if (!data)
     {

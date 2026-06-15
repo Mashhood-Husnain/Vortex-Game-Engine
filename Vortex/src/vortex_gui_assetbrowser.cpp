@@ -4,6 +4,31 @@
 #include <cctype>
 #include <fstream>
 
+GLuint VortexGUI::return_file_icon_tex(const std::string &ext_name)
+{
+    if (ext_name == ".cpp") return file_cpp_icon_tex;
+    else if (ext_name == ".hpp") return file_hpp_icon_tex;
+    else if (ext_name == ".mtl") return file_mtl_icon_tex;
+    else if (ext_name == ".obj") return file_obj_icon_tex;
+    else if (ext_name == ".png") return file_png_icon_tex;
+    else if (ext_name == ".txt") return file_txt_icon_tex;
+    else return file_icon_tex;
+}
+
+GLuint VortexGUI::return_folder_icon_tex(const std::filesystem::directory_entry &entry)
+{
+    try
+    {
+        if (std::filesystem::is_empty(entry.path())) return folder_icon_tex;
+    }
+    catch (const std::filesystem::filesystem_error&)
+    {
+        VORTEX_WARN("Couldn't determine wether folder is empty or not");
+    }
+
+    return folder_full_icon_tex;
+}
+
 void VortexGUI::draw_asset_browser()
 {
     if (!show_asset_browser) return;
@@ -117,8 +142,9 @@ void VortexGUI::draw_asset_browser()
     for (const auto& entry : directory_entries)
     {
         std::string filename = entry.path().filename().string();
+        std::string file_extname = entry.path().extension().string();
 
-        ImGui::PushID(filename.c_str());
+        ImGui::PushID(entry.path().string().c_str());
 
         if (entry.is_directory())
         {
@@ -128,7 +154,7 @@ void VortexGUI::draw_asset_browser()
 
             if (ImGui::ImageButton(
                 filename.c_str(),
-                (ImTextureID)(intptr_t)folder_icon_tex,
+                (ImTextureID)(intptr_t)return_folder_icon_tex(entry),
                 ImVec2(thumbnail_size, thumbnail_size)
             ))
             {
@@ -144,7 +170,7 @@ void VortexGUI::draw_asset_browser()
 
             ImGui::ImageButton(
                 filename.c_str(),
-                (ImTextureID)(intptr_t)file_icon_tex,
+                (ImTextureID)(intptr_t)return_file_icon_tex(file_extname),
                 ImVec2(thumbnail_size, thumbnail_size)
             );
 
@@ -259,7 +285,7 @@ void VortexGUI::draw_asset_browser()
         if (ImGui::Button("Create", ImVec2(120, 0)))
         {
             std::string full_path = vortex_generatepath(pending_creation_path, new_item_name);
-            
+
             std::filesystem::create_directory(full_path);
             show_create_folder_modal = false;
         }
