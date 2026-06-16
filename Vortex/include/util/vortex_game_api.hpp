@@ -17,8 +17,8 @@ struct GameMemory
 extern "C"
 {
     typedef void (*GameInitFunc)(GameMemory *memory, VortexApplication *app);
-    typedef void (*GameUpdateFunc)(GameMemory *memory, VortexApplication *app, float dt);
+    typedef void (*GameUpdateFunc)(GameMemory *memory, VortexApplication *app);
 
     VORTEX_API void GameInit(GameMemory *memory, VortexApplication *app);
-    VORTEX_API void GameUpdate(GameMemory *memory, VortexApplication *app, float dt);
+    VORTEX_API void GameUpdate(GameMemory *memory, VortexApplication *app);
 }

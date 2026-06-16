@@ -13,12 +13,12 @@ class VortexRigidbody : public VortexMonoBehaviour
 public:
     glm::vec3 velocity = glm::vec3(0.0f);
     float gravity_value = 25.0f;
-    
+
     bool is_kinematic = false;
     bool is_grounded = false;
     bool gravity = false;
 
-    void on_update(float deltaTime) override;
+    void on_update() override;
 
     void serialize(json &j) override;
     void deserialize(const json &j) override;

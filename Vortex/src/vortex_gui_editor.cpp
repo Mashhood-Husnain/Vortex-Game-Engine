@@ -2,7 +2,7 @@
 #include "vortex_application.hpp"
 #include "vortex_physics.hpp"
 
-void VortexGUI::draw_editor_render_viewport(float deltaTime, VortexCamera *camera)
+void VortexGUI::draw_editor_render_viewport(VortexCamera *camera)
 {
     if (!show_render_scene_viewport) return;
 
@@ -37,7 +37,7 @@ void VortexGUI::draw_editor_render_viewport(float deltaTime, VortexCamera *camer
     ImGui::PopStyleVar();
 }
 
-void VortexGUI::draw_editor_viewport(float deltaTime, VortexCamera* camera)
+void VortexGUI::draw_editor_viewport(VortexCamera* camera)
 {
     if (!show_scene_viewport) return;
 
@@ -273,9 +273,19 @@ void VortexGUI::snap_to_floor()
 
         float scaled_lowest_y = lowest_local_y * model->transform.scale.y;
 
-        model->transform.set_position(
-            glm::vec3(model->transform.get_position().x, -scaled_lowest_y, model->transform.get_position().z)
-        );
+        glm::vec3 old_position = model->transform.position;
+        glm::vec3 new_position = glm::vec3(old_position.x, -scaled_lowest_y, old_position.z);
+
+        if (old_position == new_position) continue;
+
+        ActionManager::push_action(new ActionTransform(
+            model,
+            old_position, new_position,
+            model->transform.orientation, model->transform.orientation,
+            model->transform.scale, model->transform.scale
+        ));
+
+        model->transform.set_position(new_position);
 
         model->set_model_matrix(model->get_model_matrix());
     }

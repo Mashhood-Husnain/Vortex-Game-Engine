@@ -62,14 +62,14 @@ void ParticleSystem::emit(
     active_count++;
 }
 
-void ParticleSystem::update(float deltaTime)
+void ParticleSystem::update()
 {
     for (auto &[name, settings] : emitter_registry)
     {
         if (settings.enabled && settings.spawn_rate > 0)
         {
             float spawn_interval = 1.0f / static_cast<float>(settings.spawn_rate);
-            settings.spawn_timer += deltaTime;
+            settings.spawn_timer += GLOBAL::deltaTime;
 
             while(settings.spawn_timer >= spawn_interval)
             {
@@ -87,14 +87,14 @@ void ParticleSystem::update(float deltaTime)
         }
     }
 
-    float g_dt = GLOBAL::GRAVITY * deltaTime;
+    float g_dt = GLOBAL::GRAVITY * GLOBAL::deltaTime;
 
     for (int i = 0; i < active_count; )
     {
         ParticleInstance &inst = instances[i];
         ParticlePhysics &phys = physics[i];
 
-        phys.life -= deltaTime;
+        phys.life -= GLOBAL::deltaTime;
 
         float life_ratio = phys.life / phys.max_life;
         float particle_size_behaviour;
@@ -118,7 +118,7 @@ void ParticleSystem::update(float deltaTime)
             case ParticleBehaviour::SHRINK:
                 particle_size_behaviour = phys.initial_size * (life_ratio * life_ratio);
             break;
-        
+
             default:
                 particle_size_behaviour = phys.initial_size;
             break;
@@ -141,15 +141,15 @@ void ParticleSystem::update(float deltaTime)
             phys.velocity.y -= g_dt * phys.gravity_scale;
         }
 
-        phys.velocity *= 1.0f - (phys.drag * deltaTime);
-        inst.position += phys.velocity * deltaTime;
+        phys.velocity *= 1.0f - (phys.drag * GLOBAL::deltaTime);
+        inst.position += phys.velocity * GLOBAL::deltaTime;
         inst.size = particle_size_behaviour;
 
         if (phys.gravity_scale < 0.0f)
         {
             float jitterX = ((rand() % 100) / 100.0f - 0.5f) * 0.005f;
             float jitterZ = ((rand() % 100) / 100.0f - 0.5f) * 0.005f;
-            
+
             inst.position.x += jitterX;
             inst.position.z += jitterZ;
 
@@ -254,14 +254,14 @@ void ParticleSystem::setup_buffers()
 
     // position
     glEnableVertexAttribArray(1);
-    glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, sizeof(ParticleInstance), (void*)offsetof(ParticleInstance, position)); 
+    glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, sizeof(ParticleInstance), (void*)offsetof(ParticleInstance, position));
     glVertexAttribDivisor(1, 1);
 
     // size
     glEnableVertexAttribArray(2);
-    glVertexAttribPointer(2, 1, GL_FLOAT, GL_FALSE, sizeof(ParticleInstance), (void*)offsetof(ParticleInstance, size)); 
+    glVertexAttribPointer(2, 1, GL_FLOAT, GL_FALSE, sizeof(ParticleInstance), (void*)offsetof(ParticleInstance, size));
     glVertexAttribDivisor(2, 1);
-    
+
     // color
     glEnableVertexAttribArray(3);
     glVertexAttribPointer(3, 4, GL_FLOAT, GL_FALSE, sizeof(ParticleInstance), (void*)offsetof(ParticleInstance, color));

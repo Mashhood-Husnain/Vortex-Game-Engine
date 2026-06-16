@@ -22,7 +22,7 @@ extern "C"
         pending.clear();
     }
 
-    VORTEX_API void GameUpdate(GameMemory *memory, VortexApplication *app, float dt)
+    VORTEX_API void GameUpdate(GameMemory *memory, VortexApplication *app)
     {
 
     }

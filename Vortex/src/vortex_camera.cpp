@@ -38,9 +38,9 @@ glm::mat4 VortexCamera::getViewMatrix()
     return glm::lookAt(position, position + front, up);
 }
 
-void VortexCamera::processKeyboard(const std::string& direction, float deltaTime)
+void VortexCamera::processKeyboard(const std::string& direction)
 {
-    float velocity = movement_speed * deltaTime;
+    float velocity = movement_speed * GLOBAL::deltaTime;
 
     if (direction == "FORWARD") position += front * velocity;
     if (direction == "BACKWARD") position -= front * velocity;
@@ -65,16 +65,16 @@ void VortexCamera::processMouseMovement(float xoffset, float yoffset)
     update_camera_vectors();
 }
 
-void VortexCamera::check_camera_movement(float deltaTime)
+void VortexCamera::check_camera_movement()
 {
     if (VortexKeyboard::get_key("LEFTCONTROL")) return;
 
-    if (VortexKeyboard::get_key("W")) processKeyboard("FORWARD", deltaTime);
-    if (VortexKeyboard::get_key("S")) processKeyboard("BACKWARD", deltaTime);
-    if (VortexKeyboard::get_key("A")) processKeyboard("LEFT", deltaTime);
-    if (VortexKeyboard::get_key("D")) processKeyboard("RIGHT", deltaTime);
-    if (VortexKeyboard::get_key("Q")) processKeyboard("UP", deltaTime);
-    if (VortexKeyboard::get_key("E")) processKeyboard("DOWN", deltaTime);
+    if (VortexKeyboard::get_key("W")) processKeyboard("FORWARD");
+    if (VortexKeyboard::get_key("S")) processKeyboard("BACKWARD");
+    if (VortexKeyboard::get_key("A")) processKeyboard("LEFT");
+    if (VortexKeyboard::get_key("D")) processKeyboard("RIGHT");
+    if (VortexKeyboard::get_key("Q")) processKeyboard("UP");
+    if (VortexKeyboard::get_key("E")) processKeyboard("DOWN");
 }
 
 glm::mat4 VortexCamera::getProjectionMatrix()

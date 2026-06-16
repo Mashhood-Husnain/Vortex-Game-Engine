@@ -56,7 +56,7 @@ void VortexKeyboard::update()
     }
 }
 
-bool VortexKeyboard::get_key_down(const std::string& key)
+bool VortexKeyboard::get_key_down(const std::string& key, const float time_to_wait, bool timer_active)
 {
     if (!s_window)
     {
@@ -75,15 +75,38 @@ bool VortexKeyboard::get_key_down(const std::string& key)
     }
 
     auto it = s_key_map.find(key);
-    if (it != s_key_map.end())
+    if (it == s_key_map.end())
     {
-        bool is_down_now = (glfwGetKey(s_window, it->second) == GLFW_PRESS);
-        bool was_down_last_frame = s_previous_keys[key];
-
-        return is_down_now && !was_down_last_frame;
+        VORTEX_WARN("[INPUT WARNING] Key '", key, "' is not recognized!");
+        return false;
     }
 
-    VORTEX_WARN("[INPUT WARNING] Key '", key, "' is not recognized!");
+    bool is_down_now = (glfwGetKey(s_window, it->second) == GLFW_PRESS);
+    bool was_down_last_frame = s_previous_keys[key];
+
+    static std::unordered_map<std::string, float> key_timers;
+
+    if (is_down_now)
+    {
+        if (!was_down_last_frame)
+        {
+            key_timers[key] = 0.0f;
+            return true;
+        }
+        else if (timer_active)
+        {
+            key_timers[key] += GLOBAL::deltaTime;
+
+            if (key_timers[key] >= time_to_wait)
+            {
+                return true;
+            }
+        }
+    }
+    else
+    {
+        key_timers[key] = 0.0f;
+    }
 
     return false;
 }

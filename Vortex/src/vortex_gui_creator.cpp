@@ -10,8 +10,8 @@ void create_script(std::string file_path, std::string class_name)
     script_file << "class " << class_name << " : public VortexMonoBehaviour\n{\n";
     script_file << "private:\npublic:\n";
     script_file << "    void on_start() override\n    {\n        // Initialization\n    }\n\n";
-    script_file << "    void on_update(float deltaTime) override\n    {\n        // Every frame\n    }\n\n";
-    script_file << "    void late_update(float deltaTime) override\n    {\n        // End of frame\n    }\n\n";
+    script_file << "    void on_update() override\n    {\n        // Every frame\n    }\n\n";
+    script_file << "    void late_update() override\n    {\n        // End of frame\n    }\n\n";
     script_file << "    void on_message(const std::string &message, void *data) override\n    {\n        // Cross-script communication\n    }\n};\n\n";
     script_file << "VORTEX_REGISTER_SCRIPT(" << class_name << ");\n";
     script_file.close();

@@ -248,24 +248,24 @@ void VortexModel::add_behaviour(const std::string &script_name, VortexMonoBehavi
     script_names.push_back(script_name);
 }
 
-void VortexModel::update(float deltaTime)
+void VortexModel::update()
 {
     for (VortexMonoBehaviour *script : behaviours)
     {
-        script->on_update(deltaTime);
+        script->on_update();
     }
 
     if (rigidbody)
     {
-        rigidbody->on_update(deltaTime);
+        rigidbody->on_update();
     }
 }
 
-void VortexModel::late_update(float deltaTime)
+void VortexModel::late_update()
 {
     for (VortexMonoBehaviour *script : behaviours)
     {
-        script->late_update(deltaTime);
+        script->late_update();
     }
 }
 

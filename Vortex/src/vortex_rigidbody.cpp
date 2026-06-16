@@ -1,15 +1,15 @@
 #include "vortex_rigidbody.hpp"
 
-void VortexRigidbody::on_update(float deltaTime)
+void VortexRigidbody::on_update()
 {
     if (is_kinematic) return;
 
-    if (gravity) velocity.y -= gravity_value * deltaTime;
+    if (gravity) velocity.y -= gravity_value * GLOBAL::deltaTime;
 
-    transform().position.y += velocity.y * deltaTime;
+    transform().position.y += velocity.y * GLOBAL::deltaTime;
     if (check_world_collision())
     {
-        transform().position.y -= velocity.y * deltaTime;
+        transform().position.y -= velocity.y * GLOBAL::deltaTime;
         if (velocity.y <= 0) is_grounded = true;
         velocity.y = 0.0f;
     }
@@ -18,17 +18,17 @@ void VortexRigidbody::on_update(float deltaTime)
         is_grounded = false;
     }
 
-    transform().position.x += velocity.x * deltaTime;
+    transform().position.x += velocity.x * GLOBAL::deltaTime;
     if (check_world_collision())
     {
-        transform().position.x -= velocity.x * deltaTime;
+        transform().position.x -= velocity.x * GLOBAL::deltaTime;
         velocity.x = 0.0f;
     }
 
-    transform().position.z += velocity.z * deltaTime;
+    transform().position.z += velocity.z * GLOBAL::deltaTime;
     if (check_world_collision())
     {
-        transform().position.z -= velocity.z * deltaTime;
+        transform().position.z -= velocity.z * GLOBAL::deltaTime;
         velocity.z = 0.0f;
     }
 }
@@ -49,12 +49,12 @@ bool VortexRigidbody::check_world_collision()
         if (!other->rigidbody) continue;
 
         bool is_other_dynamic = (other->rigidbody && !other->rigidbody->is_kinematic);
-        
+
         if (is_other_dynamic)
         {
             const glm::vec3 delta = other->transform.position - this_pos;
             float distance_sq = glm::dot(delta, delta);
-            
+
             if (distance_sq > 400.0f) continue;
         }
 
@@ -64,7 +64,7 @@ bool VortexRigidbody::check_world_collision()
             return true;
         }
     }
-    
+
     return false;
 }
 

@@ -54,7 +54,7 @@ public:
     {
         exposed_variables.push_back({name, ScriptVarType::FLOAT, ptr, show_in_editor});
     }
-    
+
     void expose_bool(const std::string &name, bool *ptr, const bool &show_in_editor)
     {
         exposed_variables.push_back({name, ScriptVarType::BOOL, ptr, show_in_editor});
@@ -84,8 +84,8 @@ public:
     }
 
     virtual void on_start() {}
-    virtual void on_update(float deltaTime) {}
-    virtual void late_update(float deltaTime) {}
+    virtual void on_update() {}
+    virtual void late_update() {}
 
     virtual ~VortexMonoBehaviour() = default;
 
@@ -99,7 +99,7 @@ public:
             else if (var.type == ScriptVarType::STRING) j[var.name] = *(std::string*) var.data_ptr;
             else if (var.type == ScriptVarType::VEC3)
             {
-                glm::vec3 *v = (glm::vec3*) var.data_ptr; 
+                glm::vec3 *v = (glm::vec3*) var.data_ptr;
                 j[var.name] = {v->x, v->y, v->z};
             }
         }
@@ -115,7 +115,7 @@ public:
             else if (var.type == ScriptVarType::STRING) *(std::string*) var.data_ptr = j[var.name];
             else if (var.type == ScriptVarType::VEC3)
             {
-                glm::vec3 *v = (glm::vec3*) var.data_ptr; 
+                glm::vec3 *v = (glm::vec3*) var.data_ptr;
                 auto &arr = j[var.name];
                 v->x = arr[0];
                 v->y = arr[1];

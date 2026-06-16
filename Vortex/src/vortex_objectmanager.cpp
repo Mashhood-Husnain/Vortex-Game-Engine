@@ -72,14 +72,14 @@ void VortexObjectManager::clean_up()
     depth_only_shader = nullptr;
 }
 
-void VortexObjectManager::update(float deltaTime)
+void VortexObjectManager::update()
 {
     for (VortexModel *model : active_models)
     {
         if (model->is_active)
         {
-            model->update(deltaTime);
-            model->late_update(deltaTime);
+            model->update();
+            model->late_update();
         }
     }
 
@@ -99,7 +99,7 @@ void VortexObjectManager::update(float deltaTime)
 
     for (ParticleSystem *ps : active_particlesystems)
     {
-        ps->update(deltaTime);
+        ps->update();
     }
 }
 

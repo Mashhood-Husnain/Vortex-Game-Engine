@@ -16,6 +16,7 @@
 
 #include "vortex_keyboard.hpp"
 #include "vortex_physics.hpp"
+#include "vortex_global_vars.hpp"
 
 class VortexApplication;
 
@@ -49,9 +50,9 @@ public:
     Frustum get_frustum();
     glm::vec3 get_ray_from_mouse(glm::vec2 mouse_pos, VortexApplication *app);
 
-    void processKeyboard(const std::string& direction, float deltaTime);
+    void processKeyboard(const std::string& direction);
     void processMouseMovement(float xoffset, float yoffset);
-    void check_camera_movement(float deltaTime);
+    void check_camera_movement();
     void look_at(glm::vec3 target);
 
     glm::vec3 get_position() const;

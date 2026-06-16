@@ -75,7 +75,6 @@ private:
     float mouse_last_y = 0.0f;
     bool first_mouse = true;
     float last_frame = 0.0f;
-    float deltaTime = 0.0f;
 
     bool enable_splash_screen = true;
     bool is_playing_splash = true;
@@ -107,6 +106,8 @@ private:
 
     GLFWcursor *m_invisible_cursor = nullptr;
 
+    float raw_render_time = 0.0f;
+
     static void framebuffer_size_callback(GLFWwindow* window, int width, int height);
     static void mouse_callback(GLFWwindow* window, double xposIn, double yposIn);
     static void window_close_callback(GLFWwindow* window);
@@ -114,7 +115,7 @@ private:
     void change_window_size();
     void setup_world_axis_buffers();
     void load_splash_screen();
-    void draw_splash_overlay(float dt);
+    void draw_splash_overlay();
     void init_game_code();
     void check_for_hot_reload();
 public:
@@ -129,12 +130,14 @@ public:
     bool is_mouse_visible();
     void request_exit();
 
+    float get_true_fps() const;
+    float get_vsync_fps() const;
+
     void enter_play_mode();
     void exit_play_mode();
     void trigger_compile();
 
     GLFWwindow* get_window_ptr() const;
-    float get_delta_time() const;
     float get_width() const;
     float get_height() const;
 

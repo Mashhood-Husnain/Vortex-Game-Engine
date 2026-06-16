@@ -147,8 +147,8 @@ public:
     std::vector<VortexModel_Object>& get_objects();
 
     void add_behaviour(const std::string &script_name, VortexMonoBehaviour *script);
-    void update(float deltaTime);
-    void late_update(float deltaTime);
+    void update();
+    void late_update();
     glm::mat4 get_model_matrix();
     void set_model_matrix(glm::mat4 matrix);
 

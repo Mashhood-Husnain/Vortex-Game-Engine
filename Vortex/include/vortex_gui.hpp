@@ -218,8 +218,8 @@ public:
     VortexGUI();
 
     static void build_dockspace();
-    static void draw_editor_viewport(float deltaTime, VortexCamera* camera);
-    static void draw_editor_render_viewport(float deltaTime, VortexCamera *camera);
+    static void draw_editor_viewport(VortexCamera* camera);
+    static void draw_editor_render_viewport(VortexCamera *camera);
     static void resize_scene_fbo(int width, int height);
     static void resize_render_scene_fbo(int width, int height);
     static void bind_framebuffer();

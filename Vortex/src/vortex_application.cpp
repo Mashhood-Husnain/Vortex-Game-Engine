@@ -36,11 +36,11 @@ void VortexApplication::load_splash_screen()
     stbi_image_free(data);
 }
 
-void VortexApplication::draw_splash_overlay(float dt)
+void VortexApplication::draw_splash_overlay()
 {
     if (!is_playing_splash) return;
 
-    splash_timer += dt;
+    splash_timer += GLOBAL::deltaTime;
     float total_duration = 4.5f;
     float fade_duration = 2.0f;
 
@@ -208,8 +208,8 @@ void VortexApplication::check_key_press()
 
             if (!VortexGUI::is_using_gizmo)
             {
-                if (VortexKeyboard::get_key_down("Z")) ActionManager::undo();
-                if (VortexKeyboard::get_key_down("Y")) ActionManager::redo();
+                if (VortexKeyboard::get_key_down("Z", 0.5f, true)) ActionManager::undo();
+                if (VortexKeyboard::get_key_down("Y", 0.5f, true)) ActionManager::redo();
             }
 
             if (VortexKeyboard::get_key_down("P")) VortexGUI::show_terminal = !VortexGUI::show_terminal;
@@ -546,14 +546,14 @@ void VortexApplication::run(std::function<void()> draw_callback)
 
         if (game_code->is_valid && current_state != EngineState::PROJECT_HUB)
         {
-            game_code->Update(&game_memory, this, deltaTime);
+            game_code->Update(&game_memory, this);
         }
 
         glfwPollEvents();
         check_key_press();
 
         float currentFrame = static_cast<float>(glfwGetTime());
-        deltaTime = currentFrame - last_frame;
+        GLOBAL::deltaTime = currentFrame - last_frame;
         last_frame = currentFrame;
 
         VortexGUI::update();
@@ -582,7 +582,7 @@ void VortexApplication::run(std::function<void()> draw_callback)
                 )
             )
             {
-                editor_camera->check_camera_movement(deltaTime);
+                editor_camera->check_camera_movement();
             }
 
             if ((!VortexGUI::show_scene_viewport && !VortexGUI::show_render_scene_viewport) && !show_mouse_cursor)
@@ -592,7 +592,7 @@ void VortexApplication::run(std::function<void()> draw_callback)
 
             if (current_state == EngineState::PLAY)
             {
-                VortexObjectManager::update(deltaTime);
+                VortexObjectManager::update();
             }
 
             if (VortexGUI::scene_fbo_initialized && VortexGUI::viewport_width > 0.0f && VortexGUI::viewport_height > 0.0f &&
@@ -754,13 +754,13 @@ void VortexApplication::run(std::function<void()> draw_callback)
             VortexGUI::draw_compiler_modal();
             VortexGUI::draw_exit_modal();
 
-            VortexGUI::draw_editor_render_viewport(deltaTime, render_camera);
-            VortexGUI::draw_editor_viewport(deltaTime, editor_camera);
+            VortexGUI::draw_editor_render_viewport(render_camera);
+            VortexGUI::draw_editor_viewport(editor_camera);
         }
 
         if (is_playing_splash)
         {
-            draw_splash_overlay(deltaTime);
+            draw_splash_overlay();
         }
 
         VortexGUI::render();
@@ -772,8 +772,22 @@ void VortexApplication::run(std::function<void()> draw_callback)
         VortexMouse::update();
         VortexAudio::update();
         VortexDebugRenderer::get().update();
+
+        float pre_swap_time = static_cast<float>(glfwGetTime());
+        raw_render_time = pre_swap_time - last_frame;
+
         glfwSwapBuffers(window);
     }
+}
+
+float VortexApplication::get_true_fps() const
+{
+    return raw_render_time > 0.0f ? (1.0f / raw_render_time) : 0.0f;
+}
+
+float VortexApplication::get_vsync_fps() const
+{
+    return GLOBAL::deltaTime > 0.0f ? (1.0f / GLOBAL::deltaTime) : 0.0f;
 }
 
 void VortexApplication::set_post_processor(PostProcessor *post_processor)
@@ -1070,7 +1084,6 @@ void VortexApplication::trigger_compile()
 }
 
 GLFWwindow* VortexApplication::get_window_ptr() const { return window; }
-float VortexApplication::get_delta_time() const { return deltaTime; }
 float VortexApplication::get_width() const { return default_window_width; }
 float VortexApplication::get_height() const { return default_window_height; }
 

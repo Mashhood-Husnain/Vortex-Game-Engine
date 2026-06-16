@@ -17,7 +17,7 @@
 
 #include "vortex_shaders.hpp"
 #include "vortex_camera.hpp"
-#include "util/vortex_global_vars.hpp"
+#include "vortex_global_vars.hpp"
 #include "vortex_application.hpp"
 
 class VortexApplication;
@@ -107,7 +107,7 @@ public:
         bool use_point_gravity=false, glm::vec3 gravity_point=glm::vec3(0.0f), float point_gravity_strength=0.0f
     );
 
-    void update(float deltaTime);
+    void update();
     void draw(VortexShader &shader, VortexCamera &camera);
     void resize_particles(int no_of_particles);
     EmitterSettings& get_emitter(std::string name);

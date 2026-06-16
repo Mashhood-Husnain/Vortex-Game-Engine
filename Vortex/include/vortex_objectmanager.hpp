@@ -34,7 +34,7 @@ public:
     static void init();
 
     static void clean_up();
-    static void update(float deltaTime);
+    static void update();
     static void draw(VortexCamera &camera, bool show_wireframe, bool is_render_pass);
     static void check_object_status();
 

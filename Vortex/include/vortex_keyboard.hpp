@@ -8,7 +8,8 @@
 
 #include <imgui.h>
 
-#include "util/vortex_logs.hpp"
+#include "vortex_logs.hpp"
+#include "vortex_global_vars.hpp"
 
 class VortexKeyboard
 {
@@ -21,6 +22,6 @@ public:
 
     static void init(GLFWwindow* window);
     static void update();
-    static bool get_key_down(const std::string& key);
+    static bool get_key_down(const std::string& key, const float time_to_wait=0.0f, bool timer_active=false);
     static bool get_key(const std::string& key);
 };
