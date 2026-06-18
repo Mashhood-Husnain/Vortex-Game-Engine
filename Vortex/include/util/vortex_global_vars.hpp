@@ -21,13 +21,14 @@ namespace GLOBAL
     namespace DEFAULT_VERTICES
     {
         inline constexpr float PARTICLE_VERTICES[] = {
-            -0.05f,  0.05f, 0.0f,
-            -0.05f, -0.05f, 0.0f,
-            0.05f, -0.05f, 0.0f,
+            // X,    Y,    Z,      U,    V
+            -0.5f,  0.5f, 0.0f,   0.0f, 1.0f,  // Top-left
+            -0.5f, -0.5f, 0.0f,   0.0f, 0.0f,  // Bottom-left
+             0.5f, -0.5f, 0.0f,   1.0f, 0.0f,  // Bottom-right
 
-            -0.05f,  0.05f, 0.0f,
-            0.05f, -0.05f, 0.0f,
-            0.05f,  0.05f, 0.0f
+            -0.5f,  0.5f, 0.0f,   0.0f, 1.0f,  // Top-left
+             0.5f, -0.5f, 0.0f,   1.0f, 0.0f,  // Bottom-right
+             0.5f,  0.5f, 0.0f,   1.0f, 1.0f   // Top-right
         };
 
         inline constexpr float WORLD_AXES_VERTICES[] = {

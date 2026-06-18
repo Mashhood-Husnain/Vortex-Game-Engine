@@ -24,12 +24,7 @@ class VortexApplication;
 class VortexCamera;
 class VortexShader;
 
-enum class ParticleBehaviour
-{
-    GROW,
-    SHRINK,
-    NONE
-};
+enum class ParticleBehaviour { GROW, SHRINK, NONE };
 
 struct ParticleInstance
 {
@@ -44,13 +39,15 @@ struct ParticlePhysics
     float life;
     float max_life;
     float initial_size;
-    float initial_alpha;
+
+    glm::vec4 start_color;
+    glm::vec4 end_color;
 
     float gravity_scale;
     float drag;
-
     float elasticity = 0.5f;
     float friction = 0.8f;
+    float turbulence_strength = 0.0f;
 
     ParticleBehaviour behaviour;
 
@@ -62,31 +59,39 @@ struct ParticlePhysics
 struct EmitterSettings
 {
     bool enabled = true;
-    int spawn_rate = 1;
+
+    int spawn_rate = 10;
     float spawn_timer = 0.0f;
-    float size = 0.5f;
+
     float life = 1.0f;
+    float size = 0.5f;
+    ParticleBehaviour behaviour = ParticleBehaviour::NONE;
+
+    GLuint texture_id = 0;
+    glm::vec4 start_color = glm::vec4(1.0f, 0.5f, 0.0f, 1.0f);
+    glm::vec4 end_color = glm::vec4(0.2f, 0.2f, 0.2f, 0.0f);
+
+    glm::vec3 position = glm::vec3(0.0f);
     float gravity = 0.0f;
     float drag = 0.9f;
     float elasticity = 0.5f;
     float friction = 0.8f;
-    glm::vec3 position = glm::vec3(0.0f);
-    glm::vec4 color = glm::vec4(0.5f, 0.5f, 0.5f, 0.5f);
+    float turbulence = 0.0f;
 
     bool use_point_gravity = false;
-    glm::vec3 gravity_point = glm::vec3(0.0f, 10.0f, 0.0f);
+    glm::vec3 gravity_point = glm::vec3(0.0f, 5.0f, 0.0f);
     float point_gravity_strength = 0.5f;
-
-    ParticleBehaviour behaviour = ParticleBehaviour::NONE;
 };
 
 class ParticleSystem
 {
+private:
     unsigned int VAO;
     unsigned int VBO;
     unsigned int instanceVBO;
 
     void setup_buffers();
+
 public:
     std::vector<ParticleInstance> instances;
     std::vector<ParticlePhysics> physics;
@@ -97,20 +102,17 @@ public:
 
     int max_particles;
     int active_count = 0;
-
     bool should_destroy = false;
 
     ParticleSystem(int max_particles, VortexApplication *window, std::string name);
-    void emit(
-        glm::vec3 position, float size, glm::vec3 velocity, float life, float gravity_scale, float drag,
-        glm::vec4 particle_color, float elasticity, float friction, ParticleBehaviour behaviour=ParticleBehaviour::NONE,
-        bool use_point_gravity=false, glm::vec3 gravity_point=glm::vec3(0.0f), float point_gravity_strength=0.0f
-    );
+    ~ParticleSystem();
+
+    void emit(const EmitterSettings& settings, glm::vec3 initial_velocity);
+
+    void burst(std::string emitter_name, int count);
 
     void update();
     void draw(VortexShader &shader, VortexCamera &camera);
     void resize_particles(int no_of_particles);
     EmitterSettings& get_emitter(std::string name);
-
-    ~ParticleSystem();
 };

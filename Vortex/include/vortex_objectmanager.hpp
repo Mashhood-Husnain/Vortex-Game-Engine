@@ -34,7 +34,9 @@ public:
     static void init();
 
     static void clean_up();
-    static void update();
+    static void update_scripts();
+    static void update_physics();
+    static void update_particles();
     static void draw(VortexCamera &camera, bool show_wireframe, bool is_render_pass);
     static void check_object_status();
 

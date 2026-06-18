@@ -73,6 +73,30 @@ void VortexGUI::draw_asset_browser()
         {
             path_to_navigate_to = current_path.parent_path();
         }
+
+        if (ImGui::BeginDragDropTarget())
+        {
+            if (const ImGuiPayload* payload = ImGui::AcceptDragDropPayload("ASSET_BROWSER_ITEM"))
+            {
+                std::string dragged_path_str = static_cast<const char*>(payload->Data);
+                std::filesystem::path dragged_path(dragged_path_str);
+
+                std::filesystem::path parent_dir = current_path.parent_path();
+                std::filesystem::path new_destination = parent_dir / dragged_path.filename();
+
+                try
+                {
+                    std::filesystem::rename(dragged_path, new_destination);
+                    VORTEX_INFO("[ASSET BROWSER] Moved item UP to parent directory: ", new_destination.string());
+                }
+                catch (const std::filesystem::filesystem_error& e)
+                {
+                    VORTEX_ERROR("[ASSET BROWSER] Failed to move item up: ", e.what());
+                }
+            }
+            ImGui::EndDragDropTarget();
+        }
+
         ImGui::Separator();
     }
 
@@ -103,28 +127,26 @@ void VortexGUI::draw_asset_browser()
             ImGui::GetCursorPosY() + (avail.y - text_size.y) * 0.5f
         ));
         ImGui::TextDisabled("Empty Folder");
-
-        current_path = path_to_navigate_to;
-        ImGui::End();
-        return;
     }
-
-    std::sort(directory_entries.begin(), directory_entries.end(), [](const std::filesystem::directory_entry& a, const std::filesystem::directory_entry& b)
+    else
     {
-        bool a_is_dir = a.is_directory();
-        bool b_is_dir = b.is_directory();
+        std::sort(directory_entries.begin(), directory_entries.end(), [](const std::filesystem::directory_entry& a, const std::filesystem::directory_entry& b)
+        {
+            bool a_is_dir = a.is_directory();
+            bool b_is_dir = b.is_directory();
 
-        if (a_is_dir && !b_is_dir) return true;
-        if (!a_is_dir && b_is_dir) return false;
+            if (a_is_dir && !b_is_dir) return true;
+            if (!a_is_dir && b_is_dir) return false;
 
-        std::string a_str = a.path().filename().string();
-        std::string b_str = b.path().filename().string();
+            std::string a_str = a.path().filename().string();
+            std::string b_str = b.path().filename().string();
 
-        std::transform(a_str.begin(), a_str.end(), a_str.begin(), ::tolower);
-        std::transform(b_str.begin(), b_str.end(), b_str.begin(), ::tolower);
+            std::transform(a_str.begin(), a_str.end(), a_str.begin(), ::tolower);
+            std::transform(b_str.begin(), b_str.end(), b_str.begin(), ::tolower);
 
-        return a_str < b_str;
-    });
+            return a_str < b_str;
+        });
+    }
 
     float padding = 32.0f;
     float thumbnail_size = 64.0f;
@@ -139,103 +161,170 @@ void VortexGUI::draw_asset_browser()
     static bool show_delete_modal = false;
     static char item_to_delete[512] = "";
 
-    for (const auto& entry : directory_entries)
+    if (!directory_entries.empty())
     {
-        std::string filename = entry.path().filename().string();
-        std::string file_extname = entry.path().extension().string();
-
-        ImGui::PushID(entry.path().string().c_str());
-
-        if (entry.is_directory())
+        for (const auto& entry : directory_entries)
         {
-            ImGui::PushStyleColor(ImGuiCol_Button, ImVec4(0.0f, 0.0f, 0.0f, 0.0f));
-            ImGui::PushStyleColor(ImGuiCol_ButtonHovered, ImVec4(0.3f, 0.4f, 0.6f, 0.3f));
-            ImGui::PushStyleColor(ImGuiCol_ButtonActive, ImVec4(0.3f, 0.4f, 0.6f, 0.5f));
+            std::string filename = entry.path().filename().string();
+            std::string file_extname = entry.path().extension().string();
+            std::string absolute_path = entry.path().string();
 
-            if (ImGui::ImageButton(
-                filename.c_str(),
-                (ImTextureID)(intptr_t)return_folder_icon_tex(entry),
-                ImVec2(thumbnail_size, thumbnail_size)
-            ))
+            ImGui::PushID(absolute_path.c_str());
+
+            if (entry.is_directory())
             {
-                path_to_navigate_to = current_path / entry.path().filename();
-            }
-            ImGui::PopStyleColor(3);
-        }
-        else
-        {
-            ImGui::PushStyleColor(ImGuiCol_Button, ImVec4(0.0f, 0.0f, 0.0f, 0.0f));
-            ImGui::PushStyleColor(ImGuiCol_ButtonHovered, ImVec4(0.4f, 0.4f, 0.4f, 0.3f));
-            ImGui::PushStyleColor(ImGuiCol_ButtonActive, ImVec4(0.4f, 0.4f, 0.4f, 0.5f));
+                ImGui::PushStyleColor(ImGuiCol_Button, ImVec4(0.0f, 0.0f, 0.0f, 0.0f));
+                ImGui::PushStyleColor(ImGuiCol_ButtonHovered, ImVec4(0.3f, 0.4f, 0.6f, 0.3f));
+                ImGui::PushStyleColor(ImGuiCol_ButtonActive, ImVec4(0.3f, 0.4f, 0.6f, 0.5f));
 
-            ImGui::ImageButton(
-                filename.c_str(),
-                (ImTextureID)(intptr_t)return_file_icon_tex(file_extname),
-                ImVec2(thumbnail_size, thumbnail_size)
-            );
-
-            if (ImGui::IsItemHovered() && ImGui::IsMouseDoubleClicked(ImGuiMouseButton_Left))
-            {
-                open_file_in_viewer(entry.path().string());
-            }
-
-            ImGui::PopStyleColor(3);
-        }
-
-        if (ImGui::BeginPopupContextItem(("Context##" + filename).c_str()))
-        {
-            if (entry.is_regular_file())
-            {
-                if (ImGui::MenuItem("Open in External Editor"))
+                if (ImGui::ImageButton(
+                    filename.c_str(),
+                    (ImTextureID)(intptr_t)return_folder_icon_tex(entry),
+                    ImVec2(thumbnail_size, thumbnail_size)
+                ))
                 {
-                    if (strlen(preferred_ide_path) > 0)
+                    path_to_navigate_to = current_path / entry.path().filename();
+                }
+                ImGui::PopStyleColor(3);
+
+                if (ImGui::BeginDragDropSource())
+                {
+                    ImGui::SetDragDropPayload("ASSET_BROWSER_ITEM", absolute_path.c_str(), absolute_path.size() + 1);
+                    ImGui::Text("Move %s", filename.c_str());
+                    ImGui::EndDragDropSource();
+                }
+
+                if (ImGui::BeginDragDropTarget())
+                {
+                    if (const ImGuiPayload* payload = ImGui::AcceptDragDropPayload("ASSET_BROWSER_ITEM"))
                     {
-                        std::string cmd;
-                        std::string file_path = entry.path().string();
+                        std::string dragged_path_str = static_cast<const char*>(payload->Data);
+                        std::filesystem::path dragged_path(dragged_path_str);
 
-                        #if defined(_WIN32) || defined(_WIN64)
-                            cmd = "start \"\" \"" + std::string(preferred_ide_path) + "\" \"" + file_path + "\"";
-                        #else
-                            cmd = std::string(preferred_ide_path) + " \"" + file_path + "\" &";
-                        #endif
-
-                        int result = std::system(cmd.c_str());
-                        if (result != 0)
+                        if (dragged_path != entry.path())
                         {
-                            VORTEX_WARN("[System] Failed to launch external editor. Check IDE path in settings.");
+                            std::filesystem::path new_destination = entry.path() / dragged_path.filename();
+                            try
+                            {
+                                std::filesystem::rename(dragged_path, new_destination);
+                                VORTEX_INFO("[ASSET BROWSER] Moved item to: ", new_destination.string());
+                            }
+                            catch (const std::filesystem::filesystem_error& e)
+                            {
+                                VORTEX_ERROR("[ASSET BROWSER] Failed to move item: ", e.what());
+                            }
                         }
                     }
+                    ImGui::EndDragDropTarget();
                 }
-                ImGui::Separator();
             }
-
-            if (ImGui::MenuItem("Delete"))
+            else
             {
-                vortex_strncpy(item_to_delete, sizeof(item_to_delete), entry.path().string().c_str());
-                show_delete_modal = true;
+                ImGui::PushStyleColor(ImGuiCol_Button, ImVec4(0.0f, 0.0f, 0.0f, 0.0f));
+                ImGui::PushStyleColor(ImGuiCol_ButtonHovered, ImVec4(0.4f, 0.4f, 0.4f, 0.3f));
+                ImGui::PushStyleColor(ImGuiCol_ButtonActive, ImVec4(0.4f, 0.4f, 0.4f, 0.5f));
+
+                ImGui::ImageButton(
+                    filename.c_str(),
+                    (ImTextureID)(intptr_t)return_file_icon_tex(file_extname),
+                    ImVec2(thumbnail_size, thumbnail_size)
+                );
+
+                if (ImGui::IsItemHovered() && ImGui::IsMouseDoubleClicked(ImGuiMouseButton_Left))
+                {
+                    open_file_in_viewer(entry.path().string());
+                }
+
+                ImGui::PopStyleColor(3);
+
+                if (ImGui::BeginDragDropSource())
+                {
+                    ImGui::SetDragDropPayload("ASSET_BROWSER_ITEM", absolute_path.c_str(), absolute_path.size() + 1);
+                    ImGui::Text("Move %s", filename.c_str());
+                    ImGui::EndDragDropSource();
+                }
             }
 
-            ImGui::EndPopup();
+            if (ImGui::BeginPopupContextItem(("Context##" + filename).c_str()))
+            {
+                if (entry.is_regular_file())
+                {
+                    if (ImGui::MenuItem("Open in External Editor"))
+                    {
+                        if (strlen(preferred_ide_path) > 0)
+                        {
+                            std::string cmd;
+                            std::string file_path = entry.path().string();
+
+                            #if defined(_WIN32) || defined(_WIN64)
+                                cmd = "start \"\" \"" + std::string(preferred_ide_path) + "\" \"" + file_path + "\"";
+                            #else
+                                cmd = std::string(preferred_ide_path) + " \"" + file_path + "\" &";
+                            #endif
+
+                            int result = std::system(cmd.c_str());
+                            if (result != 0)
+                            {
+                                VORTEX_WARN("[System] Failed to launch external editor. Check IDE path in settings.");
+                            }
+                        }
+                    }
+                    ImGui::Separator();
+                }
+
+                if (ImGui::MenuItem("Delete"))
+                {
+                    vortex_strncpy(item_to_delete, sizeof(item_to_delete), entry.path().string().c_str());
+                    show_delete_modal = true;
+                }
+
+                ImGui::EndPopup();
+            }
+
+            float text_width = ImGui::CalcTextSize(filename.c_str()).x;
+            float total_item_width = thumbnail_size + (ImGui::GetStyle().FramePadding.x * 2.0f);
+            float text_indent = (total_item_width - text_width) * 0.5f;
+
+            if (text_indent > 0) ImGui::SetCursorPosX(ImGui::GetCursorPosX() + text_indent);
+
+            ImGui::PushTextWrapPos(ImGui::GetCursorPos().x + cell_size - 8.0f);
+            ImGui::TextWrapped("%s", filename.c_str());
+            ImGui::PopTextWrapPos();
+
+            ImGui::Spacing();
+            ImGui::Spacing();
+
+            ImGui::NextColumn();
+            ImGui::PopID();
         }
 
-        float text_width = ImGui::CalcTextSize(filename.c_str()).x;
-        float total_item_width = thumbnail_size + (ImGui::GetStyle().FramePadding.x * 2.0f);
-        float text_indent = (total_item_width - text_width) * 0.5f;
-
-        if (text_indent > 0) ImGui::SetCursorPosX(ImGui::GetCursorPosX() + text_indent);
-
-        ImGui::PushTextWrapPos(ImGui::GetCursorPos().x + cell_size - 8.0f);
-        ImGui::TextWrapped("%s", filename.c_str());
-        ImGui::PopTextWrapPos();
-
-        ImGui::Spacing();
-        ImGui::Spacing();
-
-        ImGui::NextColumn();
-        ImGui::PopID();
+        ImGui::Columns(1);
     }
 
-    ImGui::Columns(1);
+    ImGui::InvisibleButton("##AssetBrowserBackgroundDrop", ImGui::GetContentRegionAvail());
+    if (ImGui::BeginDragDropTarget())
+    {
+        if (const ImGuiPayload* payload = ImGui::AcceptDragDropPayload("ASSET_BROWSER_ITEM"))
+        {
+            std::string dragged_path_str = static_cast<const char*>(payload->Data);
+            std::filesystem::path dragged_path(dragged_path_str);
+
+            if (dragged_path.parent_path() != current_path)
+            {
+                std::filesystem::path new_destination = current_path / dragged_path.filename();
+                try
+                {
+                    std::filesystem::rename(dragged_path, new_destination);
+                    VORTEX_INFO("[ASSET BROWSER] Moved item to current directory: ", new_destination.string());
+                }
+                catch (const std::filesystem::filesystem_error& e)
+                {
+                    VORTEX_ERROR("[ASSET BROWSER] Failed to move item: ", e.what());
+                }
+            }
+        }
+        ImGui::EndDragDropTarget();
+    }
 
     current_path = path_to_navigate_to;
 

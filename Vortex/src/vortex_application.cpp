@@ -592,8 +592,11 @@ void VortexApplication::run(std::function<void()> draw_callback)
 
             if (current_state == EngineState::PLAY)
             {
-                VortexObjectManager::update();
+                VortexObjectManager::update_scripts();
+                VortexObjectManager::update_physics();
             }
+
+            VortexObjectManager::update_particles();
 
             if (VortexGUI::scene_fbo_initialized && VortexGUI::viewport_width > 0.0f && VortexGUI::viewport_height > 0.0f &&
             (VortexGUI::viewport_height != VortexGUI::scene_height || VortexGUI::viewport_width != VortexGUI::scene_width))

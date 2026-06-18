@@ -20,46 +20,63 @@ ParticleSystem::ParticleSystem(int max_particles, VortexApplication *window, std
     setup_buffers();
 }
 
-void ParticleSystem::emit(
-    glm::vec3 position,
-    float size,
-    glm::vec3 velocity,
-    float life,
-    float gravity_scale,
-    float drag,
-    glm::vec4 particle_color,
-    float elasticity,
-    float friction,
-    ParticleBehaviour behaviour,
-    bool use_point_gravity,
-    glm::vec3 gravity_point,
-    float point_gravity_strength
-)
+
+void ParticleSystem::emit(const EmitterSettings& settings, glm::vec3 initial_velocity)
 {
     if (active_count >= max_particles) return;
 
     ParticleInstance &inst = instances[active_count];
     ParticlePhysics &phys = physics[active_count];
 
-    inst.position = position;
-    inst.size = size;
-    inst.color = particle_color;
+    inst.position = settings.position;
+    inst.size = settings.size;
+    inst.color = settings.start_color;
 
-    phys.initial_size = size;
-    phys.velocity = velocity;
-    phys.life = life;
-    phys.max_life = life;
-    phys.gravity_scale = gravity_scale;
-    phys.drag = drag;
-    phys.initial_alpha = particle_color.a;
-    phys.behaviour = behaviour;
-    phys.elasticity = elasticity;
-    phys.friction = friction;
-    phys.use_point_gravity = use_point_gravity;
-    phys.gravity_point = gravity_point;
-    phys.point_gravity_strength = point_gravity_strength;
+    phys.velocity = initial_velocity;
+    phys.life = settings.life;
+    phys.max_life = settings.life;
+    phys.initial_size = settings.size;
+
+    phys.start_color = settings.start_color;
+    phys.end_color = settings.end_color;
+
+    phys.gravity_scale = settings.gravity;
+    phys.drag = settings.drag;
+    phys.elasticity = settings.elasticity;
+    phys.friction = settings.friction;
+    phys.turbulence_strength = settings.turbulence;
+    phys.behaviour = settings.behaviour;
+
+    phys.use_point_gravity = settings.use_point_gravity;
+    phys.gravity_point = settings.gravity_point;
+    phys.point_gravity_strength = settings.point_gravity_strength;
 
     active_count++;
+}
+
+void ParticleSystem::burst(std::string emitter_name, int count)
+{
+    EmitterSettings& settings = get_emitter(emitter_name);
+
+    for (int i = 0; i < count; i++)
+    {
+        float phi = ((float)rand() / RAND_MAX) * 2.0f * M_PI;
+        float costheta = ((float)rand() / RAND_MAX) * 2.0f - 1.0f;
+        float u = ((float)rand() / RAND_MAX);
+
+        float theta = acos(costheta);
+        float r = cbrt(u);
+
+        glm::vec3 velocity(
+            r * sin(theta) * cos(phi),
+            r * sin(theta) * sin(phi),
+            r * cos(theta)
+        );
+
+        velocity *= (1.0f + ((rand() % 100) / 100.0f) * 5.0f);
+
+        emit(settings, velocity);
+    }
 }
 
 void ParticleSystem::update()
@@ -71,17 +88,12 @@ void ParticleSystem::update()
             float spawn_interval = 1.0f / static_cast<float>(settings.spawn_rate);
             settings.spawn_timer += GLOBAL::deltaTime;
 
-            while(settings.spawn_timer >= spawn_interval)
+            while (settings.spawn_timer >= spawn_interval)
             {
                 float angle = static_cast<float>(rand() % 360) * (static_cast<float>(M_PI) / 180.0f);
                 glm::vec3 velocity(cos(angle), 1.0f, sin(angle));
 
-                emit(
-                    settings.position, settings.size, velocity, settings.life, settings.gravity, settings.drag,
-                    settings.color, settings.elasticity, settings.friction, settings.behaviour, settings.use_point_gravity,
-                    settings.gravity_point, settings.point_gravity_strength
-                );
-
+                emit(settings, velocity);
                 settings.spawn_timer -= spawn_interval;
             }
         }
@@ -96,38 +108,35 @@ void ParticleSystem::update()
 
         phys.life -= GLOBAL::deltaTime;
 
-        float life_ratio = phys.life / phys.max_life;
-        float particle_size_behaviour;
-
         if (phys.life <= 0.0f)
         {
             instances[i] = instances[active_count - 1];
             physics[i] = physics[active_count - 1];
-
             active_count--;
-
             continue;
         }
+
+        float life_ratio = phys.life / phys.max_life;
+
+        inst.color = glm::mix(phys.end_color, phys.start_color, life_ratio);
 
         switch (phys.behaviour)
         {
             case ParticleBehaviour::GROW:
-                particle_size_behaviour = phys.initial_size + (phys.initial_size * (1.0f - life_ratio));
-            break;
-
+                inst.size = phys.initial_size + (phys.initial_size * (1.0f - life_ratio));
+                break;
             case ParticleBehaviour::SHRINK:
-                particle_size_behaviour = phys.initial_size * (life_ratio * life_ratio);
-            break;
-
+                inst.size = phys.initial_size * (life_ratio * life_ratio);
+                break;
             default:
-                particle_size_behaviour = phys.initial_size;
-            break;
+                inst.size = phys.initial_size;
+                break;
         }
+
 
         if (phys.use_point_gravity)
         {
             glm::vec3 direction = phys.gravity_point - inst.position;
-
             float distance = glm::length(direction);
 
             if (distance > 0.1f)
@@ -141,26 +150,20 @@ void ParticleSystem::update()
             phys.velocity.y -= g_dt * phys.gravity_scale;
         }
 
+        if (phys.turbulence_strength > 0.0f)
+        {
+            float time_offset = GLOBAL::deltaTime * 5.0f;
+            phys.velocity.x += sin(inst.position.y * 2.0f + time_offset) * phys.turbulence_strength;
+            phys.velocity.z += cos(inst.position.x * 2.0f + time_offset) * phys.turbulence_strength;
+        }
+
         phys.velocity *= 1.0f - (phys.drag * GLOBAL::deltaTime);
         inst.position += phys.velocity * GLOBAL::deltaTime;
-        inst.size = particle_size_behaviour;
-
-        if (phys.gravity_scale < 0.0f)
-        {
-            float jitterX = ((rand() % 100) / 100.0f - 0.5f) * 0.005f;
-            float jitterZ = ((rand() % 100) / 100.0f - 0.5f) * 0.005f;
-
-            inst.position.x += jitterX;
-            inst.position.z += jitterZ;
-
-            inst.color.a = phys.initial_alpha * life_ratio;
-        }
 
         if (phys.gravity_scale > 0.0f && inst.position.y < 0.0f)
         {
             inst.position.y = 0.0f;
             phys.velocity.y = -phys.velocity.y * phys.elasticity;
-
             phys.velocity.x *= phys.friction;
             phys.velocity.z *= phys.friction;
 
@@ -200,15 +203,29 @@ void ParticleSystem::draw(VortexShader &shader, VortexCamera &camera)
     shader.setMat4("view", camera.getViewMatrix());
     shader.setMat4("projection", camera.getProjectionMatrix());
 
+    glBindVertexArray(VAO);
+
     glBindBuffer(GL_ARRAY_BUFFER, instanceVBO);
-    glBufferData(GL_ARRAY_BUFFER, max_particles * sizeof(ParticleInstance), NULL, GL_STREAM_DRAW);
     glBufferSubData(GL_ARRAY_BUFFER, 0, draw_count * sizeof(ParticleInstance), instances.data());
 
     glEnable(GL_BLEND);
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
     glDepthMask(GL_FALSE);
 
-    glBindVertexArray(VAO);
+    shader.setInt("particleTexture", 0);
+    glActiveTexture(GL_TEXTURE0);
+
+    if (emitter_registry["Default Emitter"].texture_id != 0)
+    {
+        glBindTexture(GL_TEXTURE_2D, emitter_registry["Default Emitter"].texture_id);
+        shader.setBool("useTexture", true);
+    }
+    else
+    {
+        glBindTexture(GL_TEXTURE_2D, 0);
+        shader.setBool("useTexture", false);
+    }
+
     glDrawArraysInstanced(GL_TRIANGLES, 0, 6, draw_count);
 
     glBindVertexArray(0);
@@ -245,27 +262,32 @@ void ParticleSystem::setup_buffers()
     // Quad location
     glBindBuffer(GL_ARRAY_BUFFER, VBO);
     glBufferData(GL_ARRAY_BUFFER, sizeof(GLOBAL::DEFAULT_VERTICES::PARTICLE_VERTICES), GLOBAL::DEFAULT_VERTICES::PARTICLE_VERTICES, GL_STATIC_DRAW);
+
     glEnableVertexAttribArray(0);
-    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), (void*)0);
+    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void*)0);
 
-    // instance location
-    glBindBuffer(GL_ARRAY_BUFFER, instanceVBO);
-    glBufferData(GL_ARRAY_BUFFER, max_particles * sizeof(ParticleInstance), NULL, GL_STREAM_DRAW);
-
-    // position
+    // UVs for the particle texture
     glEnableVertexAttribArray(1);
-    glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, sizeof(ParticleInstance), (void*)offsetof(ParticleInstance, position));
-    glVertexAttribDivisor(1, 1);
+    glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void*)(3 * sizeof(float)));
 
-    // size
+    // Instance Data
+    glBindBuffer(GL_ARRAY_BUFFER, instanceVBO);
+    glBufferData(GL_ARRAY_BUFFER, max_particles * sizeof(ParticleInstance), NULL, GL_DYNAMIC_DRAW);
+
+    // Position (Attribute 2)
     glEnableVertexAttribArray(2);
-    glVertexAttribPointer(2, 1, GL_FLOAT, GL_FALSE, sizeof(ParticleInstance), (void*)offsetof(ParticleInstance, size));
+    glVertexAttribPointer(2, 3, GL_FLOAT, GL_FALSE, sizeof(ParticleInstance), (void*)offsetof(ParticleInstance, position));
     glVertexAttribDivisor(2, 1);
 
-    // color
+    // Size (Attribute 3)
     glEnableVertexAttribArray(3);
-    glVertexAttribPointer(3, 4, GL_FLOAT, GL_FALSE, sizeof(ParticleInstance), (void*)offsetof(ParticleInstance, color));
+    glVertexAttribPointer(3, 1, GL_FLOAT, GL_FALSE, sizeof(ParticleInstance), (void*)offsetof(ParticleInstance, size));
     glVertexAttribDivisor(3, 1);
+
+    // Color (Attribute 4)
+    glEnableVertexAttribArray(4);
+    glVertexAttribPointer(4, 4, GL_FLOAT, GL_FALSE, sizeof(ParticleInstance), (void*)offsetof(ParticleInstance, color));
+    glVertexAttribDivisor(4, 1);
 
     glBindVertexArray(0);
 }
@@ -276,7 +298,6 @@ EmitterSettings& ParticleSystem::get_emitter(std::string name)
     {
         emitter_registry[name] = EmitterSettings();
     }
-
     return emitter_registry[name];
 }
 

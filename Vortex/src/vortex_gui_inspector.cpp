@@ -538,15 +538,11 @@ void VortexGUI::inspect_particle_system(ParticleSystem *ps)
                 {
                     ImGui::Indent(10.0f); ImGui::Spacing();
 
+                    ImGui::TextDisabled("Spawning & Transform");
                     ImGui::DragFloat3("Position", &settings.position.x, 0.1f);
                     VortexGuiLambda::ClampedInputInt("Spawn Rate", &settings.spawn_rate, 100, 500, 0, ps->max_particles);
                     VortexGuiLambda::ClampedInputFloat("Size", &settings.size, 0.1f, 1.0f, 0.05f, 5.0f);
                     VortexGuiLambda::ClampedInputFloat("Life", &settings.life, 0.5f, 1.0f, 0.1f, 10.0f);
-                    VortexGuiLambda::ClampedInputFloat("Gravity", &settings.gravity, 0.2f, 0.5f, -2.0f, 2.0f);
-
-                    ImGui::SliderFloat("Drag", &settings.drag, 0.0f, 5.0f);
-                    ImGui::SliderFloat("Elasticity", &settings.elasticity, 0.0f, 1.0f);
-                    ImGui::SliderFloat("Friction", &settings.friction, 0.0f, 1.0f);
 
                     const char *behaviour_options[] = {"Grow", "Shrink", "None"};
                     int current_behaviour = static_cast<int>(settings.behaviour);
@@ -555,10 +551,27 @@ void VortexGUI::inspect_particle_system(ParticleSystem *ps)
                     {
                         settings.behaviour = static_cast<ParticleBehaviour>(current_behaviour);
                     }
+                    ImGui::Spacing(); ImGui::Separator(); ImGui::Spacing();
 
-                    ImGui::Spacing(); ImGui::ColorEdit4("Color", glm::value_ptr(settings.color));
+                    ImGui::TextDisabled("Visuals");
+                    ImGui::ColorEdit4("Start Color", glm::value_ptr(settings.start_color));
+                    ImGui::ColorEdit4("End Color", glm::value_ptr(settings.end_color));
+
+                    int tex_id = static_cast<int>(settings.texture_id);
+                    if (ImGui::InputInt("Texture ID (0 = Default)", &tex_id))
+                    {
+                        settings.texture_id = static_cast<GLuint>(std::max(0, tex_id));
+                    }
+                    ImGui::Spacing(); ImGui::Separator(); ImGui::Spacing();
+
+                    ImGui::TextDisabled("Physics & Forces");
+                    VortexGuiLambda::ClampedInputFloat("Gravity", &settings.gravity, 0.2f, 0.5f, -2.0f, 2.0f);
+                    ImGui::SliderFloat("Drag", &settings.drag, 0.0f, 5.0f);
+                    ImGui::SliderFloat("Elasticity (Bounce)", &settings.elasticity, 0.0f, 1.0f);
+                    ImGui::SliderFloat("Friction", &settings.friction, 0.0f, 1.0f);
+                    ImGui::SliderFloat("Turbulence", &settings.turbulence, 0.0f, 5.0f);
+
                     ImGui::Spacing();
-
                     if (ImGui::TreeNodeEx("Point Gravity"))
                     {
                         ImGui::Checkbox("Use Point Gravity", &settings.use_point_gravity);
@@ -568,6 +581,12 @@ void VortexGUI::inspect_particle_system(ParticleSystem *ps)
                             VortexGuiLambda::ClampedInputFloat("Pull Strength", &settings.point_gravity_strength, 0.1f, 0.0f, 0.1f, 1.0f);
                         }
                         ImGui::TreePop();
+                    }
+
+                    ImGui::Spacing(); ImGui::Separator(); ImGui::Spacing();
+                    if (ImGui::Button("Trigger Burst (100)", ImVec2(-1, 24)))
+                    {
+                        ps->burst(name, 100);
                     }
 
                     ImGui::Spacing(); ImGui::Unindent(10.0f);

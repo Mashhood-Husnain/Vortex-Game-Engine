@@ -98,3 +98,9 @@ void VortexShader::setFloat(const std::string &name, const float value) const
     GLint location = glGetUniformLocation(shader_program, name.c_str());
     glUniform1f(location, value);
 }
+
+void VortexShader::setBool(const std::string &name, const bool value) const
+{
+    GLint location = glGetUniformLocation(shader_program, name.c_str());
+    glUniform1i(location, value);
+}
