@@ -3,8 +3,11 @@
 GLFWwindow* VortexMouse::s_window = nullptr;
 std::unordered_map<std::string, int> VortexMouse::s_button_map;
 std::unordered_map<std::string, bool> VortexMouse::s_previous_buttons;
-double VortexMouse::s_mouse_x = 0.0;
-double VortexMouse::s_mouse_y = 0.0;
+double VortexMouse::s_mouse_x = 0.0f;
+double VortexMouse::s_mouse_y = 0.0f;
+
+double VortexMouse::s_previous_mouse_x = 0.0f;
+double VortexMouse::s_previous_mouse_y = 0.0f;
 
 void VortexMouse::init(GLFWwindow *window)
 {
@@ -33,6 +36,9 @@ void VortexMouse::update()
     {
         s_previous_buttons[pair.first] = (glfwGetMouseButton(s_window, pair.second) == GLFW_PRESS);
     }
+
+    s_previous_mouse_x = s_mouse_x;
+    s_previous_mouse_y = s_mouse_y;
 
     glfwGetCursorPos(s_window, &s_mouse_x, &s_mouse_y);
 }
@@ -81,9 +87,19 @@ double VortexMouse::get_x()
     return s_mouse_x;
 }
 
+double VortexMouse::get_delta_x()
+{
+    return s_mouse_x - s_previous_mouse_x;
+}
+
 double VortexMouse::get_y()
 {
     return s_mouse_y;
+}
+
+double VortexMouse::get_delta_y()
+{
+    return s_previous_mouse_y - s_mouse_y;
 }
 
 glm::vec2 VortexMouse::get_position()

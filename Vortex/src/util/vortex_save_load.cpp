@@ -1,6 +1,105 @@
 #include "util/vortex_save_load.hpp"
 #include "util/vortex_logs.hpp"
 
+void generate_ide_context(const std::string& project_name)
+{
+    std::string scripts_dir = vortex_generatepath(
+        VortexProject::SAVE_DIRECTORY,
+        project_name,
+        VortexProject::ASSET_DIR_SCRIPTS
+    );
+
+    std::string cmake_path = vortex_generatepath(scripts_dir, "CMakeLists.txt");
+    std::string vscode_dir = vortex_generatepath(scripts_dir, ".vscode");
+    std::string cpp_props_path = vortex_generatepath(vscode_dir, "c_cpp_properties.json");
+
+    if (std::filesystem::exists(cmake_path) && std::filesystem::exists(cpp_props_path)) return;
+
+    std::string engine_root = std::filesystem::absolute("..").string();
+    std::replace(engine_root.begin(), engine_root.end(), '\\', '/');
+
+    if (!std::filesystem::exists(cmake_path))
+    {
+        std::ofstream cmake_file(cmake_path);
+        if (cmake_file.is_open())
+        {
+            cmake_file << "cmake_minimum_required(VERSION 3.10)\n";
+            cmake_file << "project(" << project_name << "_Scripts)\n\n";
+            cmake_file << "set(CMAKE_CXX_STANDARD 20)\n\n";
+            cmake_file << "file(GLOB_RECURSE USER_SCRIPTS \"*.cpp\")\n";
+            cmake_file << "add_library(DummyContext SHARED ${USER_SCRIPTS})\n\n";
+            cmake_file << "target_include_directories(DummyContext PUBLIC\n";
+            cmake_file << "    \"" << engine_root << "/Vortex/include\"\n";
+            cmake_file << "    \"" << engine_root << "/Vortex/include/util\"\n";
+
+            cmake_file << "    \"" << engine_root << "/vendor/glm\"\n";
+            cmake_file << "    \"" << engine_root << "/vendor/nlohmann_json\"\n";
+            cmake_file << "    \"" << engine_root << "/vendor/glad/include\"\n";
+            cmake_file << "    \"" << engine_root << "/vendor/glfw/include\"\n";
+            cmake_file << "    \"" << engine_root << "/vendor/imgui\"\n";
+            cmake_file << "    \"" << engine_root << "/vendor/ImGuizmo\"\n";
+            cmake_file << "    \"" << engine_root << "/vendor/miniaudio\"\n";
+            cmake_file << "    \"" << engine_root << "/vendor/nvml\"\n";
+            cmake_file << "    \"" << engine_root << "/vendor/stbimage\"\n";
+
+            cmake_file << ")\n";
+            cmake_file.close();
+        }
+    }
+
+    if (!std::filesystem::exists(vscode_dir))
+    {
+        std::filesystem::create_directory(vscode_dir);
+    }
+
+    if (!std::filesystem::exists(cpp_props_path))
+    {
+        std::ofstream props_file(cpp_props_path);
+        if (props_file.is_open())
+        {
+            props_file << "{\n";
+            props_file << "    \"configurations\": [\n";
+            props_file << "        {\n";
+            props_file << "            \"name\": \"VortexEngine\",\n";
+            props_file << "            \"includePath\": [\n";
+            props_file << "                \"${workspaceFolder}/**\",\n";
+            props_file << "                \"" << engine_root << "/Vortex/include\",\n";
+            props_file << "                \"" << engine_root << "/Vortex/include/util\",\n";
+
+            props_file << "                \"" << engine_root << "/vendor/glm\",\n";
+            props_file << "                \"" << engine_root << "/vendor/nlohmann_json\",\n";
+            props_file << "                \"" << engine_root << "/vendor/glad/include\",\n";
+            props_file << "                \"" << engine_root << "/vendor/glfw/include\",\n";
+            props_file << "                \"" << engine_root << "/vendor/imgui\",\n";
+            props_file << "                \"" << engine_root << "/vendor/ImGuizmo\",\n";
+            props_file << "                \"" << engine_root << "/vendor/miniaudio\",\n";
+            props_file << "                \"" << engine_root << "/vendor/nvml\",\n";
+            props_file << "                \"" << engine_root << "/vendor/stbimage\"\n";
+
+            props_file << "            ],\n";
+            props_file << "            \"defines\": [],\n";
+
+            #if defined(_WIN32) || defined(_WIN64)
+                props_file << "            \"compilerPath\": \"C:/msys64/mingw64/bin/g++.exe\",\n";
+                props_file << "            \"intelliSenseMode\": \"windows-gcc-x64\",\n";
+            #else
+                props_file << "            \"compilerPath\": \"/usr/bin/g++\",\n";
+                props_file << "            \"intelliSenseMode\": \"linux-gcc-x64\",\n";
+            #endif
+
+            props_file << "            \"cStandard\": \"c17\",\n";
+            props_file << "            \"cppStandard\": \"c++20\"\n";
+            props_file << "        }\n";
+            props_file << "    ],\n";
+            props_file << "    \"version\": 4\n";
+            props_file << "}\n";
+            props_file.close();
+        }
+    }
+
+    VORTEX_INFO("[PROJECT] Generated IDE context for project: ", project_name);
+}
+
 void VortexProject::save_project(Snapshot *snapshot)
 {
     std::string prefix = "temp_playmode_backup_";
@@ -581,6 +680,17 @@ void VortexProject::take_snapshot(SnapshotState state, VortexApplication *window
         window,
         &settings_snapshot
     };
+
+    if (strlen(VortexGUI::preferred_ide_path) != 0)
+    {
+        std::string base_path = vortex_generatepath(SAVE_DIRECTORY, project_name);
+        if (!std::filesystem::exists(base_path)) std::filesystem::create_directory(base_path);
+
+        std::string scripts_path = vortex_generatepath(base_path, ASSET_DIR_SCRIPTS);
+        if (!std::filesystem::exists(scripts_path)) std::filesystem::create_directory(scripts_path);
+
+        generate_ide_context(project_name);
+    }
 
     if (state == SnapshotState::SAVE) VortexProject::save_project(&snapshot);
     else if (state == SnapshotState::LOAD) VortexProject::load_project(&snapshot);

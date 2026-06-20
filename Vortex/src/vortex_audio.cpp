@@ -26,15 +26,15 @@ void VortexAudio::play_sound(const std::string& filepath, float volume)
 
     ma_sound* sound = new ma_sound();
     ma_result result = ma_sound_init_from_file(sound_engine, filepath.c_str(), 0, NULL, NULL, sound);
-    
-    if (result == MA_SUCCESS) 
+
+    if (result == MA_SUCCESS)
     {
         ma_sound_set_volume(sound, volume);
         ma_sound_start(sound);
-        
+
         active_sounds.push_back(sound);
-    } 
-    else 
+    }
+    else
     {
         VORTEX_ERROR("[AUDIO WARNING] Could not load: ", filepath);
         delete sound;
@@ -45,18 +45,18 @@ void VortexAudio::update()
 {
     if (!initialized) return;
 
-    for (auto it = active_sounds.begin(); it != active_sounds.end(); ) 
+    for (auto it = active_sounds.begin(); it != active_sounds.end(); )
     {
         ma_sound* sound = *it;
-        
-        if (ma_sound_at_end(sound)) 
+
+        if (ma_sound_at_end(sound))
         {
             ma_sound_uninit(sound);
             delete sound;
-            
-            it = active_sounds.erase(it); 
-        } 
-        else 
+
+            it = active_sounds.erase(it);
+        }
+        else
         {
             ++it;
         }
@@ -69,7 +69,7 @@ void VortexAudio::clean_up()
 
     if (!initialized) return;
 
-    for (ma_sound* sound : active_sounds) 
+    for (ma_sound* sound : active_sounds)
     {
         ma_sound_uninit(sound);
         delete sound;

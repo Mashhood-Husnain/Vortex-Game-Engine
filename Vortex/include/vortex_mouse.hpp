@@ -16,6 +16,9 @@ class VortexMouse
 
     static double s_mouse_x;
     static double s_mouse_y;
+
+    static double s_previous_mouse_x;
+    static double s_previous_mouse_y;
 public:
     static void init(GLFWwindow *window);
     static void update();
@@ -23,6 +26,9 @@ public:
     static bool get_button(const std::string &button);
 
     static double get_x();
+    static double get_delta_x();
+
     static double get_y();
+    static double get_delta_y();
     static glm::vec2 get_position();
 };

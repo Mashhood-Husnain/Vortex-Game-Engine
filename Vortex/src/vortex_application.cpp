@@ -704,7 +704,7 @@ void VortexApplication::run(std::function<void()> draw_callback)
                     render_camera->set_aspect_ratio(VortexGUI::render_scene_width / VortexGUI::render_scene_height);
                 }
 
-                if (!skybox) glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
+                if (!skybox) glClearColor(0.1f, 0.1f, 0.15f, 1.0f);
                 glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
 
                 if (skybox) skybox->draw(render_camera);
@@ -998,6 +998,7 @@ void VortexApplication::exit_play_mode()
     show_mouse(true);
 
     camera = editor_camera;
+    render_camera = editor_camera;
 
     VortexUIManager::cleanup();
 
@@ -1097,11 +1098,15 @@ bool VortexApplication::is_wireframe_enabled() const { return show_wireframe; }
 bool VortexApplication::is_exit_modal_open() const { return show_exit_modal; }
 bool VortexApplication::has_unsaved() const { return has_unsaved_changes; }
 
-VortexCamera *VortexApplication::get_camera() const { return camera; }
+VortexCamera *VortexApplication::get_camera() const { return render_camera; }
 VortexCamera *VortexApplication::get_editor_camera() const { return editor_camera; }
 // ShadowManager *VortexApplication::get_shadow_manager() const { return shadow_manager; }
 
-void VortexApplication::set_camera(VortexCamera *camera) { this->camera = camera; }
+void VortexApplication::set_camera(VortexCamera *camera)
+{
+    this->render_camera = camera;
+    this->camera = camera;
+}
 
 void VortexApplication::set_state(EngineState state) { current_state = state; }
 void VortexApplication::toggle_wireframe(bool enable) { show_wireframe = enable; }

@@ -100,18 +100,18 @@ void VortexObjectManager::update_scripts()
 
 void VortexObjectManager::update_physics()
 {
-    for (VortexModel *model : active_models)
-    {
-        if (model->is_active && model->rigidbody && !model->rigidbody->is_kinematic)
-        {
-            if (model->rigidbody->gravity)
-            {
-                model->rigidbody->velocity.y -= GLOBAL::GRAVITY * model->rigidbody->gravity_value * GLOBAL::deltaTime;
-            }
-            model->transform.position += model->rigidbody->velocity * GLOBAL::deltaTime;
-            model->set_model_matrix(model->get_model_matrix());
-        }
-    }
+    // for (VortexModel *model : active_models)
+    // {
+    //     if (model->is_active && model->rigidbody && !model->rigidbody->is_kinematic)
+    //     {
+    //         if (model->rigidbody->gravity)
+    //         {
+    //             model->rigidbody->velocity.y -= GLOBAL::GRAVITY * model->rigidbody->gravity_value * GLOBAL::deltaTime;
+    //         }
+    //         model->transform.position += model->rigidbody->velocity * GLOBAL::deltaTime;
+    //         model->set_model_matrix(model->get_model_matrix());
+    //     }
+    // }
 }
 
 void VortexObjectManager::update_particles()

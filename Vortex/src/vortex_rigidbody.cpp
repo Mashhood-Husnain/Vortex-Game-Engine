@@ -6,10 +6,30 @@ void VortexRigidbody::on_update()
 
     if (gravity) velocity.y -= gravity_value * GLOBAL::deltaTime;
 
-    transform().position.y += velocity.y * GLOBAL::deltaTime;
+    int micro_steps = 10;
+
+    float y_move = velocity.y * GLOBAL::deltaTime;
+    transform().position.y += y_move;
+    object().set_model_matrix(object().get_model_matrix());
+
     if (check_world_collision())
     {
-        transform().position.y -= velocity.y * GLOBAL::deltaTime;
+        transform().position.y -= y_move;
+
+        float step = y_move / static_cast<float>(micro_steps);
+        for (int i = 0; i < micro_steps; i++)
+        {
+            transform().position.y += step;
+            object().set_model_matrix(object().get_model_matrix());
+
+            if (check_world_collision())
+            {
+                transform().position.y -= step;
+                object().set_model_matrix(object().get_model_matrix());
+                break;
+            }
+        }
+
         if (velocity.y <= 0) is_grounded = true;
         velocity.y = 0.0f;
     }
@@ -18,17 +38,49 @@ void VortexRigidbody::on_update()
         is_grounded = false;
     }
 
-    transform().position.x += velocity.x * GLOBAL::deltaTime;
+    float x_move = velocity.x * GLOBAL::deltaTime;
+    transform().position.x += x_move;
+    object().set_model_matrix(object().get_model_matrix());
+
     if (check_world_collision())
     {
-        transform().position.x -= velocity.x * GLOBAL::deltaTime;
+        transform().position.x -= x_move;
+
+        float step = x_move / static_cast<float>(micro_steps);
+        for (int i = 0; i < micro_steps; i++)
+        {
+            transform().position.x += step;
+            object().set_model_matrix(object().get_model_matrix());
+            if (check_world_collision())
+            {
+                transform().position.x -= step;
+                object().set_model_matrix(object().get_model_matrix());
+                break;
+            }
+        }
         velocity.x = 0.0f;
     }
 
-    transform().position.z += velocity.z * GLOBAL::deltaTime;
+    float z_move = velocity.z * GLOBAL::deltaTime;
+    transform().position.z += z_move;
+    object().set_model_matrix(object().get_model_matrix());
+
     if (check_world_collision())
     {
-        transform().position.z -= velocity.z * GLOBAL::deltaTime;
+        transform().position.z -= z_move;
+
+        float step = z_move / static_cast<float>(micro_steps);
+        for (int i = 0; i < micro_steps; i++)
+        {
+            transform().position.z += step;
+            object().set_model_matrix(object().get_model_matrix());
+            if (check_world_collision())
+            {
+                transform().position.z -= step;
+                object().set_model_matrix(object().get_model_matrix());
+                break;
+            }
+        }
         velocity.z = 0.0f;
     }
 }
@@ -72,6 +124,7 @@ void VortexRigidbody::serialize(json& j)
 {
     j["is_kinematic"] = is_kinematic;
     j["gravity"] = gravity;
+    j["gravity_value"] = gravity_value;
 }
 
 void VortexRigidbody::deserialize(const json& j)
@@ -83,5 +136,9 @@ void VortexRigidbody::deserialize(const json& j)
     if (j.contains("gravity"))
     {
         gravity = j["gravity"];
+    }
+    if (j.contains("gravity_value"))
+    {
+        gravity_value = j["gravity_value"];
     }
 }

@@ -108,7 +108,8 @@ void VortexGUI::draw_asset_browser()
     {
         for (const auto& entry : std::filesystem::directory_iterator(current_path))
         {
-            if (entry.path().extension() == ".vtx" || entry.path().filename().string() == settings_filename)
+            if (entry.path().extension() == ".vtx" || entry.path().filename().string() == settings_filename ||
+                entry.path().filename().string() == "CMakeLists.txt" || entry.path().filename().string() == ".vscode")
             {
                 continue;
             }
@@ -342,6 +343,35 @@ void VortexGUI::draw_asset_browser()
             pending_creation_path = current_path.string();
             show_create_folder_modal = true;
         }
+
+        ImGui::Separator();
+
+        if (ImGui::MenuItem("Open Project in IDE"))
+        {
+            if (strlen(preferred_ide_path) > 0)
+            {
+                std::string scripts_dir = vortex_generatepath(
+                    VortexProject::SAVE_DIRECTORY,
+                    m_new_project_name,
+                    VortexProject::ASSET_DIR_SCRIPTS
+                );
+
+                std::string absolute_dir = std::filesystem::absolute(scripts_dir).string();
+
+                #if defined(_WIN32) || defined(_WIN64)
+                    std::string cmd = "start \"\" \"" + std::string(preferred_ide_path) + "\" \"" + absolute_dir + "\"";
+                #else
+                    std::string cmd = std::string(preferred_ide_path) + " \"" + absolute_dir + "\" &";
+                #endif
+
+                if (std::system(cmd.c_str()) != 0) VORTEX_WARN("Failed to launch external editor.");
+            }
+            else
+            {
+                VORTEX_WARN("[Editor] No IDE path set in Edit -> Settings!");
+            }
+        }
+
         ImGui::EndPopup();
     }
 
