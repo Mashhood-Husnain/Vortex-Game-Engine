@@ -6,11 +6,14 @@
 #include <algorithm>
 #include <deque>
 
-#include "vortex_model.hpp"
 #include "vortex_objectmanager.hpp"
 #include "vortex_application.hpp"
 #include "vortex_util.hpp"
 #include "vortex_logs.hpp"
+#include "vortex_gui.hpp"
+
+class VortexModel;
+class VortexDecal;
 
 class EditorAction
 {
@@ -21,6 +24,65 @@ public:
 
     virtual std::string get_name() const = 0;
     virtual std::string get_details() const = 0;
+};
+
+class ActionDecalTransform : public EditorAction
+{
+    VortexDecal *m_target;
+    glm::vec3 m_old_pos;
+    glm::vec3 m_new_pos;
+
+    glm::quat m_old_rot;
+    glm::quat m_new_rot;
+
+    glm::vec3 m_old_scale;
+    glm::vec3 m_new_scale;
+public:
+    ActionDecalTransform(
+        VortexDecal *decal,
+        glm::vec3 old_pos, glm::vec3 new_pos,
+        glm::quat old_rot, glm::quat new_rot,
+        glm::vec3 old_scale, glm::vec3 new_scale
+    );
+    ~ActionDecalTransform() override;
+
+    void undo() override;
+    void redo() override;
+
+    std::string get_name() const override;
+    std::string get_details() const override;
+};
+
+class ActionCreateDecal : public EditorAction
+{
+    VortexModel *m_target_model;
+    VortexDecal *m_decal;
+    bool m_is_in_scene;
+public:
+    ActionCreateDecal(VortexModel *model, VortexDecal *decal);
+    ~ActionCreateDecal() override;
+
+    void undo() override;
+    void redo() override;
+
+    std::string get_name() const override;
+    std::string get_details() const override;
+};
+
+class ActionDeleteDecal : public EditorAction
+{
+    VortexModel *m_target_model;
+    VortexDecal *m_decal;
+    bool m_is_deleted;
+public:
+    ActionDeleteDecal(VortexModel *model, VortexDecal *decal);
+    ~ActionDeleteDecal() override;
+
+    void undo() override;
+    void redo() override;
+
+    std::string get_name() const override;
+    std::string get_details() const override;
 };
 
 class ActionTransform : public EditorAction
@@ -84,7 +146,7 @@ class ActionManager
 {
     static std::deque<EditorAction*> undo_stack;
     static std::deque<EditorAction*> redo_stack;
-    static const int MAX_HISTORY = 50;
+    static const int MAX_HISTORY = 150;
 public:
 
     static void push_action(EditorAction *action);

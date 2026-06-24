@@ -1,7 +1,10 @@
 #pragma once
+
 #include "vortex_canvas.hpp"
 #include <vector>
 #include <string>
+
+class VortexCanvas;
 
 class VortexUIManager
 {
@@ -10,7 +13,7 @@ public:
 
     static void add_canvas(VortexCanvas* canvas);
     static VortexCanvas* get_canvas(const std::string& name);
-    
+
     static void render_ui();
     static void cleanup();
 };

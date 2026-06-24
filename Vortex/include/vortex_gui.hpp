@@ -38,8 +38,16 @@ class VortexProject;
 class ScriptRegistry;
 class VortexMonoBehaviour;
 class VortexEditor;
+class VortexDecal;
 
 enum class SnapshotState;
+
+struct UIImageData
+{
+    GLuint id = 0;
+    int width = 0;
+    int height = 0;
+};
 
 struct CompilerState
 {
@@ -48,6 +56,66 @@ struct CompilerState
     inline static std::mutex status_mutex;
     inline static std::string status_text = "Initializing compiler...";
 };
+
+namespace VortexGuiHelpers
+{
+    inline bool DrawHeader(const char* label, bool is_selected)
+    {
+        if (is_selected)
+        {
+            ImGui::PushStyleColor(ImGuiCol_Header, ImVec4(0.25f, 0.35f, 0.45f, 0.60f));
+            ImGui::PushStyleColor(ImGuiCol_HeaderHovered, ImVec4(0.30f, 0.40f, 0.50f, 0.80f));
+            ImGui::PushStyleColor(ImGuiCol_HeaderActive, ImVec4(0.35f, 0.45f, 0.55f, 1.00f));
+        }
+
+        bool open = ImGui::CollapsingHeader(label);
+
+        if (is_selected) ImGui::PopStyleColor(3);
+
+        return open;
+    }
+
+    inline bool DrawComponentNode(const char* label, int flags, const ImVec4& color)
+    {
+        ImGui::PushStyleColor(ImGuiCol_Header, color);
+        bool open = ImGui::TreeNodeEx(label, flags);
+        ImGui::PopStyleColor();
+        return open;
+    }
+
+    inline bool DrawDangerButton(const char* label, const ImVec2& size = ImVec2(0, 0))
+    {
+        ImGui::PushStyleColor(ImGuiCol_Button, ImVec4(0.60f, 0.20f, 0.20f, 0.80f));
+        ImGui::PushStyleColor(ImGuiCol_ButtonHovered, ImVec4(0.70f, 0.25f, 0.25f, 1.00f));
+        ImGui::PushStyleColor(ImGuiCol_ButtonActive, ImVec4(0.80f, 0.30f, 0.30f, 1.00f));
+        bool pressed = ImGui::Button(label, size);
+        ImGui::PopStyleColor(3);
+        return pressed;
+    }
+
+    inline bool DrawActionButton(const char* label, const ImVec2& size = ImVec2(0, 0))
+    {
+        ImGui::PushStyleColor(ImGuiCol_Button, ImVec4(0.20f, 0.40f, 0.60f, 0.80f));
+        ImGui::PushStyleColor(ImGuiCol_ButtonHovered, ImVec4(0.25f, 0.45f, 0.70f, 1.00f));
+        ImGui::PushStyleColor(ImGuiCol_ButtonActive, ImVec4(0.30f, 0.50f, 0.80f, 1.00f));
+        bool pressed = ImGui::Button(label, size);
+        ImGui::PopStyleColor(3);
+        return pressed;
+    }
+
+    inline void DrawTransformRow(const char* label, const char* id, float* data, float step = 0.1f, float min = 0.0f, float max = 0.0f)
+    {
+        ImGui::TableNextColumn();
+        ImGui::AlignTextToFramePadding();
+        ImGui::TextDisabled("%s", label);
+
+        ImGui::TableNextColumn();
+        ImGui::SetNextItemWidth(-FLT_MIN);
+
+        if (min != max) ImGui::DragFloat3(id, data, step, min, max);
+        else ImGui::DragFloat3(id, data, step);
+    }
+}
 
 namespace VortexGuiLambda
 {
@@ -104,7 +172,6 @@ class VortexGUI
     static GLuint file_hpp_icon_tex;
     static GLuint file_mtl_icon_tex;
     static GLuint file_obj_icon_tex;
-    static GLuint file_png_icon_tex;
     static GLuint file_txt_icon_tex;
 
     static VortexApplication *app;
@@ -138,6 +205,9 @@ class VortexGUI
 
     static char m_project_to_delete[128];
 
+    static std::unordered_map<std::string, UIImageData> image_thumbnail_cache;
+    static std::string active_image_path;
+
     static void refresh_skybox_list();
     static void gui_set_skybox();
 
@@ -158,6 +228,9 @@ public:
     static void destroy_scene();
     static void destroy_render_scene();
 
+    static bool pending_layout_load;
+    static std::string pending_ini_data;
+
     static std::set<VortexModel*> m_selected_models;
     static ImGuizmo::OPERATION m_current_op;
     static bool m_is_using_gizmo;
@@ -171,6 +244,8 @@ public:
 
     static bool scene_fbo_initialized;
     static bool render_scene_fbo_initialized;
+
+    static VortexDecal* g_active_decal_for_gizmo;
 
     static float viewport_width;
     static float viewport_height;
@@ -189,6 +264,7 @@ public:
     static bool show_asset_browser;
     static bool show_settings_window;
     static bool show_file_viewer;
+    static bool show_image_viewer;
 
     static char preferred_ide_path[256];
 
@@ -200,6 +276,10 @@ public:
     static bool show_create_folder_modal;
     static char new_item_name[128];
     static std::string pending_creation_path;
+
+    static bool show_rename_modal;
+    static char item_to_rename_old_path[512];
+    static char item_to_rename_new_name[256];
 
     static int m_selected_skybox_idx;
     static int m_selected_shader_idx;
@@ -228,6 +308,8 @@ public:
     static void init(VortexApplication* app, int width, int height);
     static void update();
     static void render();
+
+    static void init_play_mode();
 
     static void scene_inspector();
     static void inspect_model(VortexModel *model);
@@ -264,6 +346,8 @@ public:
 
     static void draw_file_viewer();
     static void open_file_in_viewer(const std::string &filepath);
+
+    static void draw_image_viewer();
 
     static void clean_up();
 };

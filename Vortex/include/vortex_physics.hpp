@@ -32,6 +32,7 @@ struct RaycastHit
     float distance = 0.0f;
     VortexModel* hit_model = nullptr;
     glm::vec3 hit_point = glm::vec3(0.0f);
+    glm::vec3 hit_normal = glm::vec3(0.0f);
 };
 
 struct Plane
@@ -62,6 +63,7 @@ class VortexPhysics
 public:
     static bool check_collision(VortexModel *modela, VortexModel *modelb);
     static CollisionHit check_collision_detailed(VortexModel *modela, VortexModel *modelb);
+    static void resolve_collision(VortexModel* dynamic_obj, VortexModel* static_obj);
     static RaycastHit raycast(glm::vec3 origin, glm::vec3 direction, float max_distance, std::vector<VortexModel*> ignore_list = {});
     static RaycastHit editor_raycast(glm::vec3 origin, glm::vec3 direction, float max_dist);
     static bool aabb_in_frustum(const glm::vec3 &min, const glm::vec3 &max, const Frustum &frustum);

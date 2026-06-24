@@ -91,6 +91,7 @@ void VortexGUI::draw_main_menu_bar()
             ImGui::MenuItem("Action Stack History", "Ctrl+H", &show_stack_history_window);
             ImGui::MenuItem("Asset Browser", "Ctrl+A", &show_asset_browser);
             ImGui::MenuItem("File Viewer", "Ctrl+F", &show_file_viewer);
+            ImGui::MenuItem("Image Viewer", "Ctrl+B", &show_image_viewer);
 
             ImGui::MenuItem("Scene View", "Ctrl+Shift+S", &show_scene_viewport);
             if (show_scene_viewport && !scene_fbo_initialized)
@@ -197,7 +198,6 @@ void VortexGUI::draw_project_hub()
             VortexProject::take_snapshot(SnapshotState::LOAD, app, m_new_project_name);
 
             app->set_state(EngineState::EDITOR);
-            app->trigger_compile();
 
             selected_project = true;
         }
@@ -263,7 +263,6 @@ void VortexGUI::draw_project_hub()
                 VortexProject::take_snapshot(SnapshotState::SAVE, app, m_new_project_name);
 
                 app->set_state(EngineState::EDITOR);
-                app->trigger_compile();
 
                 selected_project = true;
             }
@@ -296,6 +295,8 @@ void VortexGUI::draw_project_hub()
         if (ImGui::Button("Yes, Delete", ImVec2(120, 0)))
         {
             std::string path_to_delete = vortex_generatepath(VortexProject::SAVE_DIRECTORY, m_project_to_delete);
+
+            VortexProject::create_backup(m_project_to_delete);
 
             try
             {
@@ -382,6 +383,8 @@ void VortexGUI::draw_file_viewer()
 
     ImGui::BeginChild("FileContent", ImVec2(0, 0), true, ImGuiWindowFlags_HorizontalScrollbar);
 
+    if (!app->is_mouse_visible()) app->show_mouse(true);
+
     if (!is_current_file_cpp)
     {
         ImGui::TextUnformatted(current_file_content.c_str());
@@ -415,3 +418,58 @@ void VortexGUI::draw_file_viewer()
     ImGui::End();
 }
 
+void VortexGUI::draw_image_viewer()
+{
+    if (!show_image_viewer) return;
+
+    if (active_image_path.empty() || !std::filesystem::exists(active_image_path))
+    {
+        show_image_viewer = false;
+        active_image_path.clear();
+        return;
+    }
+
+    ImGui::Begin("Image Viewer", &show_image_viewer);
+
+    ImGui::TextColored(ImVec4(0.6f, 0.6f, 0.6f, 1.0f), "Viewing: %s", active_image_path.c_str());
+    ImGui::Separator();
+
+    ImGui::BeginChild("ImageContent", ImVec2(0, 0), true, ImGuiWindowFlags_HorizontalScrollbar);
+
+    if (!app->is_mouse_visible() && (!is_scene_view_visible || !is_render_view_visible)) app->show_mouse(true);
+
+    auto it = image_thumbnail_cache.find(active_image_path);
+    if (it != image_thumbnail_cache.end() && it->second.id != 0)
+    {
+        GLuint tex_id = it->second.id;
+        float img_w = (float)it->second.width;
+        float img_h = (float)it->second.height;
+
+        ImVec2 avail_size = ImGui::GetContentRegionAvail();
+
+        float aspect_ratio = img_w / img_h;
+        float display_w = avail_size.x;
+        float display_h = display_w / aspect_ratio;
+
+        if (display_h > avail_size.y)
+        {
+            display_h = avail_size.y;
+            display_w = display_h * aspect_ratio;
+        }
+
+        float cursor_x = (avail_size.x - display_w) * 0.5f;
+        float cursor_y = (avail_size.y - display_h) * 0.5f;
+
+        if (cursor_x > 0) ImGui::SetCursorPosX(ImGui::GetCursorPosX() + cursor_x);
+        if (cursor_y > 0) ImGui::SetCursorPosY(ImGui::GetCursorPosY() + cursor_y);
+
+        ImGui::Image((void*)(intptr_t)tex_id, ImVec2(display_w, display_h), ImVec2(0, 1), ImVec2(1, 0));
+    }
+    else
+    {
+        ImGui::Text("Failed to load image for viewing.");
+    }
+
+    ImGui::EndChild();
+    ImGui::End();
+}

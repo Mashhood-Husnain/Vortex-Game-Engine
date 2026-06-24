@@ -26,6 +26,7 @@ class VortexObjectManager
     static VortexShader *unlit_shader;
     static VortexShader *depth_only_shader;
     static VortexShader *outline_shader;
+    static VortexShader *decal_shader;
 public:
     static std::vector<VortexModel*> active_models;
     static std::vector<VortexModel*> pending_models;
@@ -34,11 +35,15 @@ public:
     static void init();
 
     static void clean_up();
+    static void init_scripts();
     static void update_scripts();
+    static void clean_scripts();
     static void update_physics();
     static void update_particles();
     static void draw(VortexCamera &camera, bool show_wireframe, bool is_render_pass);
     static void check_object_status();
+
+    static VortexShader *get_decal_shader();
 
     static void clear_scene();
 

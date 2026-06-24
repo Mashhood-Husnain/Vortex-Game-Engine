@@ -6,7 +6,7 @@ static OBB get_obb(const VortexBoxCollider& local_box, const glm::mat4& model_ma
 {
     OBB obb;
     glm::vec3 local_center = (local_box.min + local_box.max) * 0.5f;
-    
+
     obb.center = glm::vec3(model_matrix * glm::vec4(local_center, 1.0f));
 
     obb.axes[0] = glm::vec3(model_matrix[0]);
@@ -25,7 +25,7 @@ static OBB get_obb(const VortexBoxCollider& local_box, const glm::mat4& model_ma
     return obb;
 }
 
-static bool test_OBB_overlap(const OBB& a, const OBB& b) 
+static bool test_OBB_overlap(const OBB& a, const OBB& b)
 {
     float R[3][3], AbsR[3][3];
 
@@ -92,9 +92,9 @@ static bool test_OBB_overlap(const OBB& a, const OBB& b)
     return true;
 }
 
-static bool ray_intersect_local_box(glm::vec3 local_origin, glm::vec3 local_dir, const VortexBoxCollider& box, float& t_hit)
+static bool ray_intersect_local_box(glm::vec3 local_origin, glm::vec3 local_dir, const VortexBoxCollider& box, float& t_hit, glm::vec3& local_normal)
 {
-    glm::vec3 inv_dir = 1.0f / (local_dir + glm::vec3(1e-6f)); 
+    glm::vec3 inv_dir = 1.0f / (local_dir + glm::vec3(1e-6f));
 
     glm::vec3 t0 = (box.min - local_origin) * inv_dir;
     glm::vec3 t1 = (box.max - local_origin) * inv_dir;
@@ -108,6 +108,11 @@ static bool ray_intersect_local_box(glm::vec3 local_origin, glm::vec3 local_dir,
     if (tnear > tfar || tfar < 0.0f) return false;
 
     t_hit = tnear;
+
+    if (tnear == tmin.x) local_normal = glm::vec3((inv_dir.x < 0) ? 1.0f : -1.0f, 0.0f, 0.0f);
+    else if (tnear == tmin.y) local_normal = glm::vec3(0.0f, (inv_dir.y < 0) ? 1.0f : -1.0f, 0.0f);
+    else local_normal = glm::vec3(0.0f, 0.0f, (inv_dir.z < 0) ? 1.0f : -1.0f);
+
     return true;
 }
 
@@ -131,14 +136,14 @@ CollisionHit VortexPhysics::check_collision_detailed(VortexModel *modela, Vortex
 
     bool has_inner_objects_a = modela->shared_data->objects.size() > 0;
     bool has_inner_objects_b = modelb->shared_data->objects.size() > 0;
-    
+
     if (!has_inner_objects_a && !has_inner_objects_b)
     {
         result.has_hit = true;
         result.hit_sub_object_index = -1;
         return result;
     }
-    
+
     std::vector<OBB> colliders_a;
     if (has_inner_objects_a)
     {
@@ -146,7 +151,7 @@ CollisionHit VortexPhysics::check_collision_detailed(VortexModel *modela, Vortex
         {
             if (!modela->active_parts[i]) continue;
             const auto& obj_a = modela->shared_data->objects[i];
-            
+
             glm::mat4 sub_matrix_a = glm::translate(matrix_a, obj_a.transform.position);
             sub_matrix_a *= glm::mat4_cast(obj_a.transform.orientation);
             sub_matrix_a = glm::scale(sub_matrix_a, obj_a.transform.scale);
@@ -158,7 +163,7 @@ CollisionHit VortexPhysics::check_collision_detailed(VortexModel *modela, Vortex
     {
         colliders_a.push_back(global_a);
     }
-    
+
     std::vector<OBB> colliders_b;
     if (has_inner_objects_b)
     {
@@ -178,7 +183,7 @@ CollisionHit VortexPhysics::check_collision_detailed(VortexModel *modela, Vortex
     {
         colliders_b.push_back(global_b);
     }
-    
+
     for (size_t i = 0; i < colliders_a.size(); i++)
     {
         for (size_t j = 0; j < colliders_b.size(); j++)
@@ -191,8 +196,75 @@ CollisionHit VortexPhysics::check_collision_detailed(VortexModel *modela, Vortex
             }
         }
     }
-    
+
     return result;
+}
+
+void VortexPhysics::resolve_collision(VortexModel* dynamic_obj, VortexModel* static_obj)
+{
+    if (!dynamic_obj || !static_obj || !dynamic_obj->rigidbody) return;
+
+    std::vector<glm::vec3> boundsA = dynamic_obj->get_world_bounds_min_max();
+    std::vector<glm::vec3> boundsB = static_obj->get_world_bounds_min_max();
+
+    glm::vec3 minA = boundsA[0]; glm::vec3 maxA = boundsA[1];
+    glm::vec3 minB = boundsB[0]; glm::vec3 maxB = boundsB[1];
+
+    float overlapX1 = maxA.x - minB.x;
+    float overlapX2 = maxB.x - minA.x;
+    float overlapX  = std::min(overlapX1, overlapX2);
+
+    float overlapY1 = maxA.y - minB.y;
+    float overlapY2 = maxB.y - minA.y;
+    float overlapY  = std::min(overlapY1, overlapY2);
+
+    float overlapZ1 = maxA.z - minB.z;
+    float overlapZ2 = maxB.z - minA.z;
+    float overlapZ  = std::min(overlapZ1, overlapZ2);
+
+    const float EPSILON = 0.005f;
+
+    if (overlapX < overlapY && overlapX < overlapZ)
+    {
+        if (overlapX1 < overlapX2)
+        {
+            dynamic_obj->transform.position.x -= (overlapX + EPSILON);
+            if (dynamic_obj->rigidbody->velocity.x > 0.0f) dynamic_obj->rigidbody->velocity.x = 0.0f;
+        }
+        else
+        {
+            dynamic_obj->transform.position.x += (overlapX + EPSILON);
+            if (dynamic_obj->rigidbody->velocity.x < 0.0f) dynamic_obj->rigidbody->velocity.x = 0.0f;
+        }
+    }
+    else if (overlapY < overlapX && overlapY < overlapZ)
+    {
+        if (overlapY1 < overlapY2)
+        {
+            dynamic_obj->transform.position.y -= (overlapY + EPSILON);
+            if (dynamic_obj->rigidbody->velocity.y > 0.0f) dynamic_obj->rigidbody->velocity.y = 0.0f;
+        }
+        else
+        {
+            dynamic_obj->transform.position.y += (overlapY + EPSILON);
+            if (dynamic_obj->rigidbody->velocity.y < 0.0f) dynamic_obj->rigidbody->velocity.y = 0.0f;
+        }
+    }
+    else
+    {
+        if (overlapZ1 < overlapZ2)
+        {
+            dynamic_obj->transform.position.z -= (overlapZ + EPSILON);
+            if (dynamic_obj->rigidbody->velocity.z > 0.0f) dynamic_obj->rigidbody->velocity.z = 0.0f;
+        }
+        else
+        {
+            dynamic_obj->transform.position.z += (overlapZ + EPSILON);
+            if (dynamic_obj->rigidbody->velocity.z < 0.0f) dynamic_obj->rigidbody->velocity.z = 0.0f;
+        }
+    }
+
+    dynamic_obj->set_model_matrix(dynamic_obj->get_model_matrix());
 }
 
 RaycastHit VortexPhysics::raycast(glm::vec3 origin, glm::vec3 direction, float max_distance, std::vector<VortexModel*> ignore_list)
@@ -213,12 +285,13 @@ RaycastHit VortexPhysics::raycast(glm::vec3 origin, glm::vec3 direction, float m
 
         glm::mat4 matrix = model->get_model_matrix();
         glm::mat4 inv_matrix = glm::inverse(matrix);
-        
+
         glm::vec3 local_origin = glm::vec3(inv_matrix * glm::vec4(origin, 1.0f));
         glm::vec3 local_dir = glm::normalize(glm::vec3(inv_matrix * glm::vec4(direction, 0.0f)));
 
         float global_t = 0.0f;
-        if (!ray_intersect_local_box(local_origin, local_dir, model->shared_data->collider, global_t)) continue;
+        glm::vec3 temp_normal;
+        if (!ray_intersect_local_box(local_origin, local_dir, model->shared_data->collider, global_t, temp_normal)) continue;
 
         glm::vec3 world_hit_approx = glm::vec3(matrix * glm::vec4(local_origin + local_dir * global_t, 1.0f));
         if (glm::length(world_hit_approx - origin) > closest_hit.distance) continue;
@@ -237,7 +310,7 @@ RaycastHit VortexPhysics::raycast(glm::vec3 origin, glm::vec3 direction, float m
             glm::vec3 sub_local_dir = glm::normalize(glm::vec3(inv_sub_matrix * glm::vec4(direction, 0.0f)));
 
             float sub_t = 0.0f;
-            if (ray_intersect_local_box(sub_local_origin, sub_local_dir, obj.collider, sub_t))
+            if (ray_intersect_local_box(sub_local_origin, sub_local_dir, obj.collider, sub_t, temp_normal))
             {
                 if (sub_t >= 0.0f)
                 {
@@ -273,12 +346,14 @@ RaycastHit VortexPhysics::editor_raycast(glm::vec3 origin, glm::vec3 direction, 
 
         glm::mat4 matrix = model->get_model_matrix();
         glm::mat4 inv_matrix = glm::inverse(matrix);
-        
+
         glm::vec3 local_origin = glm::vec3(inv_matrix * glm::vec4(origin, 1.0f));
         glm::vec3 local_dir = glm::normalize(glm::vec3(inv_matrix * glm::vec4(direction, 0.0f)));
 
         float local_t;
-        if (ray_intersect_local_box(local_origin, local_dir, model->shared_data->collider, local_t))
+        glm::vec3 local_normal;
+
+        if (ray_intersect_local_box(local_origin, local_dir, model->shared_data->collider, local_t, local_normal))
         {
             if (local_t >= 0.0f)
             {
@@ -289,15 +364,18 @@ RaycastHit VortexPhysics::editor_raycast(glm::vec3 origin, glm::vec3 direction, 
                 if (true_dist < min_dist)
                 {
                     min_dist = true_dist;
-                    
+
                     closest_hit.has_hit = true;
                     closest_hit.hit_model = model;
                     closest_hit.hit_point = world_hit;
+
+                    glm::mat3 normal_matrix = glm::transpose(glm::inverse(glm::mat3(matrix)));
+                    closest_hit.hit_normal = glm::normalize(normal_matrix * local_normal);
                 }
             }
         }
     }
-    
+
     return closest_hit;
 }
 
@@ -317,7 +395,7 @@ bool VortexPhysics::aabb_in_frustum(const glm::vec3 &min, const glm::vec3 &max, 
         float radius = extents.x * std::abs(planes[i]->normal.x) +
                        extents.y * std::abs(planes[i]->normal.y) +
                        extents.z * std::abs(planes[i]->normal.z);
-        
+
         float distance = glm::dot(center, planes[i]->normal) + planes[i]->distance;
 
         if (distance < -radius) return false;

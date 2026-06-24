@@ -81,10 +81,22 @@ void VortexShader::setMat4(const std::string &name, const glm::mat4 &mat4) const
     glUniformMatrix4fv(location, 1, GL_FALSE, glm::value_ptr(mat4));
 }
 
+void VortexShader::setMat3(const std::string &name, const glm::mat3 &mat3) const
+{
+    GLint location = glGetUniformLocation(shader_program, name.c_str());
+    glUniformMatrix3fv(location, 1, GL_FALSE, glm::value_ptr(mat3));
+}
+
 void VortexShader::setVec3(const std::string &name, const glm::vec3 &vec3) const
 {
     GLint location = glGetUniformLocation(shader_program, name.c_str());
     glUniform3fv(location, 1, glm::value_ptr(vec3));
+}
+
+void VortexShader::setVec2(const std::string &name, const glm::vec2 &vec2) const
+{
+    GLint location = glGetUniformLocation(shader_program, name.c_str());
+    glUniform2fv(location, 1, glm::value_ptr(vec2));
 }
 
 void VortexShader::setInt(const std::string &name, const int value) const

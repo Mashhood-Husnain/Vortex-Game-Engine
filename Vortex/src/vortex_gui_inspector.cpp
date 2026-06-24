@@ -2,6 +2,8 @@
 #include "vortex_model.hpp"
 #include "vortex_rigidbody.hpp"
 #include "vortex_particlesystem.hpp"
+#include "vortex_assetmanager.hpp"
+#include "vortex_decal.hpp"
 
 void VortexGUI::scene_inspector()
 {
@@ -58,9 +60,7 @@ void VortexGUI::scene_inspector()
     std::function<void(const std::string&, FolderNode&, std::string)> draw_node;
     draw_node = [&](const std::string& name, FolderNode& node, std::string current_path)
     {
-        ImGui::PushStyleColor(ImGuiCol_Header, ImVec4(0.2f, 0.2f, 0.22f, 1.0f));
-        bool folder_open = ImGui::TreeNodeEx(name.c_str(), ImGuiTreeNodeFlags_Framed | ImGuiTreeNodeFlags_DefaultOpen);
-        ImGui::PopStyleColor();
+        bool folder_open = VortexGuiHelpers::DrawComponentNode(name.c_str(), ImGuiTreeNodeFlags_Framed | ImGuiTreeNodeFlags_DefaultOpen, ImVec4(0.2f, 0.2f, 0.22f, 1.0f));
 
         if (ImGui::BeginPopupContextItem())
         {
@@ -75,10 +75,7 @@ void VortexGUI::scene_inspector()
                 {
                     for (VortexModel* m : VortexObjectManager::active_models)
                     {
-                        if (m->folder.find(current_path) == 0)
-                        {
-                            m->folder = "Scene";
-                        }
+                        if (m->folder.find(current_path) == 0) m->folder = "Scene";
                     }
 
                     auto it = std::find(explicit_empty_folders.begin(), explicit_empty_folders.end(), current_path);
@@ -86,7 +83,6 @@ void VortexGUI::scene_inspector()
 
                     ImGui::PopStyleColor();
                     ImGui::EndPopup();
-
                     if (folder_open) ImGui::TreePop();
                     return;
                 }
@@ -121,15 +117,9 @@ void VortexGUI::scene_inspector()
                 draw_node(sub_name, sub_node, next_path);
             }
 
-            for (VortexModel* model : node.models)
-            {
-                inspect_model(model);
-            }
+            for (VortexModel* model : node.models) inspect_model(model);
 
-            if (node.subfolders.empty() && node.models.empty())
-            {
-                ImGui::TextDisabled("  (Empty)");
-            }
+            if (node.subfolders.empty() && node.models.empty()) ImGui::TextDisabled("  (Empty)");
 
             ImGui::TreePop();
         }
@@ -164,14 +154,7 @@ void VortexGUI::inspect_model(VortexModel* model)
     std::string header_id = model->model_name + "###" + std::to_string((uintptr_t)model);
     bool is_currently_selected = (m_selected_models.find(model) != m_selected_models.end());
 
-    if (is_currently_selected)
-    {
-        ImGui::PushStyleColor(ImGuiCol_Header, ImVec4(0.25f, 0.35f, 0.45f, 0.60f));
-        ImGui::PushStyleColor(ImGuiCol_HeaderHovered, ImVec4(0.30f, 0.40f, 0.50f, 0.80f));
-        ImGui::PushStyleColor(ImGuiCol_HeaderActive, ImVec4(0.35f, 0.45f, 0.55f, 1.00f));
-    }
-
-    bool is_header_open = ImGui::CollapsingHeader(header_id.c_str());
+    bool is_header_open = VortexGuiHelpers::DrawHeader(header_id.c_str(), is_currently_selected);
 
     if (ImGui::IsItemClicked(ImGuiMouseButton_Left))
     {
@@ -203,8 +186,6 @@ void VortexGUI::inspect_model(VortexModel* model)
             }
         }
     }
-
-    if (is_currently_selected) ImGui::PopStyleColor(3);
 
     if (ImGui::BeginDragDropSource(ImGuiDragDropFlags_SourceAllowNullID))
     {
@@ -252,6 +233,65 @@ void VortexGUI::draw_model_info_panel(VortexModel* model, int flags)
         ImGui::TextDisabled("Source File:"); ImGui::SameLine(); ImGui::TextWrapped("%s", model->file_path.c_str());
         ImGui::TextDisabled("Sub-Objects: %zu", model->shared_data->objects.size());
 
+        ImGui::Spacing();
+        ImGui::TextDisabled("Albedo/Diffuse Texture");
+
+        ImGui::PushStyleColor(ImGuiCol_ChildBg, ImVec4(0.1f, 0.1f, 0.12f, 1.0f));
+        ImGui::PushStyleVar(ImGuiStyleVar_ChildRounding, 8.0f);
+        ImGui::BeginChild("TextureDropZone", ImVec2(0, 80), true);
+
+        if (model->texture_id != 0)
+        {
+            ImGui::SetCursorPosX((ImGui::GetWindowWidth() - 64) * 0.5f);
+            ImGui::SetCursorPosY(8.0f);
+            ImGui::Image((void*)(intptr_t)model->texture_id, ImVec2(64, 64), ImVec2(0, 1), ImVec2(1, 0));
+        }
+        else
+        {
+            ImVec2 text_size = ImGui::CalcTextSize("Drag & Drop Image Here");
+            ImGui::SetCursorPos(ImVec2((ImGui::GetWindowWidth() - text_size.x) * 0.5f, (ImGui::GetWindowHeight() - text_size.y) * 0.5f));
+            ImGui::TextDisabled("Drag & Drop Image Here");
+        }
+
+        ImGui::EndChild();
+        ImGui::PopStyleVar();
+        ImGui::PopStyleColor();
+
+        if (ImGui::BeginDragDropTarget())
+        {
+            if (const ImGuiPayload* payload = ImGui::AcceptDragDropPayload("ASSET_BROWSER_ITEM"))
+            {
+                std::string path_str((const char*)payload->Data);
+                if (path_str.find(".png") != std::string::npos || path_str.find(".jpg") != std::string::npos)
+                {
+                    VortexAssetManager::release_texture(model->texture_path);
+                    model->texture_id = VortexAssetManager::load_texture_raw(path_str);
+                    model->texture_path = path_str;
+                    VORTEX_INFO("[GUI] Assigned new texture: ", path_str);
+                }
+            }
+            ImGui::EndDragDropTarget();
+        }
+
+        if (model->texture_id != 0)
+        {
+            ImGui::Spacing();
+            ImGui::TextDisabled("Texture Tiling (UV Scale)");
+            ImGui::SetNextItemWidth(-FLT_MIN);
+            ImGui::DragFloat2("##TexScale", &model->texture_scale.x, 0.1f, 0.1f, 100.0f, "%.2f");
+
+            ImGui::Spacing();
+            ImGui::SetCursorPosX(ImGui::GetWindowContentRegionMax().x - 110.0f);
+
+            if (VortexGuiHelpers::DrawDangerButton("Remove Texture", ImVec2(110, 24)))
+            {
+                VortexAssetManager::release_texture(model->texture_path);
+                model->texture_id = 0;
+                model->texture_path = "";
+                VORTEX_INFO("[GUI] Removed texture from model: ", model->model_name);
+            }
+        }
+
         ImGui::Spacing(); ImGui::Unindent(10.0f);
     }
     ImGui::Spacing();
@@ -261,15 +301,49 @@ void VortexGUI::draw_model_components_panel(VortexModel* model, int flags)
 {
     if (ImGui::TreeNodeEx("|__ Components & Scripts", flags))
     {
-        ImGui::Indent(10.0f); ImGui::Spacing();
+        ImGui::Indent(10.0f);
+        ImGui::Spacing();
+
+        ImGui::PushStyleColor(ImGuiCol_ChildBg, ImVec4(0.15f, 0.15f, 0.18f, 1.0f));
+        ImGui::PushStyleColor(ImGuiCol_Border, ImVec4(0.3f, 0.3f, 0.4f, 1.0f));
+        ImGui::PushStyleVar(ImGuiStyleVar_ChildRounding, 8.0f);
+
+        ImGui::BeginChild("ScriptDropZone", ImVec2(0, 50), true);
+        ImVec2 text_size = ImGui::CalcTextSize("+ Drag & Drop Script Here");
+        ImGui::SetCursorPos(ImVec2((ImGui::GetWindowWidth() - text_size.x) * 0.5f, (ImGui::GetWindowHeight() - text_size.y) * 0.5f));
+        ImGui::TextColored(ImVec4(0.5f, 0.7f, 1.0f, 1.0f), "+ Drag & Drop Script Here");
+        ImGui::EndChild();
+
+        ImGui::PopStyleVar();
+        ImGui::PopStyleColor(2);
+
+        if (ImGui::BeginDragDropTarget())
+        {
+            if (const ImGuiPayload* payload = ImGui::AcceptDragDropPayload("ASSET_BROWSER_ITEM"))
+            {
+                std::string path_str((const char*)payload->Data);
+                if (path_str.find(".cpp") != std::string::npos || path_str.find(".hpp") != std::string::npos)
+                {
+                    std::string script_name = std::filesystem::path(path_str).stem().string();
+                    VortexMonoBehaviour *new_script = ScriptRegistry::get().create(script_name);
+                    if (new_script)
+                    {
+                        new_script->vortexGameObject = model;
+                        new_script->vortexEngine = app;
+                        new_script->vortexTransform = &model->transform;
+                        model->add_behaviour(script_name, new_script);
+                        VORTEX_INFO("[GUI] Attached script: ", script_name);
+                    }
+                }
+            }
+            ImGui::EndDragDropTarget();
+        }
+
+        ImGui::Spacing();
 
         if (model->rigidbody)
         {
-            ImGui::PushStyleColor(ImGuiCol_Header, ImVec4(0.15f, 0.22f, 0.15f, 1.0f));
-            bool rb_open = ImGui::TreeNodeEx("Vortex Rigidbody", flags);
-            ImGui::PopStyleColor();
-
-            if (rb_open)
+            if (VortexGuiHelpers::DrawComponentNode("Vortex Rigidbody", flags, ImVec4(0.15f, 0.22f, 0.15f, 1.0f)))
             {
                 ImGui::Indent(10.0f); ImGui::Spacing();
                 ImGui::Checkbox("Is Kinematic", &model->rigidbody->is_kinematic);
@@ -277,22 +351,89 @@ void VortexGUI::draw_model_components_panel(VortexModel* model, int flags)
                 if (model->rigidbody->gravity) ImGui::DragFloat("Gravity Value", &model->rigidbody->gravity_value, 0.1f);
 
                 ImGui::Spacing(); ImGui::SetCursorPosX(ImGui::GetWindowContentRegionMax().x - 70.0f);
-                ImGui::PushStyleColor(ImGuiCol_Button, ImVec4(0.4f, 0.15f, 0.15f, 0.8f));
-                ImGui::PushStyleColor(ImGuiCol_ButtonHovered, ImVec4(0.6f, 0.2f, 0.2f, 1.0f));
-                if (ImGui::Button("Remove##RB", ImVec2(70, 0))) { delete model->rigidbody; model->rigidbody = nullptr; }
-                ImGui::PopStyleColor(2);
+                if (VortexGuiHelpers::DrawDangerButton("Remove##RB", ImVec2(70, 0))) { delete model->rigidbody; model->rigidbody = nullptr; }
 
+                ImGui::Spacing(); ImGui::Unindent(10.0f);
+            }
+        }
+
+        if (!model->decals.empty())
+        {
+            if (VortexGuiHelpers::DrawComponentNode("Vortex Decals", flags, ImVec4(0.22f, 0.15f, 0.22f, 1.0f)))
+            {
+                ImGui::Indent(10.0f); ImGui::Spacing();
+                int decal_to_delete = -1;
+
+                for (size_t i = 0; i < model->decals.size(); i++)
+                {
+                    VortexDecal* decal = model->decals[i];
+                    ImGui::PushID(static_cast<int>(i));
+
+                    ImVec4 header_color = (g_active_decal_for_gizmo == decal) ? ImVec4(0.3f, 0.2f, 0.3f, 1.0f) : ImVec4(0.18f, 0.12f, 0.18f, 1.0f);
+                    bool single_decal_open = VortexGuiHelpers::DrawComponentNode(("Decal " + std::to_string(i)).c_str(), flags, header_color);
+
+                    if (ImGui::IsItemClicked()) g_active_decal_for_gizmo = decal;
+
+                    if (single_decal_open)
+                    {
+                        ImGui::Indent(10.0f); ImGui::Spacing();
+
+                        ImGui::Checkbox("Flip X", &decal->flip_x); ImGui::SameLine();
+                        ImGui::Checkbox("Flip Y", &decal->flip_y);
+                        ImGui::Spacing();
+                        ImGui::TextDisabled("Decal Texture (Drag & Drop)");
+
+                        ImGui::PushStyleColor(ImGuiCol_ChildBg, ImVec4(0.1f, 0.1f, 0.12f, 1.0f));
+                        ImVec2 drop_size(ImGui::GetContentRegionAvail().x, 60.0f);
+                        ImVec2 cursor_pos = ImGui::GetCursorScreenPos();
+                        ImGui::InvisibleButton("##decal_drop_target", drop_size);
+                        ImGui::GetWindowDrawList()->AddRectFilled(cursor_pos, ImVec2(cursor_pos.x + drop_size.x, cursor_pos.y + drop_size.y), IM_COL32(25, 25, 30, 255), 8.0f);
+
+                        if (decal->quad_model && decal->quad_model->texture_id != 0)
+                        {
+                            ImVec2 img_pos(cursor_pos.x + (drop_size.x - 48.0f) * 0.5f, cursor_pos.y + 6.0f);
+                            ImGui::GetWindowDrawList()->AddImage((void*)(intptr_t)decal->quad_model->texture_id, img_pos, ImVec2(img_pos.x + 48, img_pos.y + 48), ImVec2(0, 1), ImVec2(1, 0));
+                        }
+                        else
+                        {
+                            const char* text = "Drop Transparent PNG Here";
+                            ImVec2 t_size = ImGui::CalcTextSize(text);
+                            ImVec2 t_pos(cursor_pos.x + (drop_size.x - t_size.x) * 0.5f, cursor_pos.y + (drop_size.y - t_size.y) * 0.5f);
+                            ImGui::GetWindowDrawList()->AddText(t_pos, IM_COL32(128, 128, 128, 255), text);
+                        }
+                        ImGui::PopStyleColor();
+
+                        if (ImGui::BeginDragDropTarget())
+                        {
+                            if (const ImGuiPayload* payload = ImGui::AcceptDragDropPayload("ASSET_BROWSER_ITEM"))
+                            {
+                                std::string path_str((const char*)payload->Data);
+                                if (path_str.find(".png") != std::string::npos || path_str.find(".jpg") != std::string::npos) decal->set_texture(path_str);
+                            }
+                            ImGui::EndDragDropTarget();
+                        }
+
+                        ImGui::Spacing(); ImGui::SetCursorPosX(ImGui::GetWindowContentRegionMax().x - 70.0f);
+                        if (VortexGuiHelpers::DrawDangerButton("Remove##Decal", ImVec2(70, 0)))
+                        {
+                            if (g_active_decal_for_gizmo == decal) g_active_decal_for_gizmo = nullptr;
+
+                            ActionDeleteDecal* delete_command = new ActionDeleteDecal(model, decal);
+                            delete_command->redo();
+                            ActionManager::push_action(delete_command);
+                        }
+
+                        ImGui::Spacing(); ImGui::Unindent(10.0f);
+                    }
+                    ImGui::PopID();
+                }
                 ImGui::Spacing(); ImGui::Unindent(10.0f);
             }
         }
 
         if (model->light)
         {
-            ImGui::PushStyleColor(ImGuiCol_Header, ImVec4(0.22f, 0.22f, 0.15f, 1.0f));
-            bool l_open = ImGui::TreeNodeEx("Vortex Light", flags);
-            ImGui::PopStyleColor();
-
-            if (l_open)
+            if (VortexGuiHelpers::DrawComponentNode("Vortex Light", flags, ImVec4(0.22f, 0.22f, 0.15f, 1.0f)))
             {
                 ImGui::Indent(10.0f); ImGui::Spacing();
                 ImGui::ColorEdit3("Light Color", &model->light->color.x);
@@ -300,10 +441,11 @@ void VortexGUI::draw_model_components_panel(VortexModel* model, int flags)
                 ImGui::DragFloat("Ambient Strength", &model->light->ambient_strength, 0.01f, 0.0f, 1.0f);
 
                 ImGui::Spacing(); ImGui::SetCursorPosX(ImGui::GetWindowContentRegionMax().x - 70.0f);
-                ImGui::PushStyleColor(ImGuiCol_Button, ImVec4(0.4f, 0.15f, 0.15f, 0.8f));
-                ImGui::PushStyleColor(ImGuiCol_ButtonHovered, ImVec4(0.6f, 0.2f, 0.2f, 1.0f));
-                if (ImGui::Button("Remove##Light", ImVec2(70, 0))) { delete model->light; model->light = nullptr; }
-                ImGui::PopStyleColor(2);
+                if (VortexGuiHelpers::DrawDangerButton("Remove##Light", ImVec2(70, 0)))
+                {
+                    delete model->light;
+                    model->light = nullptr;
+                }
 
                 ImGui::Spacing(); ImGui::Unindent(10.0f);
             }
@@ -319,9 +461,7 @@ void VortexGUI::draw_model_components_panel(VortexModel* model, int flags)
                 std::string script_name = model->script_names[i];
                 VortexMonoBehaviour *script = model->behaviours[i];
 
-                ImGui::PushStyleColor(ImGuiCol_Header, ImVec4(0.12f, 0.12f, 0.14f, 1.0f));
-                bool script_open = ImGui::TreeNodeEx(script_name.c_str(), flags);
-                ImGui::PopStyleColor();
+                bool script_open = VortexGuiHelpers::DrawComponentNode(script_name.c_str(), flags, ImVec4(0.18f, 0.18f, 0.18f, 1.0f));
 
                 if (script_open)
                 {
@@ -344,10 +484,7 @@ void VortexGUI::draw_model_components_panel(VortexModel* model, int flags)
                     }
 
                     ImGui::Spacing(); ImGui::SetCursorPosX(ImGui::GetWindowContentRegionMax().x - 70.0f);
-                    ImGui::PushStyleColor(ImGuiCol_Button, ImVec4(0.4f, 0.15f, 0.15f, 0.8f));
-                    ImGui::PushStyleColor(ImGuiCol_ButtonHovered, ImVec4(0.6f, 0.2f, 0.2f, 1.0f));
-                    if (ImGui::Button("Remove", ImVec2(70, 0))) script_to_delete = static_cast<int>(i);
-                    ImGui::PopStyleColor(2);
+                    if (VortexGuiHelpers::DrawDangerButton("Remove", ImVec2(70, 0))) script_to_delete = static_cast<int>(i);
 
                     ImGui::Spacing(); ImGui::Unindent(10.0f);
                 }
@@ -382,6 +519,21 @@ void VortexGUI::draw_model_components_panel(VortexModel* model, int flags)
                 model->light = new VortexLight();
                 model->light->vortexGameObject = model;
                 model->light->vortexTransform = &model->transform;
+            }
+            if (ImGui::Selectable("Vortex Decal"))
+            {
+                VortexDecal* new_decal = new VortexDecal();
+                float z_extent = model->shared_data->collider.max.z;
+                new_decal->position = glm::vec3(0.0f, 0.0f, z_extent + 0.01f);
+                new_decal->orientation = glm::quat(glm::radians(glm::vec3(90.0f, 0.0f, 0.0f)));
+                new_decal->vortexGameObject = model;
+                new_decal->vortexEngine = app;
+                new_decal->vortexTransform = &model->transform;
+                new_decal->on_start();
+
+                ActionCreateDecal* create_command = new ActionCreateDecal(model, new_decal);
+                create_command->redo();
+                ActionManager::push_action(create_command);
             }
 
             ImGui::Separator();
@@ -440,14 +592,9 @@ void VortexGUI::draw_model_transform_panel(VortexModel* model, int flags)
             ImGui::TableSetupColumn("Label", ImGuiTableColumnFlags_WidthFixed, 60.0f);
             ImGui::TableSetupColumn("Value", ImGuiTableColumnFlags_WidthStretch);
 
-            ImGui::TableNextColumn(); ImGui::AlignTextToFramePadding(); ImGui::TextDisabled("Position");
-            ImGui::TableNextColumn(); ImGui::SetNextItemWidth(-FLT_MIN); ImGui::DragFloat3("##pos", &model->transform.position.x, 0.1f);
-
-            ImGui::TableNextColumn(); ImGui::AlignTextToFramePadding(); ImGui::TextDisabled("Scale");
-            ImGui::TableNextColumn(); ImGui::SetNextItemWidth(-FLT_MIN); ImGui::DragFloat3("##scale", &model->transform.scale.x, 0.01f, 0.001f, 10.0f);
-
-            ImGui::TableNextColumn(); ImGui::AlignTextToFramePadding(); ImGui::TextDisabled("Rotation");
-            ImGui::TableNextColumn(); ImGui::SetNextItemWidth(-FLT_MIN); ImGui::DragFloat3("##rot", &model->transform.orientation.x, 0.1f);
+            VortexGuiHelpers::DrawTransformRow("Position", "##pos", &model->transform.position.x);
+            VortexGuiHelpers::DrawTransformRow("Scale", "##scale", &model->transform.scale.x, 0.01f, 0.001f, 10.0f);
+            VortexGuiHelpers::DrawTransformRow("Rotation", "##rot", &model->transform.orientation.x);
 
             ImGui::EndTable();
         }
@@ -455,7 +602,7 @@ void VortexGUI::draw_model_transform_panel(VortexModel* model, int flags)
 
         ImGui::Spacing();
         float uniform_scale = model->transform.scale.x;
-        if (ImGui::SliderFloat("Uniform Scale", &uniform_scale, 0.001f, 10.0f)) model->transform.scale = glm::vec3(uniform_scale);
+        if (ImGui::SliderFloat("Uniform Scale", &uniform_scale, 0.001f, 0.0f)) model->transform.scale = glm::vec3(uniform_scale);
 
         ImGui::Spacing();
         if (ImGui::Button("Reset Transform", ImVec2(-1, 32)))
@@ -472,11 +619,7 @@ void VortexGUI::draw_model_transform_panel(VortexModel* model, int flags)
 
 void VortexGUI::draw_model_actions(VortexModel* model)
 {
-    ImGui::PushStyleColor(ImGuiCol_Button, ImVec4(0.20f, 0.40f, 0.60f, 0.80f));
-    ImGui::PushStyleColor(ImGuiCol_ButtonHovered, ImVec4(0.25f, 0.45f, 0.70f, 1.00f));
-    ImGui::PushStyleColor(ImGuiCol_ButtonActive, ImVec4(0.30f, 0.50f, 0.80f, 1.00f));
-
-    if (ImGui::Button("Duplicate Model", ImVec2(-1, 32)))
+    if (VortexGuiHelpers::DrawActionButton("Duplicate Model", ImVec2(-1, 32)))
     {
         VortexModel* cloned_model = model->clone();
 
@@ -492,15 +635,10 @@ void VortexGUI::draw_model_actions(VortexModel* model)
         cloned_model->is_selected = true;
         m_selected_models.insert(cloned_model);
     }
-    ImGui::PopStyleColor(3);
 
     ImGui::Spacing();
 
-    ImGui::PushStyleColor(ImGuiCol_Button, ImVec4(0.60f, 0.20f, 0.20f, 0.80f));
-    ImGui::PushStyleColor(ImGuiCol_ButtonHovered, ImVec4(0.70f, 0.25f, 0.25f, 1.00f));
-    ImGui::PushStyleColor(ImGuiCol_ButtonActive, ImVec4(0.80f, 0.30f, 0.30f, 1.00f));
-
-    if (ImGui::Button("Delete Model", ImVec2(-1, 32)))
+    if (VortexGuiHelpers::DrawDangerButton("Delete Model", ImVec2(-1, 32)))
     {
         model->is_selected = false;
         m_selected_models.erase(model);
@@ -509,7 +647,6 @@ void VortexGUI::draw_model_actions(VortexModel* model)
         delete_command->redo();
         ActionManager::push_action(delete_command);
     }
-    ImGui::PopStyleColor(3);
 }
 
 void VortexGUI::inspect_particle_system(ParticleSystem *ps)
@@ -608,11 +745,7 @@ void VortexGUI::inspect_particle_system(ParticleSystem *ps)
 
         ImGui::Spacing();
 
-        ImGui::PushStyleColor(ImGuiCol_Button, ImVec4(0.60f, 0.20f, 0.20f, 0.80f));
-        ImGui::PushStyleColor(ImGuiCol_ButtonHovered, ImVec4(0.70f, 0.25f, 0.25f, 1.00f));
-        ImGui::PushStyleColor(ImGuiCol_ButtonActive, ImVec4(0.80f, 0.30f, 0.30f, 1.00f));
-        if (ImGui::Button("Delete Particle System", ImVec2(-1, 32))) ps->should_destroy = true;
-        ImGui::PopStyleColor(3);
+        if (VortexGuiHelpers::DrawDangerButton("Delete Particle System", ImVec2(-1, 32))) ps->should_destroy = true;
 
         ImGui::Unindent(12.0f);
         ImGui::PopID(); ImGui::Spacing();

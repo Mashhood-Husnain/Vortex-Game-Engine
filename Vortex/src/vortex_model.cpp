@@ -12,6 +12,59 @@
 #include "vortex_application.hpp"
 #include "vortex_shaders.hpp"
 
+void VortexModel::bind_lights_to_shader(VortexShader* shader, bool use_scene_lights)
+{
+    const int MAX_LIGHTS = 16;
+    int light_count = 0;
+    bool using_safety_net = false;
+
+    glm::vec3 l_positions[MAX_LIGHTS];
+    glm::vec3 l_colors[MAX_LIGHTS];
+    float l_ambients[MAX_LIGHTS];
+
+    if (use_scene_lights)
+    {
+        // 1. RENDER VIEW / PLAY MODE LOGIC
+        for (VortexModel *scene_model : VortexObjectManager::active_models)
+        {
+            if (scene_model->is_active && scene_model->light)
+            {
+                l_positions[light_count] = scene_model->transform.position;
+                l_colors[light_count] = scene_model->light->color * scene_model->light->intensity;
+                l_ambients[light_count] = scene_model->light->ambient_strength;
+
+                light_count++;
+                if (light_count >= MAX_LIGHTS) break;
+            }
+        }
+    }
+    else
+    {
+        l_positions[0] = glm::vec3(10.0f, 50.0f, 20.0f);
+        l_colors[0] = glm::vec3(1.0f);
+        l_ambients[0] = 0.5f;
+
+        light_count = 1;
+        using_safety_net = true;
+    }
+
+    shader->setInt("numLights", light_count);
+    shader->setFloat("constantFalloff", 1.0f);
+    shader->setFloat("linearFalloff", using_safety_net ? 0.0f : 0.09f);
+    shader->setFloat("quadraticFalloff", using_safety_net ? 0.0f : 0.032f);
+
+    for (int i = 0; i < light_count; i++)
+    {
+        std::string pos_name = "lightPos[" + std::to_string(i) + "]";
+        std::string col_name = "lightColor[" + std::to_string(i) + "]";
+        std::string amb_name = "ambientStrength[" + std::to_string(i) + "]";
+
+        shader->setVec3(pos_name, l_positions[i]);
+        shader->setVec3(col_name, l_colors[i]);
+        shader->setFloat(amb_name, l_ambients[i]);
+    }
+}
+
 VortexModel::VortexModel(const std::string& path, VortexApplication *window, const std::string& loaded_name)
 {
     if (!window)
@@ -54,6 +107,7 @@ VortexModel::VortexModel(const std::string& path, VortexApplication *window, con
     if (shared_data)
     {
         active_parts.resize(shared_data->objects.size(), true);
+        texture_id = shared_data->texture_id;
     }
 }
 
@@ -88,7 +142,7 @@ void VortexModel::set_model_matrix(glm::mat4 matrix)
 
 void VortexModel::draw(const VortexShader &shader, VortexCamera &camera, bool wireframe, bool use_scene_lights)
 {
-    const VortexShader *active_shader = &shader;
+    VortexShader *active_shader = const_cast<VortexShader*>(&shader);
 
     // if (app->get_shadow_manager()->is_active)
     // {
@@ -107,65 +161,17 @@ void VortexModel::draw(const VortexShader &shader, VortexCamera &camera, bool wi
         active_shader->setMat4("projection", camera.getProjectionMatrix());
         active_shader->setVec3("viewPos", camera.get_position());
 
-        const int MAX_LIGHTS = 4;
-        int light_count = 0;
-        bool using_safety_net = false;
-
-        glm::vec3 l_positions[MAX_LIGHTS];
-        glm::vec3 l_colors[MAX_LIGHTS];
-        float l_ambients[MAX_LIGHTS];
-
-        if (use_scene_lights)
-        {
-            for (VortexModel *scene_model : VortexObjectManager::active_models)
-            {
-                if (scene_model->is_active && scene_model->light)
-                {
-                    l_positions[light_count] = scene_model->transform.position;
-                    l_colors[light_count] = scene_model->light->color * scene_model->light->intensity;
-                    l_ambients[light_count] = scene_model->light->ambient_strength;
-
-                    light_count++;
-                    if (light_count >= MAX_LIGHTS) break;
-                }
-            }
-        }
-        else
-        {
-            l_positions[0] = glm::vec3(10.0f, 50.0f, 20.0f);
-
-            l_colors[0] = glm::vec3(1.0f);
-            l_ambients[0] = 0.5f;
-
-            light_count = 1;
-            using_safety_net = true;
-        }
-
-        active_shader->setInt("numLights", light_count);
-
-        active_shader->setFloat("constantFalloff", 1.0f);
-        active_shader->setFloat("linearFalloff", using_safety_net ? 0.0f : 0.09f);
-        active_shader->setFloat("quadraticFalloff", using_safety_net ? 0.0f : 0.032f);
-
-        for (int i = 0; i < light_count; i++)
-        {
-            std::string pos_name = "lightPos[" + std::to_string(i) + "]";
-            std::string col_name = "lightColor[" + std::to_string(i) + "]";
-            std::string amb_name = "ambientStrength[" + std::to_string(i) + "]";
-
-            active_shader->setVec3(pos_name, l_positions[i]);
-            active_shader->setVec3(col_name, l_colors[i]);
-            active_shader->setFloat(amb_name, l_ambients[i]);
-        }
+        bind_lights_to_shader(active_shader, use_scene_lights);
 
         // textures (multi-sampling)
-        active_shader->setInt("u_hasTexture", shared_data->texture_id!= 0);
+        active_shader->setInt("u_hasTexture", texture_id != 0);
         active_shader->setInt("u_hasRoughness", shared_data->roughness_id != 0);
         active_shader->setInt("u_hasMetallic", shared_data->metallic_id != 0);
+        active_shader->setVec2("u_textureScale", texture_scale);
 
         // 0 - diffuse
         glActiveTexture(GL_TEXTURE0);
-        glBindTexture(GL_TEXTURE_2D, shared_data->texture_id); // If 0, it unbinds
+        glBindTexture(GL_TEXTURE_2D, texture_id); // If 0, it unbinds
         active_shader->setInt("u_diffuseMap", 0);
 
         // 1 - roughness
@@ -233,10 +239,22 @@ VortexModel::~VortexModel()
     behaviours.clear();
     app = nullptr;
     shared_data = nullptr;
+
+    delete rigidbody;
+    delete light;
+
     rigidbody = nullptr;
     light = nullptr;
 
+    for (VortexDecal* d : decals) delete d;
+    decals.clear();
+
     glDeleteQueries(1, &occlusion_query);
+
+    VortexAssetManager::release_texture(texture_path);
+    VortexAssetManager::release_mesh(file_path);
+
+    shared_data = nullptr;
 }
 
 void VortexModel::add_behaviour(const std::string &script_name, VortexMonoBehaviour *script)
@@ -259,6 +277,8 @@ void VortexModel::update()
     {
         rigidbody->on_update();
     }
+
+    for (VortexDecal* decal : decals) decal->on_update();
 }
 
 void VortexModel::late_update()
@@ -398,6 +418,9 @@ VortexModel* VortexModel::clone()
     new_model->collider_scale = collider_scale;
     new_model->active_parts = active_parts;
     new_model->folder = folder;
+    new_model->texture_id = texture_id;
+    new_model->texture_path = texture_path;
+    new_model->texture_scale = texture_scale;
 
     new_model->transform.position.x += 1.0f;
 
@@ -421,6 +444,22 @@ VortexModel* VortexModel::clone()
         json l_data;
         light->serialize(l_data);
         new_model->light->deserialize(l_data);
+    }
+
+    for (VortexDecal* d : decals)
+    {
+        VortexDecal* new_decal = new VortexDecal();
+        new_decal->vortexGameObject = new_model;
+        new_decal->vortexEngine = app;
+        new_decal->vortexTransform = &new_model->transform;
+
+        new_decal->on_start();
+
+        json d_data;
+        d->serialize(d_data);
+        new_decal->deserialize(d_data);
+
+        new_model->decals.push_back(new_decal);
     }
 
     for (size_t i = 0; i < script_names.size(); i++)

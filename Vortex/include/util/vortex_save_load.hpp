@@ -8,12 +8,19 @@
 #include <sstream>
 #include <filesystem>
 #include <iostream>
+#include <chrono>
+#include <ctime>
+
+#include <pwd.h>
+// #include <unistd.h>
+// #include <sys/types.h>
 
 #include <json.hpp>
 
 #include "vortex_model.hpp"
 #include "vortex_particlesystem.hpp"
 #include "vortex_application.hpp"
+#include "vortex_assetmanager.hpp"
 #include "vortex_util.hpp"
 
 #include "vortex_behaviour.hpp"
@@ -27,9 +34,29 @@ enum class SnapshotState
     LOAD
 };
 
+struct WindowLayoutSnapshot
+{
+    bool show_inspector;
+    bool show_camera_info;
+    bool show_creator_window;
+    bool show_engine_stats;
+    bool show_terminal;
+    bool show_skybox_post_process_options;
+    bool show_scene_viewport;
+    bool show_render_scene_viewport;
+    bool show_stack_history_window;
+    bool show_asset_browser;
+    bool show_settings_window;
+    bool show_file_viewer;
+    bool show_image_viewer;
+
+    std::string imgui_ini_data;
+};
+
 struct SettingsSnapshot
 {
     char *preferred_ide_path;
+    WindowLayoutSnapshot engine_layout;
 };
 
 struct Snapshot
@@ -59,6 +86,8 @@ public:
 
     static void save_project(Snapshot *snapshot);
     static void load_project(Snapshot *snapshot);
+
+    static void create_backup(const std::string& project_name);
 
     static void save_project_settings(SettingsSnapshot *settings_snapshot, const std::string project_name);
     static void load_project_settings(SettingsSnapshot *settings_snapshot, const std::string project_name);

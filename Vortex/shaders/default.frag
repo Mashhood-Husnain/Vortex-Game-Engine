@@ -1,6 +1,6 @@
 #version 330 core
 
-#define MAX_LIGHTS 4
+#define MAX_LIGHTS 16
 
 out vec4 FragColor;
 
@@ -21,6 +21,7 @@ uniform vec3 viewPos; // camera position in world space
 uniform vec3 lightColor[MAX_LIGHTS]; // color of each light
 uniform float ambientStrength[MAX_LIGHTS]; // ambient strength for each light
 uniform bool u_hasTexture;
+uniform vec2 u_textureScale;
 uniform bool u_hasRoughness;
 uniform bool u_hasMetallic;
 
@@ -82,19 +83,21 @@ void main()
     float roughness = 0.8;       // Default rough
     float metallic  = 0.0;       // Default non-metal
 
+    vec2 scaledTexCoords = TexCoords * u_textureScale;
+
     if (u_hasTexture)
     {
-        diffuseCol = texture(u_diffuseMap, TexCoords).rgb;
+        diffuseCol = texture(u_diffuseMap, scaledTexCoords).rgb;
     }
 
     if (u_hasRoughness)
     {
-        roughness = texture(u_roughnessMap, TexCoords).r;
+        roughness = texture(u_roughnessMap, scaledTexCoords).r;
     }
 
     if (u_hasMetallic)
     {
-        metallic = texture(u_metallicMap, TexCoords).r;
+        metallic = texture(u_metallicMap, scaledTexCoords).r;
     }
 
     vec3 norm = normalize(Normal);
@@ -135,7 +138,8 @@ void main()
     }
 
     vec3 lighting = total_ambient + total_diffuse + total_specular;
-    lighting += (random(TexCoords) - 0.5) * (1.0 / 255.0);
+
+    lighting += (random(scaledTexCoords) - 0.5) * (1.0 / 255.0);
 
     FragColor = vec4(lighting, 1.0);
 }

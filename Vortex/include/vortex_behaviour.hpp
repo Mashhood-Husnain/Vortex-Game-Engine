@@ -86,6 +86,7 @@ public:
     virtual void on_start() {}
     virtual void on_update() {}
     virtual void late_update() {}
+    virtual void on_destroy() {}
 
     virtual ~VortexMonoBehaviour() = default;
 

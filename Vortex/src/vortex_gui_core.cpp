@@ -7,6 +7,9 @@
 #include <cstdlib>
 #include <stb_image.h>
 
+bool VortexGUI::pending_layout_load = false;
+std::string VortexGUI::pending_ini_data = "";
+
 GLuint VortexGUI::folder_icon_tex = 0;
 GLuint VortexGUI::folder_full_icon_tex;
 
@@ -15,7 +18,6 @@ GLuint VortexGUI::file_cpp_icon_tex = 0;
 GLuint VortexGUI::file_hpp_icon_tex = 0;
 GLuint VortexGUI::file_mtl_icon_tex = 0;
 GLuint VortexGUI::file_obj_icon_tex = 0;
-GLuint VortexGUI::file_png_icon_tex = 0;
 GLuint VortexGUI::file_txt_icon_tex = 0;
 
 VortexApplication *VortexGUI::app = nullptr;
@@ -27,18 +29,22 @@ char VortexGUI::m_new_project_name[128] = "";
 char VortexGUI::m_project_to_delete[128] = "";
 char VortexGUI::preferred_ide_path[256] = "";
 
-bool VortexGUI::show_inspector = true;
-bool VortexGUI::show_camera_info = false;
-bool VortexGUI::show_creator_window = true;
-bool VortexGUI::show_engine_stats = false;
-bool VortexGUI::show_terminal = false;
-bool VortexGUI::show_skybox_post_process_options = true;
-bool VortexGUI::show_scene_viewport = true;
-bool VortexGUI::show_render_scene_viewport = false;
-bool VortexGUI::show_stack_history_window = false;
-bool VortexGUI::show_asset_browser = true;
-bool VortexGUI::show_settings_window = false;
-bool VortexGUI::show_file_viewer = false;
+bool VortexGUI::show_inspector;
+bool VortexGUI::show_camera_info;
+bool VortexGUI::show_creator_window;
+bool VortexGUI::show_engine_stats;
+bool VortexGUI::show_terminal;
+bool VortexGUI::show_skybox_post_process_options;
+bool VortexGUI::show_scene_viewport;
+bool VortexGUI::show_render_scene_viewport;
+bool VortexGUI::show_stack_history_window;
+bool VortexGUI::show_asset_browser;
+bool VortexGUI::show_settings_window;
+bool VortexGUI::show_file_viewer;
+bool VortexGUI::show_image_viewer;
+
+std::unordered_map<std::string, UIImageData> VortexGUI::image_thumbnail_cache;
+std::string VortexGUI::active_image_path = "";
 
 std::string VortexGUI::current_open_file_path = "";
 std::string VortexGUI::current_file_content = "";
@@ -48,6 +54,10 @@ bool VortexGUI::show_create_file_modal = false;
 bool VortexGUI::show_create_folder_modal = false;
 char VortexGUI::new_item_name[128] = "";
 std::string VortexGUI::pending_creation_path = "";
+
+bool VortexGUI::show_rename_modal = false;
+char VortexGUI::item_to_rename_old_path[512] = "";
+char VortexGUI::item_to_rename_new_name[256] = "";
 
 std::set<VortexModel*> VortexGUI::m_selected_models = {nullptr};
 
@@ -101,6 +111,8 @@ bool VortexGUI::is_render_view_visible = false;
 
 bool VortexGUI::is_using_gizmo = false;
 ImGuizmo::MODE VortexGUI::m_current_guizmo_mode = ImGuizmo::LOCAL;
+
+VortexDecal* VortexGUI::g_active_decal_for_gizmo = nullptr;
 
 VortexGUI::VortexGUI()
 {
@@ -179,7 +191,6 @@ void VortexGUI::init(VortexApplication *_app, int width, int height)
     file_hpp_icon_tex = load_editor_icon("assets/images/icons/file_hpp.png");
     file_mtl_icon_tex = load_editor_icon("assets/images/icons/file_mtl.png");
     file_obj_icon_tex = load_editor_icon("assets/images/icons/file_obj.png");
-    file_png_icon_tex = load_editor_icon("assets/images/icons/file_png.png");
     file_txt_icon_tex = load_editor_icon("assets/images/icons/file_txt.png");
 }
 
@@ -188,6 +199,14 @@ void VortexGUI::update()
     ImGui_ImplOpenGL3_NewFrame();
     ImGui_ImplGlfw_NewFrame();
     ImGui::NewFrame();
+
+    if (pending_layout_load)
+    {
+        ImGui::LoadIniSettingsFromMemory(pending_ini_data.c_str(), pending_ini_data.size());
+        pending_layout_load = false;
+        pending_ini_data.clear();
+        VORTEX_INFO("[GUI] Restored window layout from save file.");
+    }
 
     m_processed_models.clear();
     m_processed_ps.clear();
@@ -235,6 +254,8 @@ void VortexGUI::draw_exit_modal()
             {
                 VortexProject::take_snapshot(SnapshotState::SAVE, app);
 
+                VortexProject::create_backup(m_new_project_name);
+
                 ImGui::CloseCurrentPopup();
                 glfwSetWindowShouldClose(app->get_window_ptr(), GLFW_TRUE);
             }
@@ -243,6 +264,8 @@ void VortexGUI::draw_exit_modal()
 
             if (ImGui::Button("Exit Without Saving", ImVec2(160, 30)))
             {
+                VortexProject::create_backup(m_new_project_name);
+
                 ImGui::CloseCurrentPopup();
                 glfwSetWindowShouldClose(app->get_window_ptr(), GLFW_TRUE);
             }
@@ -266,6 +289,8 @@ void VortexGUI::draw_exit_modal()
 
             if (ImGui::Button("Yes, Exit", ImVec2(120, 30)))
             {
+                VortexProject::create_backup(m_new_project_name);
+
                 ImGui::CloseCurrentPopup();
                 glfwSetWindowShouldClose(app->get_window_ptr(), GLFW_TRUE);
             }
@@ -310,6 +335,35 @@ GLuint VortexGUI::load_editor_icon(const char* file_path)
     return texture_id;
 }
 
+void VortexGUI::init_play_mode()
+{
+    show_inspector = false;
+    show_camera_info = false;
+    show_creator_window = false;
+    show_engine_stats = false;
+    show_terminal = false;
+    show_skybox_post_process_options = false;
+    show_scene_viewport = false;
+    show_stack_history_window = false;
+    show_asset_browser = false;
+    show_settings_window = false;
+    show_file_viewer = false;
+    show_image_viewer = false;
+
+    show_render_scene_viewport = true;
+    if (!render_scene_fbo_initialized)
+    {
+        setup_render_scene_fbo(render_scene_width, render_scene_height);
+        render_scene_fbo_initialized = true;
+    }
+
+    for (VortexModel* model : m_selected_models)
+    {
+        if (model) model->is_selected = false;
+    }
+    m_selected_models.clear();
+}
+
 void VortexGUI::clean_up()
 {
     VORTEX_INFO("[GUI] Cleaning up UI subsystem resources...");
@@ -351,7 +405,7 @@ void VortexGUI::clean_up()
 
     if (scene_fbo != 0)
     {
-        glDeleteRenderbuffers(1, &scene_rbo);
+        glDeleteFramebuffers(1, &scene_fbo);
         scene_fbo = 0;
     }
 
@@ -361,6 +415,12 @@ void VortexGUI::clean_up()
         render_scene_fbo = 0;
     }
 
+    for (auto const& [path, data] : image_thumbnail_cache)
+    {
+        if (data.id != 0) glDeleteTextures(1, &data.id);
+    }
+    image_thumbnail_cache.clear();
+
     glDeleteTextures(1, &folder_icon_tex);
     glDeleteTextures(1, &folder_full_icon_tex);
 
@@ -369,7 +429,6 @@ void VortexGUI::clean_up()
     glDeleteTextures(1, &file_hpp_icon_tex);
     glDeleteTextures(1, &file_mtl_icon_tex);
     glDeleteTextures(1, &file_obj_icon_tex);
-    glDeleteTextures(1, &file_png_icon_tex);
     glDeleteTextures(1, &file_txt_icon_tex);
 
     m_shaders_loaded = false;

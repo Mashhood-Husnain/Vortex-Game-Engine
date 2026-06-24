@@ -7,6 +7,7 @@ VortexShader *VortexObjectManager::particle_shader = nullptr;
 VortexShader *VortexObjectManager::unlit_shader = nullptr;
 VortexShader *VortexObjectManager::depth_only_shader = nullptr;
 VortexShader *VortexObjectManager::outline_shader = nullptr;
+VortexShader *VortexObjectManager::decal_shader = nullptr;
 
 std::vector<VortexModel*> VortexObjectManager::active_models;
 std::vector<VortexModel*> VortexObjectManager::pending_models;
@@ -41,6 +42,7 @@ void VortexObjectManager::init()
     unlit_shader = new VortexShader("shaders/unlit.vert", "shaders/unlit.frag");
     depth_only_shader = new VortexShader("shaders/depth_only.vert", "shaders/depth_only.frag");
     outline_shader = new VortexShader("shaders/outline.vert", "shaders/outline.frag");
+    decal_shader = new VortexShader("shaders/decal.vert", "shaders/decal.frag");
 }
 
 void VortexObjectManager::clean_up()
@@ -72,6 +74,17 @@ void VortexObjectManager::clean_up()
     depth_only_shader = nullptr;
 }
 
+void VortexObjectManager::init_scripts()
+{
+    for (VortexModel *model : active_models)
+    {
+        for (VortexMonoBehaviour *script : model->behaviours)
+        {
+            script->on_start();
+        }
+    }
+}
+
 void VortexObjectManager::update_scripts()
 {
     if (!pending_models.empty())
@@ -98,6 +111,17 @@ void VortexObjectManager::update_scripts()
     }
 }
 
+void VortexObjectManager::clean_scripts()
+{
+    for (VortexModel *model : active_models)
+    {
+        for (VortexMonoBehaviour *script : model->behaviours)
+        {
+            script->on_destroy();
+        }
+    }
+}
+
 void VortexObjectManager::update_physics()
 {
     // for (VortexModel *model : active_models)
@@ -112,6 +136,22 @@ void VortexObjectManager::update_physics()
     //         model->set_model_matrix(model->get_model_matrix());
     //     }
     // }
+
+    for (VortexModel *dynamic_model : active_models)
+    {
+        if (!dynamic_model->is_active || !dynamic_model->rigidbody || dynamic_model->rigidbody->is_kinematic) continue;
+
+        for (VortexModel *static_model : active_models)
+        {
+            if (dynamic_model == static_model) continue;
+            if (!static_model->is_active) continue;
+
+            if (VortexPhysics::check_collision(dynamic_model, static_model))
+            {
+                VortexPhysics::resolve_collision(dynamic_model, static_model);
+            }
+        }
+    }
 }
 
 void VortexObjectManager::update_particles()
@@ -262,6 +302,23 @@ void VortexObjectManager::draw(VortexCamera &camera, bool show_wireframe, bool i
         }
     }
 
+    if (decal_shader)
+    {
+        decal_shader->use();
+        decal_shader->setMat4("view", camera.getViewMatrix());
+        decal_shader->setMat4("projection", camera.getProjectionMatrix());
+
+        for (VortexModel *model : render_queue)
+        {
+            if (!model->is_active) continue;
+
+            for (VortexDecal* decal : model->decals)
+            {
+                decal->draw(&camera, is_render_pass);
+            }
+        }
+    }
+
     if (!is_render_pass)
     {
         glEnable(GL_STENCIL_TEST);
@@ -381,3 +438,5 @@ void VortexObjectManager::clear_scene()
 
     VortexAssetManager::clean_up();
 }
+
+VortexShader *VortexObjectManager::get_decal_shader() {return decal_shader;}

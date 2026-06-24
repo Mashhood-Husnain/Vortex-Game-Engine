@@ -1,50 +1,73 @@
 #include "vortex_assetmanager.hpp"
 
-std::unordered_map<std::string, SharedMesh*> VortexAssetManager::mesh_vault;
+std::unordered_map<std::string, MeshData> VortexAssetManager::mesh_vault;
+std::unordered_map<std::string, TextureData> VortexAssetManager::texture_vault;
 std::unordered_map<std::string, int> VortexAssetManager::spawn_counts;
 
-static unsigned int load_texture_helper(const std::string& path, SharedMesh* mesh)
+unsigned int VortexAssetManager::load_texture_raw(const std::string& path)
 {
+    if (texture_vault.find(path) != texture_vault.end())
+    {
+        texture_vault[path].ref_count++;
+        return texture_vault[path].id;
+    }
+
     unsigned int textureID;
     glGenTextures(1, &textureID);
-
     int width, height, nrComponents;
-    stbi_set_flip_vertically_on_load(true); 
-    
-    unsigned char* data = stbi_load(path.c_str(), &width, &height, &nrComponents, 0);
+    stbi_set_flip_vertically_on_load(true);
+    unsigned char* data = stbi_load(path.c_str(), &width, &height, &nrComponents, 4);
+
     if (data)
     {
-        GLenum format;
-        if (nrComponents == 1) format = GL_RED;
-        else if (nrComponents == 3) format = GL_RGB;
-        else if (nrComponents == 4) format = GL_RGBA;
-
         glBindTexture(GL_TEXTURE_2D, textureID);
-        glTexImage2D(GL_TEXTURE_2D, 0, format, width, height, 0, format, GL_UNSIGNED_BYTE, data);
+        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, width, height, 0, GL_RGBA, GL_UNSIGNED_BYTE, data);
         glGenerateMipmap(GL_TEXTURE_2D);
-
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-
-        VORTEX_INFO("[TEXTURE] Successfully loaded: ", path);
-
         stbi_image_free(data);
-    }
-    else
-    {
-        VORTEX_ERROR("[TEXTURE ERROR] Failed to load: ", path);
 
-        stbi_image_free(data);
-        exit(EXIT_FAILURE);
+        texture_vault[path] = {textureID, 1};
+        VORTEX_INFO("[TEXTURE] Loaded and Cached: ", path);
+        return textureID;
     }
 
-    mesh->m_gpu_allocated_textures.push_back(textureID);
-    return textureID;
+    VORTEX_ERROR("[TEXTURE ERROR] Failed to load: ", path);
+    stbi_image_free(data);
+    return 0;
 }
 
-static void parse_mtl_helper(const std::string& mtl_filepath, SharedMesh* mesh)
+void VortexAssetManager::release_texture(const std::string& path)
+{
+    if (path.empty()) return;
+
+    auto it = texture_vault.find(path);
+    if (it != texture_vault.end())
+    {
+        it->second.ref_count--;
+
+        if (it->second.ref_count <= 0)
+        {
+            glDeleteTextures(1, &it->second.id);
+            texture_vault.erase(it);
+            VORTEX_INFO("[TEXTURE] Zero references remaining. Deleted from VRAM: ", path);
+        }
+    }
+}
+
+unsigned int VortexAssetManager::load_texture(const std::string& path, SharedMesh* mesh)
+{
+    unsigned int tex_id = load_texture_raw(path);
+    if (tex_id != 0 && mesh != nullptr)
+    {
+        mesh->m_gpu_allocated_textures.push_back(tex_id);
+    }
+    return tex_id;
+}
+
+void VortexAssetManager::parse_mtl_helper(const std::string& mtl_filepath, SharedMesh* mesh)
 {
     size_t last_slash = mtl_filepath.find_last_of("/\\");
     std::string mtl_dir = (last_slash == std::string::npos) ? "" : mtl_filepath.substr(0, last_slash + 1);
@@ -64,22 +87,22 @@ static void parse_mtl_helper(const std::string& mtl_filepath, SharedMesh* mesh)
         if (prefix == "map_Kd")
         {
             std::string tex_filename; ss >> tex_filename;
-            mesh->texture_id = load_texture_helper(mtl_dir + tex_filename, mesh);
+            mesh->texture_id = load_texture(mtl_dir + tex_filename, mesh);
         }
         else if (prefix == "map_Ns")
         {
             std::string rough_filename; ss >> rough_filename;
-            mesh->roughness_id = load_texture_helper(mtl_dir + rough_filename, mesh);
+            mesh->roughness_id = load_texture(mtl_dir + rough_filename, mesh);
         }
         else if (prefix == "map_refl")
         {
             std::string metallic_filename; ss >> metallic_filename;
-            mesh->metallic_id = load_texture_helper(mtl_dir + metallic_filename, mesh);
+            mesh->metallic_id = load_texture(mtl_dir + metallic_filename, mesh);
         }
         else if (prefix == "map_Bump")
         {
             std::string normal_filename; while(ss >> normal_filename);
-            mesh->normal_id = load_texture_helper(mtl_dir + normal_filename, mesh);
+            mesh->normal_id = load_texture(mtl_dir + normal_filename, mesh);
         }
     }
 }
@@ -88,7 +111,8 @@ SharedMesh* VortexAssetManager::get_mesh(const std::string &filepath)
 {
     if (mesh_vault.find(filepath) != mesh_vault.end())
     {
-        return mesh_vault[filepath];
+        mesh_vault[filepath].ref_count++;
+        return mesh_vault[filepath].mesh_ptr;
     }
 
     VORTEX_INFO("[ASSET MANAGER] First time loading: ", filepath);
@@ -109,7 +133,7 @@ SharedMesh* VortexAssetManager::get_mesh(const std::string &filepath)
 
     VortexModel_Object *current_obj = nullptr;
     std::string line;
-    
+
     while (std::getline(file, line))
     {
         std::stringstream ss(line);
@@ -119,7 +143,7 @@ SharedMesh* VortexAssetManager::get_mesh(const std::string &filepath)
         if(prefix == "mtllib")
         {
             std::string mtl_filename; ss >> mtl_filename;
-            std::string path1 = obj_dir + mtl_filename;            
+            std::string path1 = obj_dir + mtl_filename;
             std::string path2 = obj_dir + "../mtl/" + mtl_filename;
             std::ifstream check_file(path1);
             if (check_file.is_open())
@@ -150,17 +174,17 @@ SharedMesh* VortexAssetManager::get_mesh(const std::string &filepath)
             temp_positions.push_back(v);
             if (v.y < min_y) min_y = v.y;
             if (v.y > max_y) max_y = v.y;
-        } 
+        }
         else if (prefix == "vt")
         {
             glm::vec2 vt; ss >> vt.x >> vt.y;
             temp_tex_coords.push_back(vt);
-        } 
+        }
         else if (prefix == "vn")
         {
             glm::vec3 vn; ss >> vn.x >> vn.y >> vn.z;
             temp_normals.push_back(vn);
-        } 
+        }
         else if (prefix == "f")
         {
             if (current_obj == nullptr)
@@ -199,15 +223,15 @@ SharedMesh* VortexAssetManager::get_mesh(const std::string &filepath)
 
     glm::vec3 global_min(1e10f), global_max(-1e10f);
 
-    for (const auto& v : vertices) 
+    for (const auto& v : vertices)
     {
         global_min = glm::min(global_min, v.position);
         global_max = glm::max(global_max, v.position);
     }
-    
+
     glm::vec3 center = (global_min + global_max) * 0.5f;
 
-    for (auto& v : vertices) 
+    for (auto& v : vertices)
     {
         v.position -= center;
     }
@@ -236,8 +260,8 @@ SharedMesh* VortexAssetManager::get_mesh(const std::string &filepath)
 
         obj.collider.min = obj_min;
         obj.collider.max = obj_max;
-        
-        obj.collider.setup_visual_mesh(); 
+
+        obj.collider.setup_visual_mesh();
     }
 
     new_mesh->collider.min = global_min - center;
@@ -254,19 +278,54 @@ SharedMesh* VortexAssetManager::get_mesh(const std::string &filepath)
     glEnableVertexAttribArray(2); glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, sizeof(VortexModel_Vertex), (void*)offsetof(VortexModel_Vertex, tex_coords));
     glBindVertexArray(0);
 
-    mesh_vault[filepath] = new_mesh;
-    
+    mesh_vault[filepath] = {new_mesh, 1};
+
     VORTEX_INFO("[ASSET MANAGER] Success! Cached in VRAM.");
 
     return new_mesh;
+}
+
+void VortexAssetManager::release_mesh(const std::string& filepath)
+{
+    if (filepath.empty()) return;
+
+    auto it = mesh_vault.find(filepath);
+    if (it != mesh_vault.end())
+    {
+        it->second.ref_count--;
+
+        if (it->second.ref_count <= 0)
+        {
+            SharedMesh* mesh = it->second.mesh_ptr;
+
+            if (mesh->VAO != 0) glDeleteVertexArrays(1, &mesh->VAO);
+            if (mesh->VBO != 0) glDeleteBuffers(1, &mesh->VBO);
+
+            if (mesh->texture_id != 0) glDeleteTextures(1, &mesh->texture_id);
+            if (mesh->roughness_id != 0) glDeleteTextures(1, &mesh->roughness_id);
+            if (mesh->metallic_id != 0) glDeleteTextures(1, &mesh->metallic_id);
+            if (mesh->normal_id != 0) glDeleteTextures(1, &mesh->normal_id);
+
+            for (unsigned int tex_id : mesh->m_gpu_allocated_textures)
+            {
+                glDeleteTextures(1, &tex_id);
+            }
+
+            delete mesh;
+
+            mesh_vault.erase(it);
+            VORTEX_INFO("[ASSET MANAGER] Zero references remaining. Deleted Mesh from VRAM: ", filepath);
+        }
+    }
 }
 
 void VortexAssetManager::clean_up()
 {
     VORTEX_INFO("[ASSET MANAGER] Releasing cached VRAM meshes and texture resources...");
 
-    for (auto const& [path, mesh] : mesh_vault)
+    for (auto const& [path, data] : mesh_vault)
     {
+        SharedMesh* mesh = data.mesh_ptr;
         if (mesh->VAO != 0) glDeleteVertexArrays(1, &mesh->VAO);
         if (mesh->VBO != 0) glDeleteBuffers(1, &mesh->VBO);
 
@@ -279,10 +338,17 @@ void VortexAssetManager::clean_up()
         {
             glDeleteTextures(1, &tex_id);
         }
+
         delete mesh;
     }
     mesh_vault.clear();
     spawn_counts.clear();
+
+    for (auto const& [path, data] : texture_vault)
+    {
+        if (data.id != 0) glDeleteTextures(1, &data.id);
+    }
+    texture_vault.clear();
 }
 
 

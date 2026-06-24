@@ -31,6 +31,14 @@ public:
         factories[name] = factory;
     }
 
+    void unregister_script(const std::string &name)
+    {
+        if (factories.find(name) != factories.end())
+        {
+            factories.erase(name);
+        }
+    }
+
     VortexMonoBehaviour* create(const std::string &name)
     {
         if (factories.find(name) != factories.end())

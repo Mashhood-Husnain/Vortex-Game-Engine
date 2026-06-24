@@ -25,6 +25,7 @@
 #include "vortex_collider.hpp"
 #include "vortex_rigidbody.hpp"
 #include "vortex_light.hpp"
+#include "vortex_decal.hpp"
 
 #include "stb_image.h"
 
@@ -33,6 +34,8 @@ class VortexCamera;
 class VortexShader;
 class VortexBoxcollider;
 class VortexRigidbody;
+class VortexDecal;
+class VortexLight;
 
 struct SharedMesh;
 
@@ -89,7 +92,6 @@ struct VortexModel_Object
     Transform transform;
 
     std::string name;
-    // accessing the object from the overal vertices when loaded from VortexModel class
     int vertex_offset;
     int vertex_count;
 
@@ -107,11 +109,16 @@ class VortexModel
 public:
     VortexRigidbody *rigidbody = nullptr;
     VortexLight *light = nullptr;
+    std::vector<VortexDecal*> decals;
 
     VortexApplication *app = nullptr;
     std::string model_name = "";
 
     std::string folder = "Scene";
+
+    GLuint texture_id = 0;
+    std::string texture_path = "";
+    glm::vec2 texture_scale = glm::vec2(1.0f, 1.0f);
 
     Transform transform = {
         .position = glm::vec3(0.0f),
@@ -145,6 +152,8 @@ public:
     VortexModel(const std::string& path, VortexApplication *window, const std::string& loaded_name = "");
     void draw(const VortexShader &shader, VortexCamera &camera, bool wireframe, bool use_scene_lights = true);
     std::vector<VortexModel_Object>& get_objects();
+
+    static void bind_lights_to_shader(VortexShader *shader, bool use_scene_lights);
 
     void add_behaviour(const std::string &script_name, VortexMonoBehaviour *script);
     void update();

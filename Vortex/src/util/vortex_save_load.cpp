@@ -1,6 +1,52 @@
 #include "util/vortex_save_load.hpp"
 #include "util/vortex_logs.hpp"
 
+std::string get_global_backup_directory()
+{
+    std::string path;
+    const char *homedir;
+
+    if ((homedir = getenv("HOME")) == NULL) {
+        homedir = getpwuid(getuid())->pw_dir;
+    }
+
+    path = std::string(homedir) + "/.local/share/VortexEngine/backups";
+    return path;
+}
+
+void VortexProject::create_backup(const std::string& project_name)
+{
+    if (project_name.empty() || project_name.find("temp_playmode_backup_") == 0) return;
+
+    std::string src_dir = vortex_generatepath(SAVE_DIRECTORY, project_name);
+    if (!std::filesystem::exists(src_dir)) return;
+
+    std::string backup_base_dir = get_global_backup_directory();
+    if (!std::filesystem::exists(backup_base_dir))
+    {
+        std::filesystem::create_directories(backup_base_dir);
+    }
+
+    auto now = std::chrono::system_clock::now();
+    std::time_t now_time = std::chrono::system_clock::to_time_t(now);
+    std::tm local_tm = *std::localtime(&now_time);
+    char time_buf[64];
+    std::strftime(time_buf, sizeof(time_buf), "%Y%m%d_%H%M%S", &local_tm);
+
+    std::string backup_folder_name = project_name + "_backup_" + std::string(time_buf);
+    std::string dest_dir = vortex_generatepath(backup_base_dir, backup_folder_name);
+
+    try
+    {
+        std::filesystem::copy(src_dir, dest_dir, std::filesystem::copy_options::recursive | std::filesystem::copy_options::overwrite_existing);
+        VORTEX_INFO("[PROJECT] Backup securely archived at: ", dest_dir);
+    }
+    catch (const std::filesystem::filesystem_error& e)
+    {
+        VORTEX_ERROR("[PROJECT ERROR] Failed to create backup: ", e.what());
+    }
+}
+
 void generate_ide_context(const std::string& project_name)
 {
     std::string scripts_dir = vortex_generatepath(
@@ -18,6 +64,28 @@ void generate_ide_context(const std::string& project_name)
     std::string engine_root = std::filesystem::absolute("..").string();
     std::replace(engine_root.begin(), engine_root.end(), '\\', '/');
 
+    std::vector<std::string> include_paths;
+    include_paths.push_back(engine_root + "/Vortex/include");
+    include_paths.push_back(engine_root + "/Vortex/include/util");
+
+    std::string vendor_path = engine_root + "/vendor";
+    if (std::filesystem::exists(vendor_path) && std::filesystem::is_directory(vendor_path))
+    {
+        for (const auto& entry : std::filesystem::directory_iterator(vendor_path))
+        {
+            if (entry.is_directory())
+            {
+                std::string path_to_add = entry.path().string();
+                std::string inc_dir = path_to_add + "/include";
+
+                if (std::filesystem::exists(inc_dir)) path_to_add = inc_dir;
+
+                std::replace(path_to_add.begin(), path_to_add.end(), '\\', '/');
+                include_paths.push_back(path_to_add);
+            }
+        }
+    }
+
     if (!std::filesystem::exists(cmake_path))
     {
         std::ofstream cmake_file(cmake_path);
@@ -29,18 +97,11 @@ void generate_ide_context(const std::string& project_name)
             cmake_file << "file(GLOB_RECURSE USER_SCRIPTS \"*.cpp\")\n";
             cmake_file << "add_library(DummyContext SHARED ${USER_SCRIPTS})\n\n";
             cmake_file << "target_include_directories(DummyContext PUBLIC\n";
-            cmake_file << "    \"" << engine_root << "/Vortex/include\"\n";
-            cmake_file << "    \"" << engine_root << "/Vortex/include/util\"\n";
 
-            cmake_file << "    \"" << engine_root << "/vendor/glm\"\n";
-            cmake_file << "    \"" << engine_root << "/vendor/nlohmann_json\"\n";
-            cmake_file << "    \"" << engine_root << "/vendor/glad/include\"\n";
-            cmake_file << "    \"" << engine_root << "/vendor/glfw/include\"\n";
-            cmake_file << "    \"" << engine_root << "/vendor/imgui\"\n";
-            cmake_file << "    \"" << engine_root << "/vendor/ImGuizmo\"\n";
-            cmake_file << "    \"" << engine_root << "/vendor/miniaudio\"\n";
-            cmake_file << "    \"" << engine_root << "/vendor/nvml\"\n";
-            cmake_file << "    \"" << engine_root << "/vendor/stbimage\"\n";
+            for (const std::string& path : include_paths)
+            {
+                cmake_file << "    \"" << path << "\"\n";
+            }
 
             cmake_file << ")\n";
             cmake_file.close();
@@ -63,27 +124,20 @@ void generate_ide_context(const std::string& project_name)
             props_file << "            \"name\": \"VortexEngine\",\n";
             props_file << "            \"includePath\": [\n";
             props_file << "                \"${workspaceFolder}/**\",\n";
-            props_file << "                \"" << engine_root << "/Vortex/include\",\n";
-            props_file << "                \"" << engine_root << "/Vortex/include/util\",\n";
 
-            props_file << "                \"" << engine_root << "/vendor/glm\",\n";
-            props_file << "                \"" << engine_root << "/vendor/nlohmann_json\",\n";
-            props_file << "                \"" << engine_root << "/vendor/glad/include\",\n";
-            props_file << "                \"" << engine_root << "/vendor/glfw/include\",\n";
-            props_file << "                \"" << engine_root << "/vendor/imgui\",\n";
-            props_file << "                \"" << engine_root << "/vendor/ImGuizmo\",\n";
-            props_file << "                \"" << engine_root << "/vendor/miniaudio\",\n";
-            props_file << "                \"" << engine_root << "/vendor/nvml\",\n";
-            props_file << "                \"" << engine_root << "/vendor/stbimage\"\n";
+            for (size_t i = 0; i < include_paths.size(); i++)
+            {
+                props_file << "                \"" << include_paths[i] << "\"";
+                if (i < include_paths.size() - 1) props_file << ",";
+                props_file << "\n";
+            }
 
             props_file << "            ],\n";
             props_file << "            \"defines\": [],\n";
 
             #if defined(_WIN32) || defined(_WIN64)
-                props_file << "            \"compilerPath\": \"C:/msys64/mingw64/bin/g++.exe\",\n";
                 props_file << "            \"intelliSenseMode\": \"windows-gcc-x64\",\n";
             #else
-                props_file << "            \"compilerPath\": \"/usr/bin/g++\",\n";
                 props_file << "            \"intelliSenseMode\": \"linux-gcc-x64\",\n";
             #endif
 
@@ -179,6 +233,9 @@ void VortexProject::save_project(Snapshot *snapshot)
         j_model["show_collider"] = model->show_collider;
         j_model["collider_scale"] = {model->collider_scale.x, model->collider_scale.y, model->collider_scale.z};
 
+        j_model["texture_path"] = model->texture_path;
+        j_model["texture_scale"] = {model->texture_scale.x, model->texture_scale.y};
+
         j_model["scripts"] = json::array();
         j_model["script_data"] = json::object();
 
@@ -207,6 +264,18 @@ void VortexProject::save_project(Snapshot *snapshot)
             json l_data;
             model->light->serialize(l_data);
             j_model["light"] = l_data;
+        }
+
+        if (!model->decals.empty())
+        {
+            json d_data = json::array();
+            for (VortexDecal* decal : model->decals)
+            {
+                json d_json;
+                decal->serialize(d_json);
+                d_data.push_back(d_json);
+            }
+            j_model["decals"] = d_data;
         }
 
         j_model["folder"] = model->folder;
@@ -264,6 +333,25 @@ void VortexProject::save_project_settings(SettingsSnapshot *settings_snapshot, c
 
     nlohmann::json j;
     j["preferred_ide_path"] = std::string(settings_snapshot->preferred_ide_path);
+
+    nlohmann::json layout_j;
+    layout_j["show_inspector"] = settings_snapshot->engine_layout.show_inspector;
+    layout_j["show_creator_window"] = settings_snapshot->engine_layout.show_creator_window;
+    layout_j["show_terminal"] = settings_snapshot->engine_layout.show_terminal;
+    layout_j["show_skybox_post_process_options"] = settings_snapshot->engine_layout.show_skybox_post_process_options;
+    layout_j["show_scene_viewport"] = settings_snapshot->engine_layout.show_scene_viewport;
+    layout_j["show_render_scene_viewport"] = settings_snapshot->engine_layout.show_render_scene_viewport;
+    layout_j["show_asset_browser"] = settings_snapshot->engine_layout.show_asset_browser;
+    layout_j["show_camera_info"] = settings_snapshot->engine_layout.show_camera_info;
+    layout_j["show_engine_stats"] = settings_snapshot->engine_layout.show_engine_stats;
+    layout_j["show_stack_history_window"] = settings_snapshot->engine_layout.show_stack_history_window;
+    layout_j["show_settings_window"] = settings_snapshot->engine_layout.show_settings_window;
+    layout_j["show_file_viewer"] = settings_snapshot->engine_layout.show_file_viewer;
+    layout_j["show_image_viewer"] = settings_snapshot->engine_layout.show_image_viewer;
+
+    layout_j["imgui_ini_data"] = settings_snapshot->engine_layout.imgui_ini_data;
+
+    j["window_layout"] = layout_j;
 
     std::ofstream file(path);
     if (file.is_open())
@@ -387,6 +475,21 @@ void VortexProject::load_project(Snapshot *snapshot)
             new_model->collider_scale = glm::vec3(j_model["collider_scale"][0], j_model["collider_scale"][1], j_model["collider_scale"][2]);
         }
 
+        if (j_model.contains("texture_path"))
+        {
+            std::string saved_path = j_model["texture_path"];
+            if (!saved_path.empty())
+            {
+                new_model->texture_path = saved_path;
+                new_model->texture_id = VortexAssetManager::load_texture_raw(saved_path);
+            }
+        }
+
+        if (j_model.contains("texture_scale"))
+        {
+            new_model->texture_scale = glm::vec2(j_model["texture_scale"][0], j_model["texture_scale"][1]);
+        }
+
         if (j_model.contains("scripts"))
         {
             for (const auto &j_script_name : j_model["scripts"])
@@ -422,6 +525,22 @@ void VortexProject::load_project(Snapshot *snapshot)
             new_model->light->vortexTransform = &new_model->transform;
 
             new_model->light->deserialize(j_model["light"]);
+        }
+
+        if (j_model.contains("decals"))
+        {
+            for (const json& d_json : j_model["decals"])
+            {
+                VortexDecal* new_decal = new VortexDecal();
+                new_decal->vortexGameObject = new_model;
+                new_decal->vortexEngine = snapshot->window;
+                new_decal->vortexTransform = &new_model->transform;
+
+                new_decal->on_start();
+                new_decal->deserialize(d_json);
+
+                new_model->decals.push_back(new_decal);
+            }
         }
 
         snapshot->active_models.push_back(new_model);
@@ -501,6 +620,27 @@ void VortexProject::load_project_settings(SettingsSnapshot *settings_snapshot, c
                     std::string ide = j["preferred_ide_path"];
                     vortex_strncpy(settings_snapshot->preferred_ide_path, 256, ide.c_str());
                 }
+
+                if (j.contains("window_layout"))
+                {
+                    auto& layout_j = j["window_layout"];
+                    settings_snapshot->engine_layout.show_inspector = layout_j.value("show_inspector", true);
+                    settings_snapshot->engine_layout.show_creator_window = layout_j.value("show_creator_window", true);
+                    settings_snapshot->engine_layout.show_terminal = layout_j.value("show_terminal", true);
+                    settings_snapshot->engine_layout.show_skybox_post_process_options = layout_j.value("show_skybox_post_process_options", true);
+                    settings_snapshot->engine_layout.show_scene_viewport = layout_j.value("show_scene_viewport", true);
+                    settings_snapshot->engine_layout.show_render_scene_viewport = layout_j.value("show_render_scene_viewport", false);
+                    settings_snapshot->engine_layout.show_asset_browser = layout_j.value("show_asset_browser", true);
+                    settings_snapshot->engine_layout.show_camera_info = layout_j.value("show_camera_info", false);
+                    settings_snapshot->engine_layout.show_engine_stats = layout_j.value("show_engine_stats", false);
+                    settings_snapshot->engine_layout.show_stack_history_window = layout_j.value("show_stack_history_window", false);
+                    settings_snapshot->engine_layout.show_settings_window = layout_j.value("show_settings_window", false);
+                    settings_snapshot->engine_layout.show_file_viewer = layout_j.value("show_file_viewer", false);
+                    settings_snapshot->engine_layout.show_image_viewer = layout_j.value("show_image_viewer", false);
+
+                    settings_snapshot->engine_layout.imgui_ini_data = layout_j.value("imgui_ini_data", "");
+                }
+
                 VORTEX_INFO("[SETTINGS] Loaded project settings: ", path);
             }
             catch (...)
@@ -666,8 +806,32 @@ void VortexProject::take_snapshot(SnapshotState state, VortexApplication *window
 {
     if (project_name.empty()) project_name = std::string(VortexGUI::m_new_project_name);
 
+    size_t ini_size = 0;
+    std::string imgui_ini_data = "";
+    const char *ini_data = ImGui::SaveIniSettingsToMemory(&ini_size);
+    if (ini_data)
+    {
+        imgui_ini_data = std::string(ini_data, ini_size);
+    }
+
     SettingsSnapshot settings_snapshot = {
-        VortexGUI::preferred_ide_path
+        VortexGUI::preferred_ide_path,
+        {
+            VortexGUI::show_inspector,
+            VortexGUI::show_camera_info,
+            VortexGUI::show_creator_window,
+            VortexGUI::show_engine_stats,
+            VortexGUI::show_terminal,
+            VortexGUI::show_skybox_post_process_options,
+            VortexGUI::show_scene_viewport,
+            VortexGUI::show_render_scene_viewport,
+            VortexGUI::show_stack_history_window,
+            VortexGUI::show_asset_browser,
+            VortexGUI::show_settings_window,
+            VortexGUI::show_file_viewer,
+            VortexGUI::show_image_viewer,
+            imgui_ini_data
+        }
     };
 
     Snapshot snapshot = {
@@ -681,19 +845,46 @@ void VortexProject::take_snapshot(SnapshotState state, VortexApplication *window
         &settings_snapshot
     };
 
-    if (strlen(VortexGUI::preferred_ide_path) != 0)
+    if (state == SnapshotState::SAVE)
     {
-        std::string base_path = vortex_generatepath(SAVE_DIRECTORY, project_name);
-        if (!std::filesystem::exists(base_path)) std::filesystem::create_directory(base_path);
+        if (project_name.find("temp_playmode_backup_") == std::string::npos)
+        {
+            std::string base_path = vortex_generatepath(SAVE_DIRECTORY, project_name);
+            if (!std::filesystem::exists(base_path)) std::filesystem::create_directory(base_path);
 
-        std::string scripts_path = vortex_generatepath(base_path, ASSET_DIR_SCRIPTS);
-        if (!std::filesystem::exists(scripts_path)) std::filesystem::create_directory(scripts_path);
+            std::string scripts_path = vortex_generatepath(base_path, ASSET_DIR_SCRIPTS);
+            if (!std::filesystem::exists(scripts_path)) std::filesystem::create_directory(scripts_path);
 
-        generate_ide_context(project_name);
+            generate_ide_context(project_name);
+        }
+
+        VortexProject::save_project(&snapshot);
     }
+    else if (state == SnapshotState::LOAD)
+    {
+        VortexProject::load_project(&snapshot);
 
-    if (state == SnapshotState::SAVE) VortexProject::save_project(&snapshot);
-    else if (state == SnapshotState::LOAD) VortexProject::load_project(&snapshot);
+        VortexGUI::show_inspector = settings_snapshot.engine_layout.show_inspector;
+        VortexGUI::show_creator_window = settings_snapshot.engine_layout.show_creator_window;
+        VortexGUI::show_terminal = settings_snapshot.engine_layout.show_terminal;
+        VortexGUI::show_skybox_post_process_options = settings_snapshot.engine_layout.show_skybox_post_process_options;
+        VortexGUI::show_scene_viewport = settings_snapshot.engine_layout.show_scene_viewport;
+        VortexGUI::show_render_scene_viewport = settings_snapshot.engine_layout.show_render_scene_viewport;
+        VortexGUI::show_asset_browser = settings_snapshot.engine_layout.show_asset_browser;
+        VortexGUI::show_camera_info = settings_snapshot.engine_layout.show_camera_info;
+        VortexGUI::show_engine_stats = settings_snapshot.engine_layout.show_engine_stats;
+        VortexGUI::show_stack_history_window = settings_snapshot.engine_layout.show_stack_history_window;
+        VortexGUI::show_settings_window = settings_snapshot.engine_layout.show_settings_window;
+        VortexGUI::show_file_viewer = settings_snapshot.engine_layout.show_file_viewer;
+        VortexGUI::show_image_viewer = settings_snapshot.engine_layout.show_image_viewer;
+
+        if (!settings_snapshot.engine_layout.imgui_ini_data.empty())
+        {
+            VORTEX_INFO("[GUI] Queuing layout restoration (", settings_snapshot.engine_layout.imgui_ini_data.size(), " bytes)");
+            VortexGUI::pending_ini_data = settings_snapshot.engine_layout.imgui_ini_data;
+            VortexGUI::pending_layout_load = true;
+        }
+    }
 }
 
 void VortexProject::clean_playmode_backups()

@@ -32,7 +32,9 @@ public:
     VortexShader(const std::string vertex_path, const std::string fragment_path);
     void use() const;
     void setMat4(const std::string &name, const glm::mat4 &mat4) const;
+    void setMat3(const std::string &name, const glm::mat3 &mat3) const;
     void setVec3(const std::string &name, const glm::vec3 &vec3) const;
+    void setVec2(const std::string &name, const glm::vec2 &vec2) const;
     void setInt(const std::string &name, const int value) const;
     void setFloat(const std::string &name, const float value) const;
     void setBool(const std::string &name, const bool value) const;

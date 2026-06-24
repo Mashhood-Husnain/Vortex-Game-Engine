@@ -10,7 +10,6 @@ GLuint VortexGUI::return_file_icon_tex(const std::string &ext_name)
     else if (ext_name == ".hpp") return file_hpp_icon_tex;
     else if (ext_name == ".mtl") return file_mtl_icon_tex;
     else if (ext_name == ".obj") return file_obj_icon_tex;
-    else if (ext_name == ".png") return file_png_icon_tex;
     else if (ext_name == ".txt") return file_txt_icon_tex;
     else return file_icon_tex;
 }
@@ -225,15 +224,57 @@ void VortexGUI::draw_asset_browser()
                 ImGui::PushStyleColor(ImGuiCol_ButtonHovered, ImVec4(0.4f, 0.4f, 0.4f, 0.3f));
                 ImGui::PushStyleColor(ImGuiCol_ButtonActive, ImVec4(0.4f, 0.4f, 0.4f, 0.5f));
 
+                GLuint display_icon = return_file_icon_tex(file_extname);
+
+                if (file_extname == ".png" || file_extname == ".jpg")
+                {
+                    if (image_thumbnail_cache.find(absolute_path) == image_thumbnail_cache.end())
+                    {
+                        int w, h, nrComp;
+                        stbi_set_flip_vertically_on_load(true);
+                        unsigned char* data = stbi_load(absolute_path.c_str(), &w, &h, &nrComp, 4);
+
+                        if (data)
+                        {
+                            GLuint new_id;
+                            glGenTextures(1, &new_id);
+                            glBindTexture(GL_TEXTURE_2D, new_id);
+                            glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, w, h, 0, GL_RGBA, GL_UNSIGNED_BYTE, data);
+                            glGenerateMipmap(GL_TEXTURE_2D);
+                            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+                            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+                            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
+                            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+                            stbi_image_free(data);
+
+                            image_thumbnail_cache[absolute_path] = {new_id, w, h};
+                        }
+                    }
+
+                    if (image_thumbnail_cache[absolute_path].id != 0)
+                    {
+                        display_icon = image_thumbnail_cache[absolute_path].id;
+                    }
+                }
+
                 ImGui::ImageButton(
                     filename.c_str(),
-                    (ImTextureID)(intptr_t)return_file_icon_tex(file_extname),
-                    ImVec2(thumbnail_size, thumbnail_size)
+                    (ImTextureID)(intptr_t)display_icon,
+                    ImVec2(thumbnail_size, thumbnail_size),
+                    ImVec2(0, 1), ImVec2(1, 0)
                 );
 
                 if (ImGui::IsItemHovered() && ImGui::IsMouseDoubleClicked(ImGuiMouseButton_Left))
                 {
-                    open_file_in_viewer(entry.path().string());
+                    if (file_extname == ".png" || file_extname == ".jpg")
+                    {
+                        active_image_path = absolute_path;
+                        show_image_viewer = true;
+                    }
+                    else
+                    {
+                        open_file_in_viewer(entry.path().string());
+                    }
                 }
 
                 ImGui::PopStyleColor(3);
@@ -241,7 +282,7 @@ void VortexGUI::draw_asset_browser()
                 if (ImGui::BeginDragDropSource())
                 {
                     ImGui::SetDragDropPayload("ASSET_BROWSER_ITEM", absolute_path.c_str(), absolute_path.size() + 1);
-                    ImGui::Text("Move %s", filename.c_str());
+                    ImGui::Text("Assigning: %s", filename.c_str());
                     ImGui::EndDragDropSource();
                 }
             }
@@ -271,6 +312,13 @@ void VortexGUI::draw_asset_browser()
                         }
                     }
                     ImGui::Separator();
+                }
+
+                if (ImGui::MenuItem("Rename"))
+                {
+                    vortex_strncpy(item_to_rename_old_path, sizeof(item_to_rename_old_path), absolute_path.c_str());
+                    vortex_strncpy(item_to_rename_new_name, sizeof(item_to_rename_new_name), filename.c_str());
+                    show_rename_modal = true;
                 }
 
                 if (ImGui::MenuItem("Delete"))
@@ -426,7 +474,35 @@ void VortexGUI::draw_asset_browser()
         {
             try
             {
-                std::filesystem::remove_all(item_to_delete);
+                std::filesystem::path path_to_del(item_to_delete);
+
+                if (path_to_del.extension() == ".cpp" || path_to_del.extension() == ".hpp")
+                {
+                    std::string script_name = path_to_del.stem().string();
+                    VORTEX_WARN("[ASSET BROWSER] Script deletion detected. Cleaning up references to: ", script_name);
+
+                    for (VortexModel* model : VortexObjectManager::active_models)
+                    {
+                        if (!model) continue;
+
+                        for (int i = (int)model->script_names.size() - 1; i >= 0; --i)
+                        {
+                            if (model->script_names[i] == script_name)
+                            {
+                                delete model->behaviours[i];
+
+                                model->behaviours.erase(model->behaviours.begin() + i);
+                                model->script_names.erase(model->script_names.begin() + i);
+
+                                VORTEX_INFO("[ASSET BROWSER] Detached deleted script from model: ", model->model_name);
+                            }
+                        }
+                    }
+
+                    ScriptRegistry::get().unregister_script(script_name);
+                }
+
+                std::filesystem::remove_all(path_to_del);
                 VORTEX_INFO("[ASSET BROWSER] Successfully deleted: ", item_to_delete);
             }
             catch (const std::filesystem::filesystem_error& e)
@@ -438,6 +514,53 @@ void VortexGUI::draw_asset_browser()
         }
         ImGui::SameLine();
         if (ImGui::Button("Cancel", ImVec2(120, 0))) show_delete_modal = false;
+        ImGui::EndPopup();
+    }
+
+    ImGui::SetNextWindowPos(modal_center, ImGuiCond_Appearing, ImVec2(0.5f, 0.5f));
+    if (show_rename_modal) ImGui::OpenPopup("Rename Asset");
+    if (ImGui::BeginPopupModal("Rename Asset", &show_rename_modal, ImGuiWindowFlags_AlwaysAutoResize))
+    {
+        ImGui::Text("Enter new name:");
+        ImGui::SetNextItemWidth(250.0f);
+
+        bool enter_pressed = ImGui::InputText("##rename_input", item_to_rename_new_name, IM_ARRAYSIZE(item_to_rename_new_name), ImGuiInputTextFlags_EnterReturnsTrue);
+
+        ImGui::Spacing();
+
+        if (ImGui::Button("Rename", ImVec2(120, 0)) || enter_pressed)
+        {
+            std::string old_path_str(item_to_rename_old_path);
+            std::string new_name_str(item_to_rename_new_name);
+
+            if (!new_name_str.empty())
+            {
+                std::filesystem::path old_fs_path(old_path_str);
+
+                std::filesystem::path new_fs_path = old_fs_path.parent_path() / new_name_str;
+
+                try
+                {
+                    if (std::filesystem::exists(new_fs_path))
+                    {
+                         VORTEX_WARN("[ASSET BROWSER] Cannot rename. An item with that name already exists!");
+                    }
+                    else
+                    {
+                        std::filesystem::rename(old_fs_path, new_fs_path);
+                        VORTEX_INFO("[ASSET BROWSER] Renamed '", old_fs_path.filename().string(), "' to '", new_name_str, "'");
+                    }
+                }
+                catch (const std::filesystem::filesystem_error& e)
+                {
+                    VORTEX_ERROR("[ASSET BROWSER ERROR] Failed to rename: ", e.what());
+                }
+            }
+            show_rename_modal = false;
+        }
+        ImGui::SameLine();
+        if (ImGui::Button("Cancel", ImVec2(120, 0))) show_rename_modal = false;
+
         ImGui::EndPopup();
     }
 

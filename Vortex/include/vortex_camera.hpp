@@ -38,7 +38,7 @@ class VortexCamera
     float near_plane = 0.1f;
     float far_plane = 1000.0f;
 
-    float movement_speed = 10.0f;
+    float movement_speed = 25.0f;
     float mouse_sensitivity = 0.05f;
 
     void update_camera_vectors();
