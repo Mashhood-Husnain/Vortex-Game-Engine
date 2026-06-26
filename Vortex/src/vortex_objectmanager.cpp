@@ -478,8 +478,6 @@ void VortexObjectManager::clear_scene()
     active_particlesystems.clear();
 
     selected_models.clear();
-
-    VortexAssetManager::clean_up();
 }
 
 VortexShader *VortexObjectManager::get_decal_shader() { return decal_shader; }

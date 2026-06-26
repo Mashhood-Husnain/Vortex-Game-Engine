@@ -190,13 +190,21 @@ void VortexGUI::draw_project_hub()
             vortex_strncpy(m_new_project_name, sizeof(m_new_project_name), project_name.c_str());
 
             VortexObjectManager::clear_scene();
+            VortexAssetManager::clean_up();
+
             ActionManager::clear_stack_history();
 
             VortexGUI::explicit_empty_folders = {"Scene"};
 
+            ScriptRegistry::get().clear();
+
+            VortexCompiler::init_game_code(app);
+
             VortexProject::take_snapshot(SnapshotState::LOAD, app, m_new_project_name);
 
             app->set_state(EngineState::EDITOR);
+
+            VortexCompiler::trigger_compile();
 
             selected_project = true;
         }
@@ -256,11 +264,18 @@ void VortexGUI::draw_project_hub()
                 show_overwrite_error = false;
 
                 VortexObjectManager::clear_scene();
+                VortexAssetManager::clean_up();
+
                 VortexGUI::explicit_empty_folders = {"Scene"};
+
+                ScriptRegistry::get().clear();
+                VortexCompiler::init_game_code(app);
 
                 VortexProject::take_snapshot(SnapshotState::SAVE, app, m_new_project_name);
 
                 app->set_state(EngineState::EDITOR);
+
+                VortexCompiler::trigger_compile();
 
                 selected_project = true;
             }

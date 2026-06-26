@@ -29,19 +29,19 @@ char VortexGUI::m_new_project_name[128] = "";
 char VortexGUI::m_project_to_delete[128] = "";
 char VortexGUI::preferred_ide_path[256] = "";
 
-bool VortexGUI::show_inspector;
-bool VortexGUI::show_camera_info;
-bool VortexGUI::show_creator_window;
-bool VortexGUI::show_engine_stats;
-bool VortexGUI::show_terminal;
-bool VortexGUI::show_skybox_post_process_options;
-bool VortexGUI::show_scene_viewport;
-bool VortexGUI::show_render_scene_viewport;
-bool VortexGUI::show_stack_history_window;
-bool VortexGUI::show_asset_browser;
-bool VortexGUI::show_settings_window;
-bool VortexGUI::show_file_viewer;
-bool VortexGUI::show_image_viewer;
+bool VortexGUI::show_inspector = true;
+bool VortexGUI::show_camera_info = false;
+bool VortexGUI::show_creator_window = true;
+bool VortexGUI::show_engine_stats = false;
+bool VortexGUI::show_terminal = false;
+bool VortexGUI::show_skybox_post_process_options = true;
+bool VortexGUI::show_scene_viewport = true;
+bool VortexGUI::show_render_scene_viewport = false;
+bool VortexGUI::show_stack_history_window = false;
+bool VortexGUI::show_asset_browser = true;
+bool VortexGUI::show_settings_window = false;
+bool VortexGUI::show_file_viewer = false;
+bool VortexGUI::show_image_viewer = false;
 
 std::unordered_map<std::string, UIImageData> VortexGUI::image_thumbnail_cache;
 std::string VortexGUI::active_image_path = "";
@@ -190,6 +190,11 @@ void VortexGUI::init(VortexApplication *_app, int width, int height)
     file_mtl_icon_tex = load_editor_icon("assets/images/icons/file_mtl.png");
     file_obj_icon_tex = load_editor_icon("assets/images/icons/file_obj.png");
     file_txt_icon_tex = load_editor_icon("assets/images/icons/file_txt.png");
+
+    const GLubyte *vendor_ptr = glGetString(GL_VENDOR);
+    const GLubyte *renderer_ptr = glGetString(GL_RENDERER);
+    _vendor_ = vendor_ptr ? reinterpret_cast<const char*>(vendor_ptr) : "Unknown Vendor";
+    _renderer_  = renderer_ptr ? reinterpret_cast<const char*>(renderer_ptr) : "Unknown Renderer";
 }
 
 void VortexGUI::update()
@@ -360,11 +365,6 @@ void VortexGUI::init_play_mode()
         if (model) model->is_selected = false;
     }
     VortexObjectManager::selected_models.clear();
-
-    const GLubyte *vendor_ptr = glGetString(GL_VENDOR);
-    const GLubyte *renderer_ptr = glGetString(GL_RENDERER);
-    _vendor_ = vendor_ptr ? reinterpret_cast<const char*>(vendor_ptr) : "Unknown Vendor";
-    _renderer_  = renderer_ptr ? reinterpret_cast<const char*>(renderer_ptr) : "Unknown Renderer";
 }
 
 void VortexGUI::clean_up()

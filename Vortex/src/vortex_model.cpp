@@ -41,7 +41,7 @@ void VortexModel::bind_lights_to_shader(VortexShader* shader, bool use_scene_lig
     else
     {
         l_positions[0] = glm::vec3(10.0f, 50.0f, 20.0f);
-        l_colors[0] = glm::vec3(1.0f);
+        l_colors[0] = glm::vec3(0.5f);
         l_ambients[0] = 0.5f;
 
         light_count = 1;

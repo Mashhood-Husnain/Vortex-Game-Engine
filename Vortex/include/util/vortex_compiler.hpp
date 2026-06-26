@@ -29,6 +29,8 @@ class VortexCompiler
     static CompilerState compiler_state;
     static GameMemory game_memory;
     static GameCode *game_code;
+
+    static bool initialized;
 public:
     static void trigger_compile();
     static void check_for_hot_reload(VortexApplication *app);

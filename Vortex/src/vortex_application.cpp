@@ -478,8 +478,6 @@ void VortexApplication::mouse_callback(GLFWwindow* window, double xposIn, double
 
 void VortexApplication::run(std::function<void()> draw_callback)
 {
-    VortexCompiler::init_game_code(this);
-
     VORTEX_INFO("VORTEX ENGINE RUNNING ON:");
     VORTEX_INFO("VENDOR:   ", VortexGUI::_vendor_);
     VORTEX_INFO("RENDERER: ", VortexGUI::_renderer_);
@@ -493,7 +491,6 @@ void VortexApplication::run(std::function<void()> draw_callback)
     while(!glfwWindowShouldClose(window))
     {
         VortexCompiler::check_for_hot_reload(this);
-        if (current_state != EngineState::PROJECT_HUB) VortexCompiler::update(this);
 
         glfwPollEvents();
         check_key_press();
@@ -521,6 +518,8 @@ void VortexApplication::run(std::function<void()> draw_callback)
         }
         else
         {
+            if (current_state != EngineState::PROJECT_HUB) VortexCompiler::update(this);
+
             if (!show_mouse_cursor && current_state == EngineState::EDITOR &&
                 (
                     (VortexGUI::is_scene_view_visible && VortexGUI::show_scene_viewport) ||

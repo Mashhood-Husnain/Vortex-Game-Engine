@@ -4,15 +4,17 @@ CompilerState VortexCompiler::compiler_state;
 GameMemory VortexCompiler::game_memory;
 GameCode *VortexCompiler::game_code = nullptr;
 
+bool VortexCompiler::initialized = false;
+
 std::string VortexCompiler::status_text()
 {
-    std::lock_guard lock(compiler_state.status_mutex);
+    std::lock_guard<std::mutex> lock(compiler_state.status_mutex);
     return compiler_state.status_text;
 }
 
 void VortexCompiler::set_status_mutex(const std::string &status_text)
 {
-    std::lock_guard lock(compiler_state.status_mutex);
+    std::lock_guard<std::mutex> lock(compiler_state.status_mutex);
     compiler_state.status_text = status_text;
 }
 
@@ -38,6 +40,8 @@ void VortexCompiler::clean_up()
 
 void VortexCompiler::init_game_code(VortexApplication *app)
 {
+    if (initialized) return;
+
     game_memory = {};
     game_memory.is_initialized = false;
     game_memory.registry_context = &ScriptRegistry::get();
@@ -55,6 +59,8 @@ void VortexCompiler::init_game_code(VortexApplication *app)
     {
         game_code->Init(&game_memory, app);
     }
+
+    initialized = true;
 }
 
 void VortexCompiler::update(VortexApplication *app)
@@ -67,6 +73,7 @@ void VortexCompiler::update(VortexApplication *app)
 
 void VortexCompiler::check_for_hot_reload(VortexApplication *app)
 {
+    if (!initialized) return;
     if (!game_code || !game_code->need_reload()) return;
 
     VORTEX_INFO("[ENGINE] Recompilation detected! Preparing hot reload...");
@@ -154,10 +161,7 @@ void VortexCompiler::trigger_compile()
     compiler_state.progress.store(0.0f);
     compiler_state.is_compiling.store(true);
 
-    {
-        std::lock_guard<std::mutex> lock(compiler_state.status_mutex);
-        compiler_state.status_text = "Starting CMake Build...";
-    }
+    set_status_mutex("Starting CMake Build...");
 
     std::string project_script_dir = vortex_generatepath(
         VortexProject::SAVE_DIRECTORY,
@@ -192,10 +196,7 @@ void VortexCompiler::trigger_compile()
                 std::string line = buffer;
                 if (!line.empty() && line.back() == '\n') line.pop_back();
 
-                {
-                    std::lock_guard<std::mutex> lock(compiler_state.status_mutex);
-                    compiler_state.status_text = line;
-                }
+                set_status_mutex(line);
 
                 size_t bracket_open = line.find('[');
                 size_t percent_sign = line.find('%');
@@ -214,10 +215,7 @@ void VortexCompiler::trigger_compile()
 
         compiler_state.progress.store(1.0f);
 
-        {
-            std::lock_guard<std::mutex> lock(compiler_state.status_mutex);
-            compiler_state.status_text = "Build Complete! Triggering Hot Reload...";
-        }
+        set_status_mutex("Build Complete! Triggering Hot Reload...");
 
         std::this_thread::sleep_for(std::chrono::milliseconds(500));
         compiler_state.is_compiling.store(false);
