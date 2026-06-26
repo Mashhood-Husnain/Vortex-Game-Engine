@@ -12,6 +12,7 @@ VortexShader *VortexObjectManager::decal_shader = nullptr;
 std::vector<VortexModel*> VortexObjectManager::active_models;
 std::vector<VortexModel*> VortexObjectManager::pending_models;
 std::vector<ParticleSystem*> VortexObjectManager::active_particlesystems;
+std::set<VortexModel*> VortexObjectManager::selected_models;
 
 void setup_occlusion_cube()
 {
@@ -160,6 +161,46 @@ void VortexObjectManager::update_particles()
     {
         ps->update();
     }
+}
+
+void VortexObjectManager::duplicate_selected_models()
+{
+    std::vector<VortexModel*> newly_cloned_models;
+
+    for (VortexModel *current_model : selected_models)
+    {
+        VortexModel *cloned_model = current_model->clone();
+        VortexObjectManager::active_models.push_back(cloned_model);
+
+        newly_cloned_models.push_back(cloned_model);
+
+        current_model->is_selected = false;
+
+        ActionManager::push_action(new ActionCreate(cloned_model));
+    }
+
+    selected_models.clear();
+
+    for (VortexModel * clone : newly_cloned_models)
+    {
+        clone->is_selected = true;
+        selected_models.insert(clone);
+    }
+}
+
+void VortexObjectManager::delete_selected_models()
+{
+    for (VortexModel *model : VortexObjectManager::selected_models)
+    {
+        model->is_selected = false;
+
+        ActionDelete *delete_command = new ActionDelete(model);
+        delete_command->redo();
+
+        ActionManager::push_action(delete_command);
+    }
+
+    VortexObjectManager::selected_models.clear();
 }
 
 void VortexObjectManager::draw(VortexCamera &camera, bool show_wireframe, bool is_render_pass)
@@ -436,7 +477,9 @@ void VortexObjectManager::clear_scene()
     }
     active_particlesystems.clear();
 
+    selected_models.clear();
+
     VortexAssetManager::clean_up();
 }
 
-VortexShader *VortexObjectManager::get_decal_shader() {return decal_shader;}
+VortexShader *VortexObjectManager::get_decal_shader() { return decal_shader; }

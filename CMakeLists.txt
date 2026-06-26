@@ -140,6 +140,7 @@ add_executable(engine
     Vortex/src/util/vortex_save_load.cpp
     Vortex/src/util/vortex_save_load_encryption.cpp
     Vortex/src/util/vortex_nvml.cpp
+    Vortex/src/util/vortex_compiler.cpp
 )
 
 # ----------------------------

@@ -97,9 +97,9 @@ void VortexGUI::scene_inspector()
             {
                 VortexModel* dragged_model = *(VortexModel**)payload->Data;
 
-                if (m_selected_models.find(dragged_model) != m_selected_models.end())
+                if (VortexObjectManager::selected_models.find(dragged_model) != VortexObjectManager::selected_models.end())
                 {
-                    for (VortexModel* m : m_selected_models) m->folder = current_path;
+                    for (VortexModel* m : VortexObjectManager::selected_models) m->folder = current_path;
                 }
                 else
                 {
@@ -152,7 +152,7 @@ void VortexGUI::inspect_model(VortexModel* model)
     ImGuiTreeNodeFlags sub_header_flags = ImGuiTreeNodeFlags_Framed | ImGuiTreeNodeFlags_NoTreePushOnOpen;
 
     std::string header_id = model->model_name + "###" + std::to_string((uintptr_t)model);
-    bool is_currently_selected = (m_selected_models.find(model) != m_selected_models.end());
+    bool is_currently_selected = (VortexObjectManager::selected_models.find(model) != VortexObjectManager::selected_models.end());
 
     bool is_header_open = VortexGuiHelpers::DrawHeader(header_id.c_str(), is_currently_selected);
 
@@ -160,28 +160,36 @@ void VortexGUI::inspect_model(VortexModel* model)
     {
         if (ImGui::GetIO().KeyCtrl)
         {
-            if (is_currently_selected) { m_selected_models.erase(model); model->is_selected = false; }
-            else { m_selected_models.insert(model); model->is_selected = true; }
+            if (is_currently_selected)
+            {
+                VortexObjectManager::selected_models.erase(model);
+                model->is_selected = false;
+            }
+            else
+            {
+                VortexObjectManager::selected_models.insert(model);
+                model->is_selected = true;
+            }
         }
         else if(!is_currently_selected)
         {
-            for (VortexModel* m : m_selected_models) m->is_selected = false;
-            m_selected_models.clear();
-            m_selected_models.insert(model);
+            for (VortexModel* m : VortexObjectManager::selected_models) m->is_selected = false;
+            VortexObjectManager::selected_models.clear();
+            VortexObjectManager::selected_models.insert(model);
             model->is_selected = true;
         }
     }
 
     if (ImGui::IsItemHovered() && ImGui::IsMouseReleased(ImGuiMouseButton_Left) && !ImGui::GetIO().KeyCtrl)
     {
-        if (is_currently_selected && m_selected_models.size() > 1)
+        if (is_currently_selected && VortexObjectManager::selected_models.size() > 1)
         {
             ImVec2 drag_delta = ImGui::GetMouseDragDelta(ImGuiMouseButton_Left);
             if (drag_delta.x == 0.0f && drag_delta.y == 0.0f)
             {
-                for (VortexModel* m : m_selected_models) m->is_selected = false;
-                m_selected_models.clear();
-                m_selected_models.insert(model);
+                for (VortexModel* m : VortexObjectManager::selected_models) m->is_selected = false;
+                VortexObjectManager::selected_models.clear();
+                VortexObjectManager::selected_models.insert(model);
                 model->is_selected = true;
             }
         }
@@ -190,7 +198,7 @@ void VortexGUI::inspect_model(VortexModel* model)
     if (ImGui::BeginDragDropSource(ImGuiDragDropFlags_SourceAllowNullID))
     {
         ImGui::SetDragDropPayload("MODEL_NODE", &model, sizeof(VortexModel*));
-        if (m_selected_models.size() > 1 && is_currently_selected) ImGui::Text("Moving %zu selected items...", m_selected_models.size());
+        if (VortexObjectManager::selected_models.size() > 1 && is_currently_selected) ImGui::Text("Moving %zu selected items...", VortexObjectManager::selected_models.size());
         else ImGui::Text("Moving: %s", model->model_name.c_str());
         ImGui::EndDragDropSource();
     }
@@ -629,11 +637,11 @@ void VortexGUI::draw_model_actions(VortexModel* model)
 
         VortexObjectManager::active_models.push_back(cloned_model);
 
-        for (auto* m : m_selected_models) m->is_selected = false;
-        m_selected_models.clear();
+        for (auto* m : VortexObjectManager::selected_models) m->is_selected = false;
+        VortexObjectManager::selected_models.clear();
 
         cloned_model->is_selected = true;
-        m_selected_models.insert(cloned_model);
+        VortexObjectManager::selected_models.insert(cloned_model);
     }
 
     ImGui::Spacing();
@@ -641,7 +649,7 @@ void VortexGUI::draw_model_actions(VortexModel* model)
     if (VortexGuiHelpers::DrawDangerButton("Delete Model", ImVec2(-1, 32)))
     {
         model->is_selected = false;
-        m_selected_models.erase(model);
+        VortexObjectManager::selected_models.erase(model);
 
         ActionDelete *delete_command = new ActionDelete(model);
         delete_command->redo();

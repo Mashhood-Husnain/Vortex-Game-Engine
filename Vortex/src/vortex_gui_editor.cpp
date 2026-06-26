@@ -73,10 +73,18 @@ void VortexGUI::draw_editor_viewport(VortexCamera* camera)
 
         ImGuizmo::BeginFrame();
 
-        if (!m_selected_models.empty())
+        if (!VortexObjectManager::selected_models.empty())
         {
-            VortexModel *anchor = *m_selected_models.begin();
-            if (!anchor) { m_selected_models.clear(); ImGui::End(); ImGui::PopStyleVar(); return; }
+            VortexModel *anchor = *VortexObjectManager::selected_models.begin();
+            if (!anchor)
+            {
+                VortexObjectManager::selected_models.clear();
+
+                ImGui::End();
+                ImGui::PopStyleVar();
+
+                return;
+            }
 
             if (g_active_decal_for_gizmo)
             {
@@ -262,7 +270,7 @@ void VortexGUI::draw_editor_viewport(VortexCamera* camera)
                 {
                     glm::mat4 delta_matrix = gizmo_matrix * glm::inverse(anchor_old_matrix);
 
-                    for (VortexModel* model : m_selected_models)
+                    for (VortexModel* model : VortexObjectManager::selected_models)
                     {
                         if (!model) continue;
 
@@ -345,27 +353,27 @@ void VortexGUI::handle_picking(VortexCamera* camera, ImVec2 image_pos)
 
             if (hit.has_hit)
             {
-                if (!ImGui::GetIO().KeyCtrl && m_selected_models.find(hit.hit_model) == m_selected_models.end()) g_active_decal_for_gizmo = nullptr;
+                if (!ImGui::GetIO().KeyCtrl && VortexObjectManager::selected_models.find(hit.hit_model) == VortexObjectManager::selected_models.end()) g_active_decal_for_gizmo = nullptr;
 
                 if (ImGui::GetIO().KeyCtrl)
                 {
-                    if (m_selected_models.find(hit.hit_model) != m_selected_models.end())
+                    if (VortexObjectManager::selected_models.find(hit.hit_model) != VortexObjectManager::selected_models.end())
                     {
-                        m_selected_models.erase(hit.hit_model);
+                        VortexObjectManager::selected_models.erase(hit.hit_model);
                         hit.hit_model->is_selected = false;
                     }
                     else
                     {
-                        m_selected_models.insert(hit.hit_model);
+                        VortexObjectManager::selected_models.insert(hit.hit_model);
                         hit.hit_model->is_selected = true;
                     }
                 }
                 else
                 {
-                    for (VortexModel* m : m_selected_models) m->is_selected = false;
-                    m_selected_models.clear();
+                    for (VortexModel* m : VortexObjectManager::selected_models) m->is_selected = false;
+                    VortexObjectManager::selected_models.clear();
 
-                    m_selected_models.insert(hit.hit_model);
+                    VortexObjectManager::selected_models.insert(hit.hit_model);
                     hit.hit_model->is_selected = true;
                 }
             }
@@ -373,8 +381,8 @@ void VortexGUI::handle_picking(VortexCamera* camera, ImVec2 image_pos)
             {
                 if (!ImGui::GetIO().KeyCtrl)
                 {
-                    for (VortexModel* m : m_selected_models) m->is_selected = false;
-                    m_selected_models.clear();
+                    for (VortexModel* m : VortexObjectManager::selected_models) m->is_selected = false;
+                    VortexObjectManager::selected_models.clear();
                 }
             }
         }
@@ -383,7 +391,7 @@ void VortexGUI::handle_picking(VortexCamera* camera, ImVec2 image_pos)
 
 void VortexGUI::snap_to_floor()
 {
-    for (VortexModel* model : m_selected_models)
+    for (VortexModel* model : VortexObjectManager::selected_models)
     {
         auto& objects = model->get_objects();
         if (objects.empty()) continue;

@@ -10,6 +10,7 @@
 
 #include <string>
 #include <algorithm>
+#include <set>
 
 static GLuint occlusion_VAO = 0;
 static GLuint occlusion_VBO = 0;
@@ -31,6 +32,7 @@ public:
     static std::vector<VortexModel*> active_models;
     static std::vector<VortexModel*> pending_models;
     static std::vector<ParticleSystem*> active_particlesystems;
+    static std::set<VortexModel*> selected_models;
 
     static void init();
 
@@ -40,6 +42,8 @@ public:
     static void clean_scripts();
     static void update_physics();
     static void update_particles();
+    static void delete_selected_models();
+    static void duplicate_selected_models();
     static void draw(VortexCamera &camera, bool show_wireframe, bool is_render_pass);
     static void check_object_status();
 

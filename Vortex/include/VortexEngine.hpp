@@ -13,10 +13,10 @@
 #include "vortex_camera.hpp"
 #include "vortex_debugrenderer.hpp"
 
-#include "util/vortex_global_vars.hpp"
-#include "util/vortex_script_registry.hpp"
-#include "util/vortex_game_api.hpp"
-#include "util/vortex_game_reloader.hpp"
+#include "vortex_global_vars.hpp"
+#include "vortex_script_registry.hpp"
+#include "vortex_game_api.hpp"
+#include "vortex_game_reloader.hpp"
 
 #include <iostream>
 #include <glm/glm.hpp>

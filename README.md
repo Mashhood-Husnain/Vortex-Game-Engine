@@ -135,6 +135,7 @@ When you launch the engine, you will start in Editor Mode attached to the defaul
 | **TAB** | Toggle Engine Stats view in Play Mode (this binding only works in Play Mode)|
 | **LEFT CTRL + Mouse Drag** | Snap selected model to grid |
 | **LEFT CTRL + F** | Toggle File viewer |
+| **LEFT CTRL + B** | Toggle Image viewer |
 | **LEFT CTRL + P** | Toggle Engine Terminal |
 | **LEFT CTRL + I** | Toggle Scene Inspector |
 | **LEFT CTRL + X** | Toggle Camera Info |

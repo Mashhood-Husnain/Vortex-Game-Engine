@@ -75,7 +75,7 @@ void VortexGUI::draw_main_menu_bar()
 
             if (ImGui::MenuItem("Compile", "Ctrl+C"))
             {
-                app->trigger_compile();
+                VortexCompiler::trigger_compile();
             }
             ImGui::EndMenu();
         }
@@ -190,7 +190,6 @@ void VortexGUI::draw_project_hub()
             vortex_strncpy(m_new_project_name, sizeof(m_new_project_name), project_name.c_str());
 
             VortexObjectManager::clear_scene();
-            VortexGUI::m_selected_models.clear();
             ActionManager::clear_stack_history();
 
             VortexGUI::explicit_empty_folders = {"Scene"};
@@ -257,7 +256,6 @@ void VortexGUI::draw_project_hub()
                 show_overwrite_error = false;
 
                 VortexObjectManager::clear_scene();
-                VortexGUI::m_selected_models.clear();
                 VortexGUI::explicit_empty_folders = {"Scene"};
 
                 VortexProject::take_snapshot(SnapshotState::SAVE, app, m_new_project_name);

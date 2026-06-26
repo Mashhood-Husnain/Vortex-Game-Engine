@@ -38,13 +38,11 @@
 #include "vortex_debugrenderer.hpp"
 #include "vortex_actions.hpp"
 
-#include "util/vortex_global_vars.hpp"
-#include "util/vortex_save_load.hpp"
-#include "util/vortex_logs.hpp"
-#include "util/vortex_game_api.hpp"
-#include "util/vortex_game_reloader.hpp"
-#include "util/vortex_script_registry.hpp"
-#include "util/vortex_util.hpp"
+#include "vortex_global_vars.hpp"
+#include "vortex_save_load.hpp"
+#include "vortex_logs.hpp"
+#include "vortex_util.hpp"
+#include "vortex_compiler.hpp"
 
 class VortexSkybox;
 class VortexGrid;
@@ -101,9 +99,6 @@ private:
     unsigned int world_axisVAO;
     unsigned int world_axisVBO;
 
-    GameMemory game_memory;
-    GameCode *game_code = nullptr;
-
     GLFWcursor *m_invisible_cursor = nullptr;
 
     float raw_render_time = 0.0f;
@@ -116,8 +111,6 @@ private:
     void setup_world_axis_buffers();
     void load_splash_screen();
     void draw_splash_overlay();
-    void init_game_code();
-    void check_for_hot_reload();
 public:
     VortexApplication(std::string window_name);
     ~VortexApplication();
@@ -135,7 +128,6 @@ public:
 
     void enter_play_mode();
     void exit_play_mode();
-    void trigger_compile();
 
     GLFWwindow* get_window_ptr() const;
     float get_width() const;

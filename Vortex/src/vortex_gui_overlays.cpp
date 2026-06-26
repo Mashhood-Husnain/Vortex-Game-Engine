@@ -208,7 +208,7 @@ void VortexGUI::camera_info(VortexCamera *camera)
 
 void VortexGUI::draw_compiler_modal()
 {
-    if (CompilerState::is_compiling.load())
+    if (VortexCompiler::is_compiling())
     {
         if (!ImGui::IsPopupOpen("Compiling Scripts"))
         {
@@ -226,19 +226,18 @@ void VortexGUI::draw_compiler_modal()
         ImGui::Text("Compiling Game Code...");
         ImGui::Spacing();
 
-        float progress = CompilerState::progress.load();
+        float progress = VortexCompiler::progress();
         ImGui::ProgressBar(progress, ImVec2(400, 24));
 
         ImGui::Spacing();
 
         {
-            std::lock_guard<std::mutex> lock(CompilerState::status_mutex);
-            std::string display_text = CompilerState::status_text;
+            std::string display_text = VortexCompiler::status_text();
             if (display_text.length() > 60) display_text = display_text.substr(0, 57) + "...";
             ImGui::TextDisabled("%s", display_text.c_str());
         }
 
-        if (!CompilerState::is_compiling.load())
+        if (!VortexCompiler::is_compiling())
         {
             ImGui::CloseCurrentPopup();
         }

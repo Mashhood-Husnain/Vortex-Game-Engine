@@ -59,8 +59,6 @@ bool VortexGUI::show_rename_modal = false;
 char VortexGUI::item_to_rename_old_path[512] = "";
 char VortexGUI::item_to_rename_new_name[256] = "";
 
-std::set<VortexModel*> VortexGUI::m_selected_models = {nullptr};
-
 std::vector<std::string> VortexGUI::explicit_empty_folders = {"Scene"};
 
 std::string VortexGUI::_vendor_ = "";
@@ -357,18 +355,22 @@ void VortexGUI::init_play_mode()
         render_scene_fbo_initialized = true;
     }
 
-    for (VortexModel* model : m_selected_models)
+    for (VortexModel* model : VortexObjectManager::selected_models)
     {
         if (model) model->is_selected = false;
     }
-    m_selected_models.clear();
+    VortexObjectManager::selected_models.clear();
+
+    const GLubyte *vendor_ptr = glGetString(GL_VENDOR);
+    const GLubyte *renderer_ptr = glGetString(GL_RENDERER);
+    _vendor_ = vendor_ptr ? reinterpret_cast<const char*>(vendor_ptr) : "Unknown Vendor";
+    _renderer_  = renderer_ptr ? reinterpret_cast<const char*>(renderer_ptr) : "Unknown Renderer";
 }
 
 void VortexGUI::clean_up()
 {
     VORTEX_INFO("[GUI] Cleaning up UI subsystem resources...");
 
-    m_selected_models.clear();
     m_processed_models.clear();
     m_processed_ps.clear();
 

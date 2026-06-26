@@ -131,46 +131,6 @@ void VortexApplication::window_close_callback(GLFWwindow* window)
     }
 }
 
-void duplicate_models()
-{
-    std::vector<VortexModel*> newly_cloned_models;
-
-    for (VortexModel *current_model : VortexGUI::m_selected_models)
-    {
-        VortexModel *cloned_model = current_model->clone();
-        VortexObjectManager::active_models.push_back(cloned_model);
-
-        newly_cloned_models.push_back(cloned_model);
-
-        current_model->is_selected = false;
-
-        ActionManager::push_action(new ActionCreate(cloned_model));
-    }
-
-    VortexGUI::m_selected_models.clear();
-
-    for (VortexModel * clone : newly_cloned_models)
-    {
-        clone->is_selected = true;
-        VortexGUI::m_selected_models.insert(clone);
-    }
-}
-
-void delete_models()
-{
-    for (VortexModel *model : VortexGUI::m_selected_models)
-    {
-        model->is_selected = false;
-
-        ActionDelete *delete_command = new ActionDelete(model);
-        delete_command->redo();
-
-        ActionManager::push_action(delete_command);
-    }
-
-    VortexGUI::m_selected_models.clear();
-}
-
 void VortexApplication::check_key_press()
 {
     if (is_playing_splash) return;
@@ -184,7 +144,7 @@ void VortexApplication::check_key_press()
 
     if (current_state == EngineState::EDITOR)
     {
-        if (VortexKeyboard::get_key_down("DELETE") && !VortexGUI::m_selected_models.empty()) delete_models();
+        if (VortexKeyboard::get_key_down("DELETE") && !VortexObjectManager::selected_models.empty()) VortexObjectManager::delete_selected_models();
 
         if (VortexKeyboard::get_key("LEFTCONTROL"))
         {
@@ -221,8 +181,8 @@ void VortexApplication::check_key_press()
             if (VortexKeyboard::get_key_down("F")) VortexGUI::show_file_viewer = !VortexGUI::show_file_viewer;
             if (VortexKeyboard::get_key_down("B")) VortexGUI::show_image_viewer = !VortexGUI::show_image_viewer;
 
-            if (VortexKeyboard::get_key_down("C")) trigger_compile();
-            if (VortexKeyboard::get_key_down("D")) duplicate_models();
+            if (VortexKeyboard::get_key_down("C")) VortexCompiler::trigger_compile();
+            if (VortexKeyboard::get_key_down("D")) VortexObjectManager::duplicate_selected_models();
         }
         else
         {
@@ -401,13 +361,7 @@ VortexApplication::~VortexApplication()
     VortexDebugRenderer::get().clean_up();
     VortexGUI::clean_up();
     VortexProject::clean_playmode_backups();
-
-    if (game_code)
-    {
-        game_code->unload();
-        delete game_code;
-        game_code = nullptr;
-    }
+    VortexCompiler::clean_up();
 
     worldaxis_shader = nullptr;
     // shadow_manager = nullptr;
@@ -524,17 +478,11 @@ void VortexApplication::mouse_callback(GLFWwindow* window, double xposIn, double
 
 void VortexApplication::run(std::function<void()> draw_callback)
 {
-    init_game_code();
+    VortexCompiler::init_game_code(this);
 
     VORTEX_INFO("VORTEX ENGINE RUNNING ON:");
-    VORTEX_INFO("VENDOR:   ", glGetString(GL_VENDOR));
-    VORTEX_INFO("RENDERER: ", glGetString(GL_RENDERER));
-
-    const GLubyte *vendor_ptr = glGetString(GL_VENDOR);
-    const GLubyte *renderer_ptr = glGetString(GL_RENDERER);
-
-    VortexGUI::_vendor_ = vendor_ptr ? reinterpret_cast<const char*>(vendor_ptr) : "Unknown Vendor";
-    VortexGUI::_renderer_  = renderer_ptr ? reinterpret_cast<const char*>(renderer_ptr) : "Unknown Renderer";
+    VORTEX_INFO("VENDOR:   ", VortexGUI::_vendor_);
+    VORTEX_INFO("RENDERER: ", VortexGUI::_renderer_);
 
     glfwShowWindow(window);
 
@@ -544,12 +492,8 @@ void VortexApplication::run(std::function<void()> draw_callback)
 
     while(!glfwWindowShouldClose(window))
     {
-        check_for_hot_reload();
-
-        if (game_code->is_valid && current_state != EngineState::PROJECT_HUB)
-        {
-            game_code->Update(&game_memory, this);
-        }
+        VortexCompiler::check_for_hot_reload(this);
+        if (current_state != EngineState::PROJECT_HUB) VortexCompiler::update(this);
 
         glfwPollEvents();
         check_key_press();
@@ -836,109 +780,6 @@ void VortexApplication::show_mouse(bool status)
     }
 }
 
-void VortexApplication::init_game_code()
-{
-    game_memory = {};
-    game_memory.is_initialized = false;
-    game_memory.registry_context = &ScriptRegistry::get();
-
-    #ifdef _WIN32
-        std::string game_code_name = "VortexGame.dll";
-    #else
-        std::string game_code_name = "./libVortexGame.so";
-    #endif
-
-    game_code = new GameCode(game_code_name);
-    game_code->load();
-
-    if (game_code->is_valid && !game_memory.is_initialized)
-    {
-        game_code->Init(&game_memory, this);
-    }
-}
-
-void VortexApplication::check_for_hot_reload()
-{
-    if (!game_code || !game_code->need_reload()) return;
-
-    VORTEX_INFO("[ENGINE] Recompilation detected! Preparing hot reload...");
-    std::error_code ec;
-
-    #ifdef _WIN32
-        std::string game_code_name = "VortexGame.dll";
-        std::string test_temp_path = "VortexGame_test.dll";
-    #else
-        std::string game_code_name = "./libVortexGame.so";
-        std::string test_temp_path = "./libVortexGame_test.so";
-    #endif
-
-    std::filesystem::copy_file(game_code_name, test_temp_path, std::filesystem::copy_options::overwrite_existing, ec);
-
-    int retries = 0;
-    while (retries < 10)
-    {
-        std::filesystem::copy_file(game_code_name, test_temp_path, std::filesystem::copy_options::overwrite_existing, ec);
-        if (!ec) break;
-        std::this_thread::sleep_for(std::chrono::milliseconds(100));
-        retries++;
-    }
-
-    if (ec)
-    {
-        VORTEX_WARN("[ENGINE] Compiler is still writing. Waiting...");
-        return;
-    }
-    std::filesystem::remove(test_temp_path, ec);
-
-    for (VortexModel* model : VortexObjectManager::active_models)
-    {
-        for (VortexMonoBehaviour* script : model->behaviours)
-        {
-            delete script;
-        }
-        model->behaviours.clear();
-    }
-
-    ScriptRegistry::get().clear();
-
-    game_code->unload();
-    game_code->load();
-
-    if (game_code->is_valid)
-    {
-        game_code->Init(&game_memory, this);
-
-        for (VortexModel* model : VortexObjectManager::active_models)
-        {
-            std::vector<VortexMonoBehaviour*> restored_behaviours;
-            std::vector<std::string> restored_names;
-
-            for (const std::string& script_name : model->script_names)
-            {
-                VortexMonoBehaviour* fresh_script = ScriptRegistry::get().create(script_name);
-
-                if (fresh_script)
-                {
-                    fresh_script->vortexGameObject = model;
-                    fresh_script->vortexEngine = this;
-                    fresh_script->vortexTransform = &model->transform;
-
-                    restored_behaviours.push_back(fresh_script);
-                    restored_names.push_back(script_name);
-                }
-                else
-                {
-                    VORTEX_WARN("[ENGINE] Script '", script_name, "' is missing from the DLL. Removing from model.");
-                }
-            }
-
-            model->behaviours = restored_behaviours;
-            model->script_names = restored_names;
-        }
-        VORTEX_INFO("[ENGINE] Hot Reload Complete! All pointers safely restored.");
-    }
-}
-
 void VortexApplication::enter_play_mode()
 {
     if (current_state == EngineState::PLAY) return;
@@ -971,88 +812,9 @@ void VortexApplication::exit_play_mode()
     VortexUIManager::cleanup();
 
     VortexObjectManager::clear_scene();
-    VortexGUI::m_selected_models.clear();
 
     std::string project_name = VortexGUI::m_new_project_name;
     VortexProject::take_snapshot(SnapshotState::LOAD, this, "temp_playmode_backup_" + project_name);
-}
-
-void VortexApplication::trigger_compile()
-{
-    if (CompilerState::is_compiling.load()) return;
-
-    CompilerState::progress.store(0.0f);
-    CompilerState::is_compiling.store(true);
-
-    {
-        std::lock_guard<std::mutex> lock(CompilerState::status_mutex);
-        CompilerState::status_text = "Starting CMake Build...";
-    }
-
-    std::string project_script_dir = vortex_generatepath(
-        VortexProject::SAVE_DIRECTORY,
-        VortexGUI::m_new_project_name,
-        VortexProject::ASSET_DIR_SCRIPTS
-    );
-
-    std::string absolute_script_dir = std::filesystem::absolute(project_script_dir).string();
-
-    std::thread([absolute_script_dir]()
-    {
-        #ifdef _WIN32
-            #define POPEN _popen
-            #define PCLOSE _pclose
-        #else
-            #define POPEN popen
-            #define PCLOSE pclose
-        #endif
-
-        std::string safe_path = absolute_script_dir;
-        std::replace(safe_path.begin(), safe_path.end(), '\\', '/');
-
-        std::string compile_cmd = "cmake -DPROJECT_DIR=\"" + safe_path + "\" .. && make VortexGame 2>&1";
-
-        FILE* pipe = POPEN(compile_cmd.c_str(), "r");
-
-        if (pipe)
-        {
-            char buffer[256];
-            while (fgets(buffer, sizeof(buffer), pipe) != nullptr)
-            {
-                std::string line = buffer;
-                if (!line.empty() && line.back() == '\n') line.pop_back();
-
-                {
-                    std::lock_guard<std::mutex> lock(CompilerState::status_mutex);
-                    CompilerState::status_text = line;
-                }
-
-                size_t bracket_open = line.find('[');
-                size_t percent_sign = line.find('%');
-
-                if (bracket_open != std::string::npos && percent_sign != std::string::npos && percent_sign > bracket_open)
-                {
-                    std::string num_str = line.substr(bracket_open + 1, percent_sign - bracket_open - 1);
-                    try {
-                        float percent = std::stof(num_str) / 100.0f;
-                        CompilerState::progress.store(percent);
-                    } catch (...) {}
-                }
-            }
-            PCLOSE(pipe);
-        }
-
-        CompilerState::progress.store(1.0f);
-
-        {
-            std::lock_guard<std::mutex> lock(CompilerState::status_mutex);
-            CompilerState::status_text = "Build Complete! Triggering Hot Reload...";
-        }
-
-        std::this_thread::sleep_for(std::chrono::milliseconds(500));
-        CompilerState::is_compiling.store(false);
-
-    }).detach();
 }
 
 GLFWwindow* VortexApplication::get_window_ptr() const { return window; }

@@ -17,8 +17,6 @@
 #include <glm/gtc/type_ptr.hpp>
 #include <glm/gtx/matrix_decompose.hpp>
 #include <ImGuizmo.hpp>
-#include <mutex>
-#include <atomic>
 #include <cstdio>
 #include <sstream>
 #include <cctype>
@@ -29,6 +27,7 @@
 #include "vortex_logs.hpp"
 #include "vortex_util.hpp"
 #include "vortex_keyboard.hpp"
+#include "vortex_compiler.hpp"
 
 class VortexApplication;
 class VortexModel;
@@ -39,6 +38,7 @@ class ScriptRegistry;
 class VortexMonoBehaviour;
 class VortexEditor;
 class VortexDecal;
+class VortexCompiler;
 
 enum class SnapshotState;
 
@@ -47,14 +47,6 @@ struct UIImageData
     GLuint id = 0;
     int width = 0;
     int height = 0;
-};
-
-struct CompilerState
-{
-    inline static std::atomic<bool> is_compiling{false};
-    inline static std::atomic<float> progress{0.0f};
-    inline static std::mutex status_mutex;
-    inline static std::string status_text = "Initializing compiler...";
 };
 
 namespace VortexGuiHelpers
@@ -231,7 +223,6 @@ public:
     static bool pending_layout_load;
     static std::string pending_ini_data;
 
-    static std::set<VortexModel*> m_selected_models;
     static ImGuizmo::OPERATION m_current_op;
     static bool m_is_using_gizmo;
 
