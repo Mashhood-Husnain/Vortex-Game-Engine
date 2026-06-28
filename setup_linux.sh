@@ -28,10 +28,10 @@ CURRENT_DIR=$(pwd)
 
 echo "[Vortex Setup] Building Vortex Engine..."
 
-mkdir -p build
-cd build || exit
+mkdir -p build/linux
+cd build/linux || exit
 
-cmake -DCMAKE_BUILD_TYPE=Release ..
+cmake -DCMAKE_BUILD_TYPE=Release ../..
 make -j$(nproc)
 
 if [ ! -f "engine" ]; then
@@ -60,12 +60,12 @@ Version=1.0\n\
 Type=Application\n\
 Name=Vortex Engine\n\
 Comment=Custom C++ 3D Game Engine\n\
-Exec=env -C \"%s/Vortex\" \"%s/build/engine\"\n\
+Exec=env -C \"%s/Vortex\" \"%s/build/linux/engine\"\n\
 Icon=vortex_icon\n\
 Terminal=false\n\
 Categories=Development;3DGraphics;\n" "$CURRENT_DIR" "$CURRENT_DIR" > "$APPS_DIR/vortex-engine.desktop"
 
-chmod +x "$CURRENT_DIR/build/engine"
+chmod +x "$CURRENT_DIR/build/linux/engine"
 chmod +x "$APPS_DIR/vortex-engine.desktop"
 
 update-desktop-database "$APPS_DIR"

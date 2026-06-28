@@ -20,6 +20,10 @@
 #include <imgui_internal.h>
 #include <stb_image.h>
 
+#if defined(_WIN32) || defined(_WIN64)
+    #include <windows.h>
+#endif
+
 #include "vortex_camera.hpp"
 #include "vortex_shaders.hpp"
 // #include "vortex_shadowmanager.hpp"

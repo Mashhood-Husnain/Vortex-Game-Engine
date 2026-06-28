@@ -11,9 +11,12 @@
 #include <chrono>
 #include <ctime>
 
-#include <pwd.h>
-// #include <unistd.h>
-// #include <sys/types.h>
+#if defined(_WIN32) || defined(_WIN64)
+    #include <windows.h>
+    #include <ShlObj.h>
+#else
+    #include <pwd.h>
+#endif
 
 #include <json.hpp>
 

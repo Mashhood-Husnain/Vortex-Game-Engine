@@ -4,13 +4,28 @@
 std::string get_global_backup_directory()
 {
     std::string path;
-    const char *homedir;
 
-    if ((homedir = getenv("HOME")) == NULL) {
-        homedir = getpwuid(getuid())->pw_dir;
-    }
+    #if defined(_WIN32) || defined(_WIN64)
+        char path_buffer[MAX_PATH];
+        if (SUCCEEDED(SHGetFolderPathA(NULL, CSIDL_LOCAL_APPDATA, NULL, 0, path_buffer)))
+        {
+            path = std::string(path_buffer) + "\\VortexEngine\\backups";
+            std::replace(path.begin(), path.end(), '\\', '/');
+        }
+        else
+        {
+            path = "C:/VortexEngine/backups"; 
+        }
+    #else
+        const char *homedir;
 
-    path = std::string(homedir) + "/.local/share/VortexEngine/backups";
+        if ((homedir = getenv("HOME")) == NULL) {
+            homedir = getpwuid(getuid())->pw_dir;
+        }
+
+        path = std::string(homedir) + "/.local/share/VortexEngine/backups";
+    #endif
+
     return path;
 }
 

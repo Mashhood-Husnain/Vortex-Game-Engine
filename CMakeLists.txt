@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.10)
+cmake_minimum_required(VERSION 3.16) # Require 3.16+ for PCH (Precompiled Headers) support
 project(VortexEngine)
 
 set(CMAKE_CXX_STANDARD 20)
@@ -6,6 +6,24 @@ set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_WINDOWS_EXPORT_ALL_SYMBOLS ON)
 set(CMAKE_POSITION_INDEPENDENT_CODE ON)
+
+add_compile_definitions(IMGUI_IMPL_OPENGL_LOADER_GLAD)
+
+# ----------------------------
+# COMPILER CACHE (ccache)
+# ----------------------------
+find_program(CCACHE_PROGRAM ccache)
+if(CCACHE_PROGRAM)
+    message(STATUS "[VORTEX BUILD] ccache found: Enabling compiler cache")
+    set(CMAKE_CXX_COMPILER_LAUNCHER "${CCACHE_PROGRAM}")
+    set(CMAKE_C_COMPILER_LAUNCHER "${CCACHE_PROGRAM}")
+endif()
+
+# ----------------------------
+# UNITY BUILDS (Jumbo Builds)
+# ----------------------------
+set(CMAKE_UNITY_BUILD ON)
+set(CMAKE_UNITY_BUILD_BATCH_SIZE 16) # Groups 16 .cpp files into one compilation unit
 
 # ----------------------------
 # OS-Specific Definitions
@@ -46,6 +64,8 @@ add_subdirectory(vendor/glfw)
 # GLAD
 add_library(glad vendor/glad/src/glad.c)
 target_include_directories(glad PUBLIC vendor/glad/include)
+# Disable unity build for C dependencies to prevent cross-language compilation issues
+set_target_properties(glad PROPERTIES UNITY_BUILD OFF)
 
 # STB_IMAGE
 add_library(stb_image vendor/stbimage/stb_image.cpp)
@@ -61,6 +81,8 @@ add_library(imgui
     vendor/imgui/imgui_impl_opengl3.cpp
 )
 target_include_directories(imgui PUBLIC vendor/imgui vendor/glfw/include)
+target_compile_definitions(imgui PUBLIC IMGUI_IMPL_OPENGL_LOADER_GLAD)
+set_target_properties(imgui PROPERTIES UNITY_BUILD OFF)
 
 # ImGuizmo
 add_library(ImGuizmo vendor/ImGuizmo/ImGuizmo.cpp)
@@ -73,6 +95,7 @@ include_directories(vendor/nvml)
 # miniaudio
 add_library(miniaudio vendor/miniaudio/miniaudio.c)
 target_include_directories(miniaudio PUBLIC vendor/miniaudio)
+set_target_properties(miniaudio PROPERTIES UNITY_BUILD OFF)
 
 # Environment Variables (.env)
 # ----------------------------
@@ -143,29 +166,21 @@ add_executable(engine
     Vortex/src/util/vortex_compiler.cpp
 )
 
-# ----------------------------
-# Get user's custom scripts dynamically
-# ----------------------------
 set_target_properties(engine PROPERTIES ENABLE_EXPORTS TRUE)
 
-add_library(VortexGame SHARED Vortex/src/VortexEngine.cpp)
-
-if(PROJECT_DIR)
-    file(GLOB_RECURSE USER_SCRIPTS CONFIGURE_DEPENDS "${PROJECT_DIR}/*.cpp")
-
-    if(USER_SCRIPTS)
-        message(STATUS "[VORTEX COMPILER] Found user scripts: ${USER_SCRIPTS}")
-        target_sources(VortexGame PRIVATE ${USER_SCRIPTS})
-    else()
-        message(STATUS "[VORTEX COMPILER] No .cpp files found in ${PROJECT_DIR}")
-    endif()
-endif()
-
-target_link_libraries(VortexGame engine)
-
-set_target_properties(VortexGame PROPERTIES
-    LIBRARY_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}"
-    RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}"
+# ----------------------------
+# PRECOMPILED HEADERS (PCH) - Avoids parsing heavy libraries in every file
+# ----------------------------
+target_precompile_headers(engine PRIVATE
+    <vector>
+    <string>
+    <memory>
+    <map>
+    <unordered_map>
+    <filesystem>
+    <iostream>
+    "vendor/imgui/imgui.h"
+    "vendor/glm/glm/glm.hpp"
 )
 
 # ----------------------------
@@ -199,8 +214,8 @@ target_link_libraries(engine
     Threads::Threads
 )
 
-# OS-Specific Libraries
-if (UNIX AND NOT APPLE)
+if(UNIX AND NOT APPLE)
+    # Linux requires linking math, realtime, and ALSA directly for miniaudio
     target_link_libraries(engine
         m
         rt
@@ -209,3 +224,34 @@ if (UNIX AND NOT APPLE)
         ${CMAKE_DL_LIBS}
     )
 endif()
+
+# ----------------------------
+# DYNAMIC SCRIPT COMPILER 
+# ----------------------------
+add_library(VortexGame SHARED Vortex/src/VortexEngine.cpp)
+
+if(PROJECT_DIR)
+    file(GLOB_RECURSE USER_SCRIPTS CONFIGURE_DEPENDS "${PROJECT_DIR}/*.cpp")
+
+    if(USER_SCRIPTS)
+        message(STATUS "[VORTEX COMPILER] Found user scripts: ${USER_SCRIPTS}")
+        target_sources(VortexGame PRIVATE ${USER_SCRIPTS})
+    else()
+        message(STATUS "[VORTEX COMPILER] No .cpp files found in ${PROJECT_DIR}")
+    endif()
+endif()
+
+# Important: Scripts need the same core includes as the engine to compile against your headers
+target_include_directories(VortexGame PUBLIC
+    Vortex/include
+    Vortex/include/util
+    vendor/glm
+    vendor/imgui
+)
+
+target_link_libraries(VortexGame engine)
+
+set_target_properties(VortexGame PROPERTIES
+    LIBRARY_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}"
+    RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}"
+)
