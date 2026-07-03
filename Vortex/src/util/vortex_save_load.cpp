@@ -14,7 +14,7 @@ std::string get_global_backup_directory()
         }
         else
         {
-            path = "C:/VortexEngine/backups"; 
+            path = "C:/VortexEngine/backups";
         }
     #else
         const char *homedir;
@@ -865,10 +865,10 @@ void VortexProject::take_snapshot(SnapshotState state, VortexApplication *window
         if (project_name.find("temp_playmode_backup_") == std::string::npos)
         {
             std::string base_path = vortex_generatepath(SAVE_DIRECTORY, project_name);
-            if (!std::filesystem::exists(base_path)) std::filesystem::create_directory(base_path);
+            if (!std::filesystem::exists(base_path)) std::filesystem::create_directories(base_path);
 
             std::string scripts_path = vortex_generatepath(base_path, ASSET_DIR_SCRIPTS);
-            if (!std::filesystem::exists(scripts_path)) std::filesystem::create_directory(scripts_path);
+            if (!std::filesystem::exists(scripts_path)) std::filesystem::create_directories(scripts_path);
 
             generate_ide_context(project_name);
         }

@@ -216,27 +216,27 @@ void VortexApplication::setup_world_axis_buffers()
     glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(float), (void*)(3 * sizeof(float)));
 }
 
-// void glfw_error_callback(int error, const char* description)
-// {
-//     std::cerr << "[GLFW ERROR " << error << "]: " << description << std::endl;
-// }
+void glfw_error_callback(int error, const char* description)
+{
+    std::cerr << "[GLFW ERROR " << error << "]: " << description << std::endl;
+}
 
 VortexApplication::VortexApplication(std::string window_name)
 {
-    // glfwSetErrorCallback(glfw_error_callback);
+    glfwSetErrorCallback(glfw_error_callback);
 
     #if defined(_WIN32) || defined(_WIN64)
         char path_buffer[MAX_PATH];
         GetModuleFileNameA(NULL, path_buffer, MAX_PATH);
-        
+
         std::filesystem::path search_dir = std::filesystem::path(path_buffer).parent_path();
-        
+
         while (!std::filesystem::exists(search_dir / "shaders"))
         {
             if (!search_dir.has_parent_path() || search_dir == search_dir.parent_path()) break;
             search_dir = search_dir.parent_path();
         }
-        
+
         if (std::filesystem::exists(search_dir / "shaders"))
         {
             std::filesystem::current_path(search_dir);

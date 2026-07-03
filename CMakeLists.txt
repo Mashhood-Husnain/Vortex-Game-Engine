@@ -58,13 +58,15 @@ endif()
 # ----------------------------
 # Vendors
 # ----------------------------
+
+# GLFW
 set(GLFW_BUILD_DOCS OFF CACHE BOOL "" FORCE)
 add_subdirectory(vendor/glfw)
+set_target_properties(glfw PROPERTIES UNITY_BUILD OFF)
 
 # GLAD
 add_library(glad vendor/glad/src/glad.c)
 target_include_directories(glad PUBLIC vendor/glad/include)
-# Disable unity build for C dependencies to prevent cross-language compilation issues
 set_target_properties(glad PROPERTIES UNITY_BUILD OFF)
 
 # STB_IMAGE
@@ -226,7 +228,7 @@ if(UNIX AND NOT APPLE)
 endif()
 
 # ----------------------------
-# DYNAMIC SCRIPT COMPILER 
+# DYNAMIC SCRIPT COMPILER
 # ----------------------------
 add_library(VortexGame SHARED Vortex/src/VortexEngine.cpp)
 
