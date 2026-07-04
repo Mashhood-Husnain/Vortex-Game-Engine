@@ -8,6 +8,7 @@ out vec3 Normal;
 out vec3 FragPos;
 out vec2 TexCoords;
 out vec4 FragPosLightSpace;
+out vec3 LocalPos;
 
 uniform mat4 model;
 uniform mat4 view;
@@ -16,6 +17,7 @@ uniform mat4 lightSpaceMatrix;
 
 void main()
 {
+    LocalPos = aPos;
     FragPos = vec3(model * vec4(aPos, 1.0));
     Normal = mat3(transpose(inverse(model))) * aNormal;
     TexCoords = aTexCoords;

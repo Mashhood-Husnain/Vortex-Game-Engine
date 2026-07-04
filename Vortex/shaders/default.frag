@@ -8,6 +8,7 @@ in vec3 Normal;
 in vec3 FragPos;
 in vec2 TexCoords;
 in vec4 FragPosLightSpace;
+in vec3 LocalPos;
 
 uniform sampler2D u_diffuseMap;
 uniform sampler2D u_roughnessMap;
@@ -77,17 +78,43 @@ float ShadowCalculation(vec4 fragPosLightSpace, vec3 normal, vec3 lightDir)
     return shadow / 16.0;
 }
 
+float checker(vec2 uv)
+{
+    vec2 c = floor(uv);
+    return mod(c.x + c.y, 2.0);
+}
+
 void main()
 {
-    vec3 diffuseCol = vec3(0.5); // Default grey
     float roughness = 0.8;       // Default rough
     float metallic  = 0.0;       // Default non-metal
 
     vec2 scaledTexCoords = TexCoords * u_textureScale;
 
+    vec3 baseColor;
     if (u_hasTexture)
     {
-        diffuseCol = texture(u_diffuseMap, scaledTexCoords).rgb;
+        baseColor = texture(u_diffuseMap, scaledTexCoords).rgb;
+    }
+    else
+    {
+        // Calculate checker pattern only if there is no texture
+        vec3 blend = abs(normalize(Normal));
+        blend /= (blend.x + blend.y + blend.z);
+
+        float scale = 4.0;
+        vec2 uvx = LocalPos.yz * scale;
+        vec2 uvy = LocalPos.xz * scale;
+        vec2 uvz = LocalPos.xy * scale;
+
+        float checker_pattern = checker(uvx) * blend.x +
+                                checker(uvy) * blend.y +
+                                checker(uvz) * blend.z;
+
+        vec3 colorA = vec3(0.75);
+        vec3 colorB = vec3(0.55);
+
+        baseColor = mix(colorA, colorB, checker_pattern);
     }
 
     if (u_hasRoughness)
@@ -113,18 +140,18 @@ void main()
         float attenuation = 1.0 / (constantFalloff + linearFalloff * distance + quadraticFalloff * (distance * distance));
 
         // ambient
-        vec3 ambient = ambientStrength[i] * lightColor[i] * diffuseCol;
+        vec3 ambient = ambientStrength[i] * lightColor[i];
 
         // diffuse
         vec3 lightDir = normalize(lightPos[i] - FragPos);
         float diff = max(dot(norm, lightDir), 0.0);
-        vec3 diffuse = diff * lightColor[i] * diffuseCol;
+        vec3 diffuse = diff * lightColor[i];
 
         // specular
         vec3 reflectDir = reflect(-lightDir, norm);
         float spec_power = max((1.0 - roughness) * 128.0, 1.0);
         float spec = pow(max(dot(viewDir, reflectDir), 0.0), spec_power);
-        vec3 specular = spec * lightColor[i] * mix(vec3(0.3), diffuseCol, metallic);
+        vec3 specular = spec * lightColor[i] * mix(vec3(0.3), baseColor, metallic);
 
         float shadow = 0.0;
         if (i == 0)
@@ -137,9 +164,10 @@ void main()
         total_specular += (1.0 - shadow) * specular * attenuation;
     }
 
-    vec3 lighting = total_ambient + total_diffuse + total_specular;
+    vec3 lighting = (total_ambient + total_diffuse) * baseColor + total_specular;
 
     lighting += (random(scaledTexCoords) - 0.5) * (1.0 / 255.0);
 
+    // final color
     FragColor = vec4(lighting, 1.0);
 }
