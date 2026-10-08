@@ -48,7 +48,7 @@ void VortexObjectManager::init()
 
 void VortexObjectManager::clean_up()
 {
-    VORTEX_INFO("[OBJECT MANAGER] Destroying active scene entities and clearing simulation registry...");
+    VORTEX_INFO_TAG("OBJECT MANAGER", "Destroying active scene entities and clearing simulation registry...");
 
     for (VortexModel* model : active_models) delete model;
     active_models.clear();
@@ -463,7 +463,7 @@ void VortexObjectManager::destroy_object(VortexModel *target_object)
 
 void VortexObjectManager::clear_scene()
 {
-    VORTEX_INFO("[OBJECT MANAGER] Wiping scene memory for context switch...");
+    VORTEX_INFO_TAG("OBJECT MANAGER", "Wiping scene memory for context switch...");
 
     for (VortexModel* model : active_models)
     {

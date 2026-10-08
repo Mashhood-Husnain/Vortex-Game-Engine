@@ -28,6 +28,8 @@
 #include "vortex_shaders.hpp"
 // #include "vortex_shadowmanager.hpp"
 #include "vortex_gui.hpp"
+#include "vortex_gui_ImGui.hpp"
+
 #include "vortex_postprocessor.hpp"
 #include "vortex_skybox.hpp"
 #include "vortex_particlesystem.hpp"
@@ -78,8 +80,17 @@ private:
     bool first_mouse = true;
     float last_frame = 0.0f;
 
+    // #ifdef NDEBUG
+    //     bool enable_splash_screen = true;
+    //     bool is_playing_splash = true;
+    // #else
+    //     bool enable_splash_screen = false;
+    //     bool is_playing_splash = false;
+    // #endif
+
     bool enable_splash_screen = true;
     bool is_playing_splash = true;
+
     GLuint splash_texture = 0;
     int splash_width = 0;
     int splash_height = 0;

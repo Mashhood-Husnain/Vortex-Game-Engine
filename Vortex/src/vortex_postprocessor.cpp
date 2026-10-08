@@ -21,13 +21,13 @@ PostProcessor::PostProcessor(std::string shader_vert_path, std::string shader_fr
 
     if (glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE)
     {
-        VORTEX_ERROR("ERROR::FRAMEBUFFER:: Framebuffer is not complete!");
+        VORTEX_ERROR_TAG("FRAMEBUFFER", "Framebuffer is not complete!");
         exit(EXIT_FAILURE);
     }
 
     glBindFramebuffer(GL_FRAMEBUFFER, 0);
 
-    float quadVertices[] = { 
+    float quadVertices[] = {
         -1.0f,  1.0f,  0.0f, 1.0f,
         -1.0f, -1.0f,  0.0f, 0.0f,
             1.0f, -1.0f,  1.0f, 0.0f,
@@ -66,12 +66,12 @@ void PostProcessor::draw(float time)
 {
     glDisable(GL_DEPTH_TEST);
     screenShader->use();
-    
+
     glActiveTexture(GL_TEXTURE0);
     glBindTexture(GL_TEXTURE_2D, texture);
     screenShader->setInt("screenTexture", 0);
-    screenShader->setFloat("uTime", time);    
-    
+    screenShader->setFloat("uTime", time);
+
     glBindVertexArray(quadVAO);
     glDrawArrays(GL_TRIANGLES, 0, 6);
     glBindVertexArray(0);
@@ -83,7 +83,7 @@ void PostProcessor::resize(int width, int height)
 {
     glBindTexture(GL_TEXTURE_2D, texture);
     glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, width, height, 0, GL_RGB, GL_UNSIGNED_BYTE, NULL);
-    
+
     glBindRenderbuffer(GL_RENDERBUFFER, rbo);
     glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH24_STENCIL8, width, height);
 }
@@ -122,7 +122,7 @@ PostProcessor::~PostProcessor()
 
     if (screenShader != nullptr)
     {
-        delete screenShader; 
+        delete screenShader;
         screenShader = nullptr;
     }
 }

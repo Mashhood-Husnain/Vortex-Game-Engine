@@ -1,16 +1,27 @@
-#include "vortex_gui.hpp"
+#include "vortex_gui_ImGui.hpp"
 #include "vortex_model.hpp"
-#include "vortex_rigidbody.hpp"
 #include "vortex_particlesystem.hpp"
+#include "vortex_objectmanager.hpp"
 #include "vortex_assetmanager.hpp"
 #include "vortex_decal.hpp"
 
-void VortexGUI::scene_inspector()
+struct FolderNode
 {
-    if (!show_inspector) return;
+    std::vector<VortexModel*> models;
+    std::unordered_map<std::string, FolderNode> subfolders;
+};
 
+VortexInspectorWindow::VortexInspectorWindow() : VortexImGuiWindow(getGuiWindowTypeName(GuiWindowTypes::InspectorWindow), true) {}
+
+void VortexInspectorWindow::apply_window_constraints()
+{
     ImGui::SetNextWindowSizeConstraints(ImVec2(300, 100), ImVec2(FLT_MAX, FLT_MAX));
-    ImGui::Begin("Scene Inspector");
+}
+
+void VortexInspectorWindow::draw_content()
+{
+    m_processed_models.clear();
+    m_processed_ps.clear();
 
     static char new_folder_path[128] = "Scene/NewFolder";
     ImGui::SetNextItemWidth(ImGui::GetContentRegionAvail().x - 100);
@@ -20,9 +31,9 @@ void VortexGUI::scene_inspector()
     if (ImGui::Button("Create Path") && strlen(new_folder_path) > 0)
     {
         std::string path(new_folder_path);
-        if (std::find(explicit_empty_folders.begin(), explicit_empty_folders.end(), path) == explicit_empty_folders.end())
+        if (std::find(VortexGUI::explicit_empty_folders.begin(), VortexGUI::explicit_empty_folders.end(), path) == VortexGUI::explicit_empty_folders.end())
         {
-            explicit_empty_folders.push_back(path);
+            VortexGUI::explicit_empty_folders.push_back(path);
         }
     }
 
@@ -47,7 +58,7 @@ void VortexGUI::scene_inspector()
         if (model) current->models.push_back(model);
     };
 
-    for (const std::string& empty_path : explicit_empty_folders)
+    for (const std::string& empty_path : VortexGUI::explicit_empty_folders)
     {
         insert_into_tree(empty_path, nullptr);
     }
@@ -60,7 +71,7 @@ void VortexGUI::scene_inspector()
     std::function<void(const std::string&, FolderNode&, std::string)> draw_node;
     draw_node = [&](const std::string& name, FolderNode& node, std::string current_path)
     {
-        bool folder_open = VortexGuiHelpers::DrawComponentNode(name.c_str(), ImGuiTreeNodeFlags_Framed | ImGuiTreeNodeFlags_DefaultOpen, ImVec4(0.2f, 0.2f, 0.22f, 1.0f));
+        bool folder_open = VortexUI::Helpers::DrawComponentNode(name.c_str(), ImGuiTreeNodeFlags_Framed | ImGuiTreeNodeFlags_DefaultOpen, ImVec4(0.2f, 0.2f, 0.22f, 1.0f));
 
         if (ImGui::BeginPopupContextItem())
         {
@@ -78,8 +89,8 @@ void VortexGUI::scene_inspector()
                         if (m->folder.find(current_path) == 0) m->folder = "Scene";
                     }
 
-                    auto it = std::find(explicit_empty_folders.begin(), explicit_empty_folders.end(), current_path);
-                    if (it != explicit_empty_folders.end()) explicit_empty_folders.erase(it);
+                    auto it = std::find(VortexGUI::explicit_empty_folders.begin(), VortexGUI::explicit_empty_folders.end(), current_path);
+                    if (it != VortexGUI::explicit_empty_folders.end()) VortexGUI::explicit_empty_folders.erase(it);
 
                     ImGui::PopStyleColor();
                     ImGui::EndPopup();
@@ -113,7 +124,7 @@ void VortexGUI::scene_inspector()
         {
             for (auto& [sub_name, sub_node] : node.subfolders)
             {
-                std::string next_path = current_path.empty() ? sub_name : vortex_generatepath(current_path, sub_name);
+                std::string next_path = current_path.empty() ? sub_name : VortexUtils::vortex_generatepath(current_path, sub_name);
                 draw_node(sub_name, sub_node, next_path);
             }
 
@@ -139,13 +150,11 @@ void VortexGUI::scene_inspector()
             inspect_particle_system(ps);
         }
     }
-
-    ImGui::End();
 }
 
-void VortexGUI::inspect_model(VortexModel* model)
+void VortexInspectorWindow::inspect_model(VortexModel* model)
 {
-    if (!show_inspector || !model) return;
+    if (!model) return;
     if (m_processed_models.find(model) != m_processed_models.end()) return;
 
     m_processed_models.insert(model);
@@ -154,7 +163,7 @@ void VortexGUI::inspect_model(VortexModel* model)
     std::string header_id = model->model_name + "###" + std::to_string((uintptr_t)model);
     bool is_currently_selected = (VortexObjectManager::selected_models.find(model) != VortexObjectManager::selected_models.end());
 
-    bool is_header_open = VortexGuiHelpers::DrawHeader(header_id.c_str(), is_currently_selected);
+    bool is_header_open = VortexUI::Helpers::DrawHeader(header_id.c_str(), is_currently_selected);
 
     if (ImGui::IsItemClicked(ImGuiMouseButton_Left))
     {
@@ -223,7 +232,7 @@ void VortexGUI::inspect_model(VortexModel* model)
     }
 }
 
-void VortexGUI::draw_model_info_panel(VortexModel* model, int flags)
+void VortexInspectorWindow::draw_model_info_panel(VortexModel* model, int flags)
 {
     if (ImGui::TreeNodeEx("|__ Model Info", flags))
     {
@@ -275,7 +284,7 @@ void VortexGUI::draw_model_info_panel(VortexModel* model, int flags)
                     VortexAssetManager::release_texture(model->texture_path);
                     model->texture_id = VortexAssetManager::load_texture_raw(path_str);
                     model->texture_path = path_str;
-                    VORTEX_INFO("[GUI] Assigned new texture: ", path_str);
+                    VORTEX_INFO_TAG("GUI", "Assigned new texture: ", path_str);
                 }
             }
             ImGui::EndDragDropTarget();
@@ -291,12 +300,12 @@ void VortexGUI::draw_model_info_panel(VortexModel* model, int flags)
             ImGui::Spacing();
             ImGui::SetCursorPosX(ImGui::GetWindowContentRegionMax().x - 110.0f);
 
-            if (VortexGuiHelpers::DrawDangerButton("Remove Texture", ImVec2(110, 24)))
+            if (VortexUI::Helpers::DrawDangerButton("Remove Texture", ImVec2(110, 24)))
             {
                 VortexAssetManager::release_texture(model->texture_path);
                 model->texture_id = 0;
                 model->texture_path = "";
-                VORTEX_INFO("[GUI] Removed texture from model: ", model->model_name);
+                VORTEX_INFO_TAG("GUI", "Removed texture from model: ", model->model_name);
             }
         }
 
@@ -305,8 +314,10 @@ void VortexGUI::draw_model_info_panel(VortexModel* model, int flags)
     ImGui::Spacing();
 }
 
-void VortexGUI::draw_model_components_panel(VortexModel* model, int flags)
+void VortexInspectorWindow::draw_model_components_panel(VortexModel* model, int flags)
 {
+    VortexEditorContext &ctx = VortexImGuiManager::context;
+
     if (ImGui::TreeNodeEx("|__ Components & Scripts", flags))
     {
         ImGui::Indent(10.0f);
@@ -337,10 +348,10 @@ void VortexGUI::draw_model_components_panel(VortexModel* model, int flags)
                     if (new_script)
                     {
                         new_script->vortexGameObject = model;
-                        new_script->vortexEngine = app;
+                        new_script->vortexEngine = ctx.application;
                         new_script->vortexTransform = &model->transform;
                         model->add_behaviour(script_name, new_script);
-                        VORTEX_INFO("[GUI] Attached script: ", script_name);
+                        VORTEX_INFO_TAG("GUI", "Attached script: ", script_name);
                     }
                 }
             }
@@ -351,7 +362,7 @@ void VortexGUI::draw_model_components_panel(VortexModel* model, int flags)
 
         if (model->rigidbody)
         {
-            if (VortexGuiHelpers::DrawComponentNode("Vortex Rigidbody", flags, ImVec4(0.15f, 0.22f, 0.15f, 1.0f)))
+            if (VortexUI::Helpers::DrawComponentNode("Vortex Rigidbody", flags, ImVec4(0.15f, 0.22f, 0.15f, 1.0f)))
             {
                 ImGui::Indent(10.0f); ImGui::Spacing();
                 ImGui::Checkbox("Is Kinematic", &model->rigidbody->is_kinematic);
@@ -359,7 +370,7 @@ void VortexGUI::draw_model_components_panel(VortexModel* model, int flags)
                 if (model->rigidbody->gravity) ImGui::DragFloat("Gravity Value", &model->rigidbody->gravity_value, 0.1f);
 
                 ImGui::Spacing(); ImGui::SetCursorPosX(ImGui::GetWindowContentRegionMax().x - 70.0f);
-                if (VortexGuiHelpers::DrawDangerButton("Remove##RB", ImVec2(70, 0))) { delete model->rigidbody; model->rigidbody = nullptr; }
+                if (VortexUI::Helpers::DrawDangerButton("Remove##RB", ImVec2(70, 0))) { delete model->rigidbody; model->rigidbody = nullptr; }
 
                 ImGui::Spacing(); ImGui::Unindent(10.0f);
             }
@@ -367,7 +378,7 @@ void VortexGUI::draw_model_components_panel(VortexModel* model, int flags)
 
         if (!model->decals.empty())
         {
-            if (VortexGuiHelpers::DrawComponentNode("Vortex Decals", flags, ImVec4(0.22f, 0.15f, 0.22f, 1.0f)))
+            if (VortexUI::Helpers::DrawComponentNode("Vortex Decals", flags, ImVec4(0.22f, 0.15f, 0.22f, 1.0f)))
             {
                 ImGui::Indent(10.0f); ImGui::Spacing();
                 int decal_to_delete = -1;
@@ -378,7 +389,7 @@ void VortexGUI::draw_model_components_panel(VortexModel* model, int flags)
                     ImGui::PushID(static_cast<int>(i));
 
                     ImVec4 header_color = (g_active_decal_for_gizmo == decal) ? ImVec4(0.3f, 0.2f, 0.3f, 1.0f) : ImVec4(0.18f, 0.12f, 0.18f, 1.0f);
-                    bool single_decal_open = VortexGuiHelpers::DrawComponentNode(("Decal " + std::to_string(i)).c_str(), flags, header_color);
+                    bool single_decal_open = VortexUI::Helpers::DrawComponentNode(("Decal " + std::to_string(i)).c_str(), flags, header_color);
 
                     if (ImGui::IsItemClicked()) g_active_decal_for_gizmo = decal;
 
@@ -422,7 +433,7 @@ void VortexGUI::draw_model_components_panel(VortexModel* model, int flags)
                         }
 
                         ImGui::Spacing(); ImGui::SetCursorPosX(ImGui::GetWindowContentRegionMax().x - 70.0f);
-                        if (VortexGuiHelpers::DrawDangerButton("Remove##Decal", ImVec2(70, 0)))
+                        if (VortexUI::Helpers::DrawDangerButton("Remove##Decal", ImVec2(70, 0)))
                         {
                             if (g_active_decal_for_gizmo == decal) g_active_decal_for_gizmo = nullptr;
 
@@ -441,7 +452,7 @@ void VortexGUI::draw_model_components_panel(VortexModel* model, int flags)
 
         if (model->light)
         {
-            if (VortexGuiHelpers::DrawComponentNode("Vortex Light", flags, ImVec4(0.22f, 0.22f, 0.15f, 1.0f)))
+            if (VortexUI::Helpers::DrawComponentNode("Vortex Light", flags, ImVec4(0.22f, 0.22f, 0.15f, 1.0f)))
             {
                 ImGui::Indent(10.0f); ImGui::Spacing();
                 ImGui::ColorEdit3("Light Color", &model->light->color.x);
@@ -449,7 +460,7 @@ void VortexGUI::draw_model_components_panel(VortexModel* model, int flags)
                 ImGui::DragFloat("Ambient Strength", &model->light->ambient_strength, 0.01f, 0.0f, 1.0f);
 
                 ImGui::Spacing(); ImGui::SetCursorPosX(ImGui::GetWindowContentRegionMax().x - 70.0f);
-                if (VortexGuiHelpers::DrawDangerButton("Remove##Light", ImVec2(70, 0)))
+                if (VortexUI::Helpers::DrawDangerButton("Remove##Light", ImVec2(70, 0)))
                 {
                     delete model->light;
                     model->light = nullptr;
@@ -469,7 +480,7 @@ void VortexGUI::draw_model_components_panel(VortexModel* model, int flags)
                 std::string script_name = model->script_names[i];
                 VortexMonoBehaviour *script = model->behaviours[i];
 
-                bool script_open = VortexGuiHelpers::DrawComponentNode(script_name.c_str(), flags, ImVec4(0.18f, 0.18f, 0.18f, 1.0f));
+                bool script_open = VortexUI::Helpers::DrawComponentNode(script_name.c_str(), flags, ImVec4(0.18f, 0.18f, 0.18f, 1.0f));
 
                 if (script_open)
                 {
@@ -486,13 +497,13 @@ void VortexGUI::draw_model_components_panel(VortexModel* model, int flags)
                         {
                             std::string *str_ptr = (std::string*)var.data_ptr;
                             char buffer[256];
-                            vortex_strncpy(buffer, sizeof(buffer), str_ptr->c_str());
+                            VortexUtils::vortex_strncpy(buffer, sizeof(buffer), str_ptr->c_str());
                             if (ImGui::InputText(var.name.c_str(), buffer, IM_ARRAYSIZE(buffer))) *str_ptr = std::string(buffer);
                         }
                     }
 
                     ImGui::Spacing(); ImGui::SetCursorPosX(ImGui::GetWindowContentRegionMax().x - 70.0f);
-                    if (VortexGuiHelpers::DrawDangerButton("Remove", ImVec2(70, 0))) script_to_delete = static_cast<int>(i);
+                    if (VortexUI::Helpers::DrawDangerButton("Remove", ImVec2(70, 0))) script_to_delete = static_cast<int>(i);
 
                     ImGui::Spacing(); ImGui::Unindent(10.0f);
                 }
@@ -535,7 +546,7 @@ void VortexGUI::draw_model_components_panel(VortexModel* model, int flags)
                 new_decal->position = glm::vec3(0.0f, 0.0f, z_extent + 0.01f);
                 new_decal->orientation = glm::quat(glm::radians(glm::vec3(90.0f, 0.0f, 0.0f)));
                 new_decal->vortexGameObject = model;
-                new_decal->vortexEngine = app;
+                new_decal->vortexEngine = ctx.application;
                 new_decal->vortexTransform = &model->transform;
                 new_decal->on_start();
 
@@ -557,7 +568,7 @@ void VortexGUI::draw_model_components_panel(VortexModel* model, int flags)
                     if (new_script)
                     {
                         new_script->vortexGameObject = model;
-                        new_script->vortexEngine = app;
+                        new_script->vortexEngine = ctx.application;
                         new_script->vortexTransform = &model->transform;
                         model->add_behaviour(script_name, new_script);
                     }
@@ -570,7 +581,7 @@ void VortexGUI::draw_model_components_panel(VortexModel* model, int flags)
     ImGui::Spacing();
 }
 
-void VortexGUI::draw_model_transform_panel(VortexModel* model, int flags)
+void VortexInspectorWindow::draw_model_transform_panel(VortexModel* model, int flags)
 {
     if (ImGui::TreeNodeEx("|__ Physics & Transform", flags))
     {
@@ -600,9 +611,9 @@ void VortexGUI::draw_model_transform_panel(VortexModel* model, int flags)
             ImGui::TableSetupColumn("Label", ImGuiTableColumnFlags_WidthFixed, 60.0f);
             ImGui::TableSetupColumn("Value", ImGuiTableColumnFlags_WidthStretch);
 
-            VortexGuiHelpers::DrawTransformRow("Position", "##pos", &model->transform.position.x);
-            VortexGuiHelpers::DrawTransformRow("Scale", "##scale", &model->transform.scale.x, 0.01f, 0.001f, 10.0f);
-            VortexGuiHelpers::DrawTransformRow("Rotation", "##rot", &model->transform.orientation.x);
+            VortexUI::Helpers::DrawTransformRow("Position", "##pos", &model->transform.position.x);
+            VortexUI::Helpers::DrawTransformRow("Scale", "##scale", &model->transform.scale.x, 0.01f, 0.001f, 10.0f);
+            VortexUI::Helpers::DrawTransformRow("Rotation", "##rot", &model->transform.orientation.x);
 
             ImGui::EndTable();
         }
@@ -625,9 +636,9 @@ void VortexGUI::draw_model_transform_panel(VortexModel* model, int flags)
     ImGui::Spacing();
 }
 
-void VortexGUI::draw_model_actions(VortexModel* model)
+void VortexInspectorWindow::draw_model_actions(VortexModel* model)
 {
-    if (VortexGuiHelpers::DrawActionButton("Duplicate Model", ImVec2(-1, 32)))
+    if (VortexUI::Helpers::DrawActionButton("Duplicate Model", ImVec2(-1, 32)))
     {
         VortexModel* cloned_model = model->clone();
 
@@ -646,7 +657,7 @@ void VortexGUI::draw_model_actions(VortexModel* model)
 
     ImGui::Spacing();
 
-    if (VortexGuiHelpers::DrawDangerButton("Delete Model", ImVec2(-1, 32)))
+    if (VortexUI::Helpers::DrawDangerButton("Delete Model", ImVec2(-1, 32)))
     {
         model->is_selected = false;
         VortexObjectManager::selected_models.erase(model);
@@ -657,9 +668,9 @@ void VortexGUI::draw_model_actions(VortexModel* model)
     }
 }
 
-void VortexGUI::inspect_particle_system(ParticleSystem *ps)
+void VortexInspectorWindow::inspect_particle_system(ParticleSystem *ps)
 {
-    if (!show_inspector || !ps) return;
+    if (!ps) return;
     if (m_processed_ps.find(ps) != m_processed_ps.end()) return;
 
     m_processed_ps.insert(ps);
@@ -685,9 +696,9 @@ void VortexGUI::inspect_particle_system(ParticleSystem *ps)
 
                     ImGui::TextDisabled("Spawning & Transform");
                     ImGui::DragFloat3("Position", &settings.position.x, 0.1f);
-                    VortexGuiLambda::ClampedInputInt("Spawn Rate", &settings.spawn_rate, 100, 500, 0, ps->max_particles);
-                    VortexGuiLambda::ClampedInputFloat("Size", &settings.size, 0.1f, 1.0f, 0.05f, 5.0f);
-                    VortexGuiLambda::ClampedInputFloat("Life", &settings.life, 0.5f, 1.0f, 0.1f, 10.0f);
+                    VortexUI::Lambda::ClampedInputInt("Spawn Rate", &settings.spawn_rate, 100, 500, 0, ps->max_particles);
+                    VortexUI::Lambda::ClampedInputFloat("Size", &settings.size, 0.1f, 1.0f, 0.05f, 5.0f);
+                    VortexUI::Lambda::ClampedInputFloat("Life", &settings.life, 0.5f, 1.0f, 0.1f, 10.0f);
 
                     const char *behaviour_options[] = {"Grow", "Shrink", "None"};
                     int current_behaviour = static_cast<int>(settings.behaviour);
@@ -710,7 +721,7 @@ void VortexGUI::inspect_particle_system(ParticleSystem *ps)
                     ImGui::Spacing(); ImGui::Separator(); ImGui::Spacing();
 
                     ImGui::TextDisabled("Physics & Forces");
-                    VortexGuiLambda::ClampedInputFloat("Gravity", &settings.gravity, 0.2f, 0.5f, -2.0f, 2.0f);
+                    VortexUI::Lambda::ClampedInputFloat("Gravity", &settings.gravity, 0.2f, 0.5f, -2.0f, 2.0f);
                     ImGui::SliderFloat("Drag", &settings.drag, 0.0f, 5.0f);
                     ImGui::SliderFloat("Elasticity (Bounce)", &settings.elasticity, 0.0f, 1.0f);
                     ImGui::SliderFloat("Friction", &settings.friction, 0.0f, 1.0f);
@@ -723,7 +734,7 @@ void VortexGUI::inspect_particle_system(ParticleSystem *ps)
                         if (settings.use_point_gravity)
                         {
                             ImGui::DragFloat3("Target Pos", glm::value_ptr(settings.gravity_point), 0.1f);
-                            VortexGuiLambda::ClampedInputFloat("Pull Strength", &settings.point_gravity_strength, 0.1f, 0.0f, 0.1f, 1.0f);
+                            VortexUI::Lambda::ClampedInputFloat("Pull Strength", &settings.point_gravity_strength, 0.1f, 0.0f, 0.1f, 1.0f);
                         }
                         ImGui::TreePop();
                     }
@@ -753,7 +764,7 @@ void VortexGUI::inspect_particle_system(ParticleSystem *ps)
 
         ImGui::Spacing();
 
-        if (VortexGuiHelpers::DrawDangerButton("Delete Particle System", ImVec2(-1, 32))) ps->should_destroy = true;
+        if (VortexUI::Helpers::DrawDangerButton("Delete Particle System", ImVec2(-1, 32))) ps->should_destroy = true;
 
         ImGui::Unindent(12.0f);
         ImGui::PopID(); ImGui::Spacing();

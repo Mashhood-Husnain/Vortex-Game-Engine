@@ -1,33 +1,51 @@
-#include "vortex_gui.hpp"
-#include "util/vortex_save_load.hpp"
-#include "vortex_objectmanager.hpp"
-#include "vortex_particlesystem.hpp"
+#include "vortex_gui_ImGui.hpp"
 
-void create_script(std::string file_path, std::string class_name)
+VortexCreatorWindow::VortexCreatorWindow() : VortexImGuiWindow(getGuiWindowTypeName(GuiWindowTypes::CreatorWindow), true) {}
+
+void VortexCreatorWindow::apply_window_constraints()
 {
-    std::ofstream script_file(file_path);
-    script_file << "#include \"VortexEngine.hpp\"\n\n";
-    script_file << "class " << class_name << " : public VortexMonoBehaviour\n{\n";
-    script_file << "private:\npublic:\n";
-    script_file << "    void on_start() override\n    {\n        // Initialization\n    }\n\n";
-    script_file << "    void on_update() override\n    {\n        // Every frame\n    }\n\n";
-    script_file << "    void late_update() override\n    {\n        // End of frame\n    }\n\n";
-    script_file << "    void on_destroy() override\n    {\n        // Destroy at the end\n    }\n\n";
-    script_file << "    void on_message(const std::string &message, void *data) override\n    {\n        // Cross-script communication\n    }\n};\n\n";
-    script_file << "VORTEX_REGISTER_SCRIPT(" << class_name << ");\n";
-    script_file.close();
-
-    VORTEX_INFO("[EDITOR] Auto-Generated Script: ", file_path);
+    ImGui::SetNextWindowSizeConstraints(ImVec2(200, 300), ImVec2(FLT_MAX, FLT_MAX));
 }
 
-void VortexGUI::creator_window()
+void replace_all(std::string &str, const std::string &from, const std::string &to)
 {
-    if (!show_creator_window) return;
+    size_t pos = 0;
 
-    ImGui::SetNextWindowSizeConstraints(ImVec2(300, 100), ImVec2(FLT_MAX, FLT_MAX));
-    ImGui::Begin("Creator Tools");
+    while((pos = str.find(from, pos)) != std::string::npos)
+    {
+        str.replace(pos, from.length(), to);
+        pos += to.length();
+    }
+}
 
+void VortexCreatorWindow::create_script(std::string file_path, std::string class_name)
+{
+    std::ifstream template_file(script_template_path);
+
+    if (!template_file)
+    {
+        VORTEX_ERROR_TAG("SCRIPT", "Failed to open script Template");
+        return;
+    }
+
+    std::stringstream buffer;
+    buffer << template_file.rdbuf();
+
+    std::string script = buffer.str();
+
+    replace_all(script, "@CLASS_NAME@", class_name);
+
+    std::ofstream output(file_path);
+    output << script;
+
+    VORTEX_INFO_TAG("EDITOR", "Generated Script: ", file_path);
+}
+
+void VortexCreatorWindow::draw_content()
+{
     ImGui::Spacing();
+
+    VortexEditorContext &ctx = VortexImGuiManager::context;
 
     if (ImGui::CollapsingHeader("New Script"))
     {
@@ -44,9 +62,9 @@ void VortexGUI::creator_window()
         {
             std::string class_name = std::string(new_script_name);
 
-            std::string file_path = vortex_generatepath(
+            std::string file_path = VortexUtils::vortex_generatepath(
                 VortexProject::SAVE_DIRECTORY,
-                m_new_project_name,
+                std::string(ctx.m_new_project_name),
                 VortexProject::ASSET_DIR_SCRIPTS,
                 class_name + ".cpp"
             );
@@ -86,7 +104,8 @@ void VortexGUI::creator_window()
 
         ImGui::TextDisabled("Max Capacity");
         ImGui::SetNextItemWidth(-FLT_MIN);
-        VortexGuiLambda::ClampedInputInt("##MaxCap", &new_ps_max, 10000, 50000, 100, 1000000);
+
+        VortexUI::Lambda::ClampedInputInt("##MaxCap", &new_ps_max, 10000, 50000, 100, 1000000);
 
         static bool show_error_message_ps = false;
 
@@ -108,8 +127,10 @@ void VortexGUI::creator_window()
             else
             {
                 show_error_message_ps = false;
-                ParticleSystem *new_ps = new ParticleSystem(new_ps_max, app, std::string(new_ps_name));
+
+                ParticleSystem *new_ps = new ParticleSystem(new_ps_max, ctx.application, std::string(new_ps_name));
                 new_ps->get_emitter("Default Emitter");
+
                 VortexObjectManager::active_particlesystems.push_back(new_ps);
             }
         }
@@ -133,16 +154,13 @@ void VortexGUI::creator_window()
         ImGui::PushStyleColor(ImGuiCol_ButtonHovered, ImVec4(0.25f, 0.25f, 0.27f, 1.0f));
         ImGui::PushStyleColor(ImGuiCol_ButtonActive, ImVec4(0.3f, 0.3f, 0.32f, 1.0f));
 
-        std::string user_models_path = vortex_generatepath(
+        std::string user_models_path = VortexUtils::vortex_generatepath(
             VortexProject::SAVE_DIRECTORY,
-            m_new_project_name,
+            std::string(ctx.m_new_project_name),
             VortexProject::ASSET_DIR_MODELS,
             VortexProject::ASSET_DIR_MODELS_OBJ
         );
         std::string engine_models_path = "assets/models/obj";
-
-        static std::vector<std::pair<std::string, std::string>> cached_user_models;
-        static std::vector<std::pair<std::string, std::string>> cached_engine_models;
 
         if (ImGui::Button("Refresh Assets Folder", ImVec2(-1, 24)) || !m_models_scanned)
         {
@@ -205,8 +223,9 @@ void VortexGUI::creator_window()
 
                         if (ImGui::Button(button_label.c_str(), ImVec2(-1, button_height)))
                         {
-                            VortexModel *new_model = new VortexModel(model_pair.second.c_str(), app);
+                            VortexModel *new_model = new VortexModel(model_pair.second.c_str(), ctx.application);
                             new_model->folder = "Scene";
+
                             VortexObjectManager::active_models.push_back(new_model);
                             ActionManager::push_action(new ActionCreate(new_model));
                         }
@@ -224,6 +243,4 @@ void VortexGUI::creator_window()
         ImGui::EndChild();
         ImGui::PopStyleColor();
     }
-
-    ImGui::End();
 }

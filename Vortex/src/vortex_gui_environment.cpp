@@ -59,7 +59,7 @@ void VortexGUI::post_process_options()
         ImGui::TextDisabled("Active Screen Effect");
 
         ImGui::SetNextItemWidth(-FLT_MIN);
-        if (ImGui::Combo("##Effect", &m_selected_shader_idx, VortexGuiLambda::DataGetter, static_cast<void*>(&m_display_names), static_cast<int>(m_display_names.size())))
+        if (ImGui::Combo("##Effect", &m_selected_shader_idx, VortexUI::Lambda::DataGetter, static_cast<void*>(&m_display_names), static_cast<int>(m_display_names.size())))
         {
             gui_set_post_processor();
         }
@@ -142,7 +142,7 @@ void VortexGUI::skybox_options()
             ImGui::TextDisabled("Active Environment");
 
             ImGui::SetNextItemWidth(-FLT_MIN);
-            if (ImGui::Combo("##Environment", &m_selected_skybox_idx, VortexGuiLambda::DataGetter, static_cast<void*>(&m_skybox_display_names), static_cast<int>(m_skybox_display_names.size())))
+            if (ImGui::Combo("##Environment", &m_selected_skybox_idx, VortexUI::Lambda::DataGetter, static_cast<void*>(&m_skybox_display_names), static_cast<int>(m_skybox_display_names.size())))
             {
                 gui_set_skybox();
             }

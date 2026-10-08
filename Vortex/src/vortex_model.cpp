@@ -69,7 +69,7 @@ VortexModel::VortexModel(const std::string& path, VortexApplication *window, con
 {
     if (!window)
     {
-        VORTEX_ERROR("[MODEL ERROR] 'window' for model not specified");
+        VORTEX_ERROR_TAG("MODEL", "'window' for model not specified");
         exit(EXIT_FAILURE);
     }
 

@@ -16,7 +16,7 @@ std::string VortexEncrypt::get_key()
         env_file.close();
     }
 
-    VORTEX_WARN("[ENCRYPTION] .env file or ENCRYPTION_KEY not found. Using default key");
+    VORTEX_WARN_TAG("ENCRYPTION", ".env file or ENCRYPTION_KEY not found. Using default key");
     return "VORTEX_DEFAULT_SECURE_KEY_9921";
 }
 

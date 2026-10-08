@@ -23,7 +23,7 @@ void VortexApplication::load_splash_screen()
 
     if (!data)
     {
-        VORTEX_ERROR("Splash screen logo not found!");
+        VORTEX_ERROR_TAG("WINDOW", "Splash screen logo not found!");
         is_playing_splash = false;
         return;
     }
@@ -163,7 +163,7 @@ void VortexApplication::check_key_press()
                 if (VortexKeyboard::get_key_down("R")) enter_play_mode();
 
                 if (VortexKeyboard::get_key_down("O")) VortexGUI::show_skybox_post_process_options = !VortexGUI::show_skybox_post_process_options;
-                if (VortexKeyboard::get_key_down("I")) VortexGUI::show_inspector = !VortexGUI::show_inspector;
+                if (VortexKeyboard::get_key_down("I")) VortexImGuiManager::toggle_window(getGuiWindowTypeName(GuiWindowTypes::InspectorWindow));
             }
 
             if (!VortexGUI::is_using_gizmo)
@@ -172,9 +172,9 @@ void VortexApplication::check_key_press()
                 if (VortexKeyboard::get_key_down("Y", 0.5f, true)) ActionManager::redo();
             }
 
-            if (VortexKeyboard::get_key_down("P")) VortexGUI::show_terminal = !VortexGUI::show_terminal;
+            if (VortexKeyboard::get_key_down("P")) VortexImGuiManager::toggle_window(getGuiWindowTypeName(GuiWindowTypes::TerminalWindow));
             if (VortexKeyboard::get_key_down("X")) VortexGUI::show_camera_info = !VortexGUI::show_camera_info;
-            if (VortexKeyboard::get_key_down("W")) VortexGUI::show_creator_window = !VortexGUI::show_creator_window;
+            if (VortexKeyboard::get_key_down("W")) VortexImGuiManager::toggle_window(getGuiWindowTypeName(GuiWindowTypes::CreatorWindow));
             if (VortexKeyboard::get_key_down("E")) VortexGUI::show_engine_stats = !VortexGUI::show_engine_stats;
             if (VortexKeyboard::get_key_down("H")) VortexGUI::show_stack_history_window = !VortexGUI::show_stack_history_window;
             if (VortexKeyboard::get_key_down("A")) VortexGUI::show_asset_browser = !VortexGUI::show_asset_browser;
@@ -245,7 +245,7 @@ VortexApplication::VortexApplication(std::string window_name)
 
     if (!glfwInit())
     {
-        VORTEX_ERROR("Failed to initialize GLFW");
+        VORTEX_ERROR_TAG("WINDOW", "Failed to initialize GLFW");
         exit(EXIT_FAILURE);
     }
 
@@ -288,7 +288,7 @@ VortexApplication::VortexApplication(std::string window_name)
 
     if (window == nullptr)
     {
-        VORTEX_ERROR("Failed to create GLFW window");
+        VORTEX_ERROR_TAG("WINDOW", "Failed to create GLFW window");
         glfwTerminate();
         exit(EXIT_FAILURE);
     }
@@ -303,7 +303,7 @@ VortexApplication::VortexApplication(std::string window_name)
     if(glfwRawMouseMotionSupported())
     {
         glfwSetInputMode(window, GLFW_RAW_MOUSE_MOTION, GLFW_TRUE);
-        VORTEX_INFO("[INPUT] Hardware Raw Mouse Motion Enabled");
+        VORTEX_INFO_TAG("INPUT", "Hardware Raw Mouse Motion Enabled");
     }
 
     unsigned char pixels[16 * 16 * 4] = {0};
@@ -316,7 +316,7 @@ VortexApplication::VortexApplication(std::string window_name)
 
     if (!gladLoadGLLoader((GLADloadproc)glfwGetProcAddress))
     {
-        VORTEX_ERROR("Failed to initialize GLAD");
+        VORTEX_ERROR_TAG("WINDOW", "Failed to initialize GLAD");
         exit(EXIT_FAILURE);
     }
 
@@ -359,6 +359,8 @@ VortexApplication::VortexApplication(std::string window_name)
     }
 
     VortexGUI::init(this, start_width, start_height);
+
+    VortexImGuiManager::init(this);
 }
 
 VortexApplication::~VortexApplication()
@@ -394,7 +396,7 @@ VortexApplication::~VortexApplication()
     if (window) glfwDestroyWindow(window);
     glfwTerminate();
 
-    VORTEX_INFO("[ENGINE] Successfully Closed Application!");
+    VORTEX_INFO_TAG("ENGINE", "Successfully Closed Application!");
 }
 
 void VortexApplication::change_window_size()
@@ -497,8 +499,10 @@ void VortexApplication::mouse_callback(GLFWwindow* window, double xposIn, double
 void VortexApplication::run(std::function<void()> draw_callback)
 {
     VORTEX_INFO("VORTEX ENGINE RUNNING ON:");
-    VORTEX_INFO("VENDOR:   ", VortexGUI::_vendor_);
-    VORTEX_INFO("RENDERER: ", VortexGUI::_renderer_);
+    VORTEX_INFO("VENDOR:", VortexGUI::_vendor_);
+    VORTEX_INFO("RENDERER:", VortexGUI::_renderer_);
+
+    VORTEX_DEBUG_MSG("This is a test debug message to check the logging system.");
 
     glfwShowWindow(window);
 
@@ -710,9 +714,6 @@ void VortexApplication::run(std::function<void()> draw_callback)
             VortexGUI::camera_info(camera);
             VortexGUI::post_process_options();
             VortexGUI::skybox_options();
-            VortexGUI::creator_window();
-            VortexGUI::scene_inspector();
-            VortexGUI::draw_terminal();
             VortexGUI::draw_stack_history_window();
             VortexGUI::draw_settings_window();
             VortexGUI::draw_file_viewer();
@@ -723,6 +724,8 @@ void VortexApplication::run(std::function<void()> draw_callback)
 
             VortexGUI::draw_editor_render_viewport(render_camera);
             VortexGUI::draw_editor_viewport(editor_camera);
+
+            VortexImGuiManager::render_all();
         }
 
         if (is_playing_splash)
@@ -801,7 +804,7 @@ void VortexApplication::enter_play_mode()
 {
     if (current_state == EngineState::PLAY) return;
 
-    VORTEX_INFO("[ENGINE] Entering Play Mode...");
+    VORTEX_INFO_TAG("ENGINE", "Entering Play Mode...");
 
     std::string project_name = VortexGUI::m_new_project_name;
     VortexProject::take_snapshot(SnapshotState::SAVE, this, "temp_playmode_backup_" + project_name);
@@ -816,7 +819,7 @@ void VortexApplication::enter_play_mode()
 
 void VortexApplication::exit_play_mode()
 {
-    VORTEX_INFO("[ENGINE] Exiting Play Mode...");
+    VORTEX_INFO_TAG("ENGINE", "Exiting Play Mode...");
 
     VortexObjectManager::clean_scripts();
 

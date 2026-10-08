@@ -30,11 +30,11 @@ unsigned int VortexAssetManager::load_texture_raw(const std::string& path)
         stbi_image_free(data);
 
         texture_vault[path] = {textureID, 1};
-        VORTEX_INFO("[TEXTURE] Loaded and Cached: ", path);
+        VORTEX_INFO_TAG("TEXTURE", "Loaded and Cached: ", path);
         return textureID;
     }
 
-    VORTEX_ERROR("[TEXTURE ERROR] Failed to load: ", path);
+    VORTEX_ERROR_TAG("TEXTURE ERROR", "Failed to load: ", path);
     stbi_image_free(data);
     return 0;
 }
@@ -52,7 +52,7 @@ void VortexAssetManager::release_texture(const std::string& path)
         {
             glDeleteTextures(1, &it->second.id);
             texture_vault.erase(it);
-            VORTEX_INFO("[TEXTURE] Zero references remaining. Deleted from VRAM: ", path);
+            VORTEX_INFO_TAG("TEXTURE", "Zero references remaining. Deleted from VRAM: ", path);
         }
     }
 }
@@ -75,7 +75,7 @@ void VortexAssetManager::parse_mtl_helper(const std::string& mtl_filepath, Share
     std::ifstream file(mtl_filepath);
     if (!file.is_open()) return;
 
-    VORTEX_INFO("[MTL] Reading material: ", mtl_filepath);
+    VORTEX_INFO_TAG("MTL", "Reading material: ", mtl_filepath);
 
     std::string line;
     while(std::getline(file, line))
@@ -115,7 +115,7 @@ SharedMesh* VortexAssetManager::get_mesh(const std::string &filepath)
         return mesh_vault[filepath].mesh_ptr;
     }
 
-    VORTEX_INFO("[ASSET MANAGER] First time loading: ", filepath);
+    VORTEX_INFO_TAG("ASSET MANAGER", "First time loading: ", filepath);
 
     SharedMesh *new_mesh = new SharedMesh();
     std::vector<VortexModel_Vertex> vertices;
@@ -280,7 +280,7 @@ SharedMesh* VortexAssetManager::get_mesh(const std::string &filepath)
 
     mesh_vault[filepath] = {new_mesh, 1};
 
-    VORTEX_INFO("[ASSET MANAGER] Success! Cached in VRAM.");
+    VORTEX_INFO_TAG("ASSET MANAGER", "Success! Cached in VRAM.");
 
     return new_mesh;
 }
@@ -314,14 +314,14 @@ void VortexAssetManager::release_mesh(const std::string& filepath)
             delete mesh;
 
             mesh_vault.erase(it);
-            VORTEX_INFO("[ASSET MANAGER] Zero references remaining. Deleted Mesh from VRAM: ", filepath);
+            VORTEX_INFO_TAG("ASSET MANAGER", "Zero references remaining. Deleted Mesh from VRAM: ", filepath);
         }
     }
 }
 
 void VortexAssetManager::clean_up()
 {
-    VORTEX_INFO("[ASSET MANAGER] Releasing cached VRAM meshes and texture resources...");
+    VORTEX_INFO_TAG("ASSET MANAGER", "Releasing cached VRAM meshes and texture resources...");
 
     for (auto const& [path, data] : mesh_vault)
     {

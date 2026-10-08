@@ -15,7 +15,7 @@ void VortexDecal::set_texture(const std::string &path)
 
     if (!std::filesystem::exists(path))
     {
-        VORTEX_WARN("[DECAL] Texture file does not exist: ", path);
+        VORTEX_WARN_TAG("DECAL", "Texture file does not exist: ", path);
         VortexAssetManager::release_texture(decal_texture_path);
         decal_texture_path = "";
         quad_model->texture_id = 0;

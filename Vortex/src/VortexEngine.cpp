@@ -8,7 +8,7 @@ extern "C"
 
         if (!memory->is_initialized)
         {
-            VORTEX_INFO("[VORTEX GAME] Initializing Engine State...");
+            VORTEX_INFO_TAG("VORTEX GAME", "Initializing Engine State...");
             memory->is_initialized = true;
         }
 
@@ -16,7 +16,7 @@ extern "C"
         for (const auto& script : pending)
         {
             ScriptRegistry::get().register_script(script.name, script.factory);
-            VORTEX_INFO("[GAME] Registered Script: ", script.name);
+            VORTEX_INFO_TAG("GAME", "Registered Script: ", script.name);
         }
 
         pending.clear();

@@ -22,7 +22,7 @@ GLuint VortexGUI::return_folder_icon_tex(const std::filesystem::directory_entry 
     }
     catch (const std::filesystem::filesystem_error&)
     {
-        VORTEX_WARN("Couldn't determine wether folder is empty or not");
+        VORTEX_WARN_TAG("GUI", "Couldn't determine wether folder is empty or not");
     }
 
     return folder_full_icon_tex;
@@ -86,11 +86,11 @@ void VortexGUI::draw_asset_browser()
                 try
                 {
                     std::filesystem::rename(dragged_path, new_destination);
-                    VORTEX_INFO("[ASSET BROWSER] Moved item UP to parent directory: ", new_destination.string());
+                    VORTEX_INFO_TAG("ASSET BROWSER", "Moved item UP to parent directory: ", new_destination.string());
                 }
                 catch (const std::filesystem::filesystem_error& e)
                 {
-                    VORTEX_ERROR("[ASSET BROWSER] Failed to move item up: ", e.what());
+                    VORTEX_ERROR_TAG("ASSET BROWSER", "Failed to move item up: ", e.what());
                 }
             }
             ImGui::EndDragDropTarget();
@@ -207,11 +207,11 @@ void VortexGUI::draw_asset_browser()
                             try
                             {
                                 std::filesystem::rename(dragged_path, new_destination);
-                                VORTEX_INFO("[ASSET BROWSER] Moved item to: ", new_destination.string());
+                                VORTEX_INFO_TAG("ASSET BROWSER", "Moved item to: ", new_destination.string());
                             }
                             catch (const std::filesystem::filesystem_error& e)
                             {
-                                VORTEX_ERROR("[ASSET BROWSER] Failed to move item: ", e.what());
+                                VORTEX_ERROR_TAG("ASSET BROWSER", "Failed to move item: ", e.what());
                             }
                         }
                     }
@@ -307,7 +307,7 @@ void VortexGUI::draw_asset_browser()
                             int result = std::system(cmd.c_str());
                             if (result != 0)
                             {
-                                VORTEX_WARN("[System] Failed to launch external editor. Check IDE path in settings.");
+                                VORTEX_WARN_TAG("System", "Failed to launch external editor. Check IDE path in settings.");
                             }
                         }
                     }
@@ -316,14 +316,14 @@ void VortexGUI::draw_asset_browser()
 
                 if (ImGui::MenuItem("Rename"))
                 {
-                    vortex_strncpy(item_to_rename_old_path, sizeof(item_to_rename_old_path), absolute_path.c_str());
-                    vortex_strncpy(item_to_rename_new_name, sizeof(item_to_rename_new_name), filename.c_str());
+                    VortexUtils::vortex_strncpy(item_to_rename_old_path, sizeof(item_to_rename_old_path), absolute_path.c_str());
+                    VortexUtils::vortex_strncpy(item_to_rename_new_name, sizeof(item_to_rename_new_name), filename.c_str());
                     show_rename_modal = true;
                 }
 
                 if (ImGui::MenuItem("Delete"))
                 {
-                    vortex_strncpy(item_to_delete, sizeof(item_to_delete), entry.path().string().c_str());
+                    VortexUtils::vortex_strncpy(item_to_delete, sizeof(item_to_delete), entry.path().string().c_str());
                     show_delete_modal = true;
                 }
 
@@ -364,11 +364,11 @@ void VortexGUI::draw_asset_browser()
                 try
                 {
                     std::filesystem::rename(dragged_path, new_destination);
-                    VORTEX_INFO("[ASSET BROWSER] Moved item to current directory: ", new_destination.string());
+                    VORTEX_INFO_TAG("ASSET BROWSER", "Moved item to current directory: ", new_destination.string());
                 }
                 catch (const std::filesystem::filesystem_error& e)
                 {
-                    VORTEX_ERROR("[ASSET BROWSER] Failed to move item: ", e.what());
+                    VORTEX_ERROR_TAG("ASSET BROWSER", "Failed to move item: ", e.what());
                 }
             }
         }
@@ -398,7 +398,7 @@ void VortexGUI::draw_asset_browser()
         {
             if (strlen(preferred_ide_path) > 0)
             {
-                std::string scripts_dir = vortex_generatepath(
+                std::string scripts_dir = VortexUtils::vortex_generatepath(
                     VortexProject::SAVE_DIRECTORY,
                     m_new_project_name,
                     VortexProject::ASSET_DIR_SCRIPTS
@@ -412,11 +412,11 @@ void VortexGUI::draw_asset_browser()
                     std::string cmd = std::string(preferred_ide_path) + " \"" + absolute_dir + "\" &";
                 #endif
 
-                if (std::system(cmd.c_str()) != 0) VORTEX_WARN("Failed to launch external editor.");
+                if (std::system(cmd.c_str()) != 0) VORTEX_WARN_TAG("ASSET BROWSER", "Failed to launch external editor.");
             }
             else
             {
-                VORTEX_WARN("[Editor] No IDE path set in Edit -> Settings!");
+                VORTEX_WARN_TAG("ASSET BROWSER", "No IDE path set in Edit -> Settings!");
             }
         }
 
@@ -433,7 +433,7 @@ void VortexGUI::draw_asset_browser()
         ImGui::InputText("##filename", new_item_name, IM_ARRAYSIZE(new_item_name));
         if (ImGui::Button("Create", ImVec2(120, 0)))
         {
-            std::string full_path = vortex_generatepath(pending_creation_path, new_item_name);
+            std::string full_path = VortexUtils::vortex_generatepath(pending_creation_path, new_item_name);
             std::ofstream new_file(full_path);
             new_file.close();
             show_create_file_modal = false;
@@ -451,7 +451,7 @@ void VortexGUI::draw_asset_browser()
         ImGui::InputText("##foldername", new_item_name, IM_ARRAYSIZE(new_item_name));
         if (ImGui::Button("Create", ImVec2(120, 0)))
         {
-            std::string full_path = vortex_generatepath(pending_creation_path, new_item_name);
+            std::string full_path = VortexUtils::vortex_generatepath(pending_creation_path, new_item_name);
 
             std::filesystem::create_directory(full_path);
             show_create_folder_modal = false;
@@ -479,7 +479,7 @@ void VortexGUI::draw_asset_browser()
                 if (path_to_del.extension() == ".cpp" || path_to_del.extension() == ".hpp")
                 {
                     std::string script_name = path_to_del.stem().string();
-                    VORTEX_WARN("[ASSET BROWSER] Script deletion detected. Cleaning up references to: ", script_name);
+                    VORTEX_WARN_TAG("ASSET BROWSER", "Script deletion detected. Cleaning up references to: ", script_name);
 
                     for (VortexModel* model : VortexObjectManager::active_models)
                     {
@@ -494,7 +494,7 @@ void VortexGUI::draw_asset_browser()
                                 model->behaviours.erase(model->behaviours.begin() + i);
                                 model->script_names.erase(model->script_names.begin() + i);
 
-                                VORTEX_INFO("[ASSET BROWSER] Detached deleted script from model: ", model->model_name);
+                                VORTEX_INFO_TAG("ASSET BROWSER", "Detached deleted script from model: ", model->model_name);
                             }
                         }
                     }
@@ -503,11 +503,11 @@ void VortexGUI::draw_asset_browser()
                 }
 
                 std::filesystem::remove_all(path_to_del);
-                VORTEX_INFO("[ASSET BROWSER] Successfully deleted: ", item_to_delete);
+                VORTEX_INFO_TAG("ASSET BROWSER", "Successfully deleted: ", item_to_delete);
             }
             catch (const std::filesystem::filesystem_error& e)
             {
-                VORTEX_ERROR("[ASSET BROWSER ERROR] Failed to delete item: ", e.what());
+                VORTEX_ERROR_TAG("ASSET BROWSER", "Failed to delete item: ", e.what());
             }
 
             show_delete_modal = false;
@@ -543,17 +543,17 @@ void VortexGUI::draw_asset_browser()
                 {
                     if (std::filesystem::exists(new_fs_path))
                     {
-                         VORTEX_WARN("[ASSET BROWSER] Cannot rename. An item with that name already exists!");
+                         VORTEX_WARN_TAG("ASSET BROWSER", "Cannot rename. An item with that name already exists!");
                     }
                     else
                     {
                         std::filesystem::rename(old_fs_path, new_fs_path);
-                        VORTEX_INFO("[ASSET BROWSER] Renamed '", old_fs_path.filename().string(), "' to '", new_name_str, "'");
+                        VORTEX_INFO_TAG("ASSET BROWSER", "Renamed '", old_fs_path.filename().string(), "' to '", new_name_str, "'");
                     }
                 }
                 catch (const std::filesystem::filesystem_error& e)
                 {
-                    VORTEX_ERROR("[ASSET BROWSER ERROR] Failed to rename: ", e.what());
+                    VORTEX_ERROR_TAG("ASSET BROWSER", "Failed to rename: ", e.what());
                 }
             }
             show_rename_modal = false;

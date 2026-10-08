@@ -13,13 +13,13 @@ void VortexAudio::init()
 
     if (result != MA_SUCCESS)
     {
-        VORTEX_ERROR("[AUDIO ERROR] Failed to initialize audio engine!");
+        VORTEX_ERROR_TAG("AUDIO ERROR", "Failed to initialize audio engine!");
         exit(EXIT_FAILURE);
     }
 
     initialized = true;
 
-    VORTEX_INFO("[AUDIO] System initialized successfully.");
+    VORTEX_INFO_TAG("AUDIO", "System initialized successfully.");
 }
 
 void VortexAudio::play_sound(const std::string& filepath, float volume)
@@ -28,7 +28,7 @@ void VortexAudio::play_sound(const std::string& filepath, float volume)
 
     ma_sound* sound = new ma_sound();
 
-    std::string new_filepath = vortex_generatepath(
+    std::string new_filepath = VortexUtils::vortex_generatepath(
         VortexProject::SAVE_DIRECTORY,
         VortexGUI::m_new_project_name,
         VortexProject::ASSET_DIR_AUDIO,
@@ -46,7 +46,7 @@ void VortexAudio::play_sound(const std::string& filepath, float volume)
     }
     else
     {
-        VORTEX_ERROR("[AUDIO WARNING] Could not load: ", new_filepath);
+        VORTEX_ERROR_TAG("AUDIO WARNING", "Could not load: ", new_filepath);
         delete sound;
     }
 }
@@ -57,7 +57,7 @@ size_t VortexAudio::create_looping_sound(const std::string& filepath, float init
 
     ma_sound* sound = new ma_sound();
 
-    std::string new_filepath = vortex_generatepath(
+    std::string new_filepath = VortexUtils::vortex_generatepath(
         VortexProject::SAVE_DIRECTORY,
         VortexGUI::m_new_project_name,
         VortexProject::ASSET_DIR_AUDIO,
@@ -77,7 +77,7 @@ size_t VortexAudio::create_looping_sound(const std::string& filepath, float init
     }
     else
     {
-        VORTEX_ERROR("[AUDIO WARNING] Could not load looping sound: ", new_filepath);
+        VORTEX_ERROR_TAG("AUDIO WARNING", "Could not load looping sound: ", new_filepath);
         delete sound;
         return 0;
     }
@@ -155,7 +155,7 @@ void VortexAudio::update()
 
 void VortexAudio::clean_up()
 {
-    VORTEX_INFO("[AUDIO] Closing hardware audio stream context and unloading sound buffers...");
+    VORTEX_INFO_TAG("AUDIO", "Closing hardware audio stream context and unloading sound buffers...");
     if (!initialized) return;
 
     for (ma_sound* sound : active_sounds)

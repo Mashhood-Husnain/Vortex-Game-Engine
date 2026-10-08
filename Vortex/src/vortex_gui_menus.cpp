@@ -82,11 +82,22 @@ void VortexGUI::draw_main_menu_bar()
 
         if (ImGui::BeginMenu("Window"))
         {
-            ImGui::MenuItem("Scene Inspector", "Ctrl+I", &show_inspector);
+            bool temp_scene_inspector = VortexImGuiManager::get_visibility(getGuiWindowTypeName(GuiWindowTypes::InspectorWindow));
+            ImGui::MenuItem("Scene Inspector", "Ctrl+I", &temp_scene_inspector);
+            VortexImGuiManager::set_visibility(getGuiWindowTypeName(GuiWindowTypes::InspectorWindow), temp_scene_inspector);
+
             ImGui::MenuItem("Camera Info", "Ctrl+X", &show_camera_info);
-            ImGui::MenuItem("Creator Window", "Ctrl+W", &show_creator_window);
+
+            bool temp_show_creator = VortexImGuiManager::get_visibility(getGuiWindowTypeName(GuiWindowTypes::CreatorWindow));
+            ImGui::MenuItem("Creator Window", "Ctrl+W", &temp_show_creator);
+            VortexImGuiManager::set_visibility(getGuiWindowTypeName(GuiWindowTypes::CreatorWindow), temp_show_creator);
+
             ImGui::MenuItem("Engine Stats", "Ctrl+E", &show_engine_stats);
-            ImGui::MenuItem("Terminal Output", "Ctrl+P", &show_terminal);
+
+            bool temp_show_terminal = VortexImGuiManager::get_visibility(getGuiWindowTypeName(GuiWindowTypes::TerminalWindow));
+            ImGui::MenuItem("Terminal Output", "Ctrl+P", &temp_show_terminal);
+            VortexImGuiManager::set_visibility(getGuiWindowTypeName(GuiWindowTypes::TerminalWindow), temp_show_terminal);
+
             ImGui::MenuItem("Skybox/Post-Process", "Ctrl+O", &show_skybox_post_process_options);
             ImGui::MenuItem("Action Stack History", "Ctrl+H", &show_stack_history_window);
             ImGui::MenuItem("Asset Browser", "Ctrl+A", &show_asset_browser);
@@ -187,7 +198,8 @@ void VortexGUI::draw_project_hub()
 
         if (ImGui::Selectable((project_name + "##" + project_name).c_str(), false, 0, ImVec2(selectable_width, 30)))
         {
-            vortex_strncpy(m_new_project_name, sizeof(m_new_project_name), project_name.c_str());
+            VortexUtils::vortex_strncpy(m_new_project_name, sizeof(m_new_project_name), project_name.c_str());
+            VortexUtils::vortex_strncpy(VortexImGuiManager::context.m_new_project_name, sizeof(VortexImGuiManager::context.m_new_project_name), project_name.c_str());
 
             VortexObjectManager::clear_scene();
             VortexAssetManager::clean_up();
@@ -217,7 +229,7 @@ void VortexGUI::draw_project_hub()
 
         if (ImGui::Button(("X##del_" + project_name).c_str(), ImVec2(delete_btn_width, 30)))
         {
-            vortex_strncpy(m_project_to_delete, sizeof(m_project_to_delete), project_name.c_str());
+            VortexUtils::vortex_strncpy(m_project_to_delete, sizeof(m_project_to_delete), project_name.c_str());
 
             open_delete_modal = true;
         }
@@ -242,6 +254,8 @@ void VortexGUI::draw_project_hub()
     ImGui::SetNextItemWidth(-FLT_MIN);
     ImGui::InputText("##NewProjectName", m_new_project_name, IM_ARRAYSIZE(m_new_project_name));
 
+    VortexUtils::vortex_strncpy(VortexImGuiManager::context.m_new_project_name, sizeof(VortexImGuiManager::context.m_new_project_name), m_new_project_name);
+
     ImGui::Spacing();
     ImGui::Spacing();
 
@@ -253,7 +267,7 @@ void VortexGUI::draw_project_hub()
     {
         if (strlen(m_new_project_name) > 0)
         {
-            std::string target_path = vortex_generatepath(VortexProject::SAVE_DIRECTORY, m_new_project_name);
+            std::string target_path = VortexUtils::vortex_generatepath(VortexProject::SAVE_DIRECTORY, m_new_project_name);
 
             if (std::filesystem::exists(target_path))
             {
@@ -307,18 +321,18 @@ void VortexGUI::draw_project_hub()
 
         if (ImGui::Button("Yes, Delete", ImVec2(120, 0)))
         {
-            std::string path_to_delete = vortex_generatepath(VortexProject::SAVE_DIRECTORY, m_project_to_delete);
+            std::string path_to_delete = VortexUtils::vortex_generatepath(VortexProject::SAVE_DIRECTORY, m_project_to_delete);
 
             VortexProject::create_backup(m_project_to_delete);
 
             try
             {
                 std::filesystem::remove_all(path_to_delete);
-                VORTEX_INFO("[PROJECT] Successfully deleted folder: ", path_to_delete);
+                VORTEX_INFO_TAG("PROJECT", "Successfully deleted folder: ", path_to_delete);
             }
             catch (const std::filesystem::filesystem_error& e)
             {
-                VORTEX_ERROR("[PROJECT ERROR] Failed to delete project folder: ", e.what());
+                VORTEX_ERROR_TAG("PROJECT ERROR", "Failed to delete project folder: ", e.what());
             }
 
             memset(m_project_to_delete, 0, sizeof(m_project_to_delete));
@@ -372,7 +386,7 @@ void VortexGUI::open_file_in_viewer(const std::string& filepath)
     }
     else
     {
-        VORTEX_ERROR("Could not read file: ", filepath);
+        VORTEX_ERROR_TAG("FILE VIEWER", "Could not read file: ", filepath);
     }
 }
 

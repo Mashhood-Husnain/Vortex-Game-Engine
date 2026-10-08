@@ -1,0 +1,11 @@
+cmake_minimum_required(VERSION 3.10)
+project(@PROJECT_NAME@_Scripts)
+
+set(CMAKE_CXX_STANDARD 20)
+
+file(GLOB_RECURSE USER_SCRIPTS "*.cpp")
+add_library(DummyContext SHARED ${USER_SCRIPTS})
+
+target_include_directories(DummyContext PUBLIC
+@INCLUDE_PATHS@
+)

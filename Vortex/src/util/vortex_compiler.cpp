@@ -76,7 +76,7 @@ void VortexCompiler::check_for_hot_reload(VortexApplication *app)
     if (!initialized) return;
     if (!game_code || !game_code->need_reload()) return;
 
-    VORTEX_INFO("[ENGINE] Recompilation detected! Preparing hot reload...");
+    VORTEX_INFO_TAG("ENGINE", "Recompilation detected! Preparing hot reload...");
     std::error_code ec;
 
     #ifdef _WIN32
@@ -100,7 +100,7 @@ void VortexCompiler::check_for_hot_reload(VortexApplication *app)
 
     if (ec)
     {
-        VORTEX_WARN("[ENGINE] Compiler is still writing. Waiting...");
+        VORTEX_WARN_TAG("ENGINE", "Compiler is still writing. Waiting...");
         return;
     }
     std::filesystem::remove(test_temp_path, ec);
@@ -143,14 +143,14 @@ void VortexCompiler::check_for_hot_reload(VortexApplication *app)
                 }
                 else
                 {
-                    VORTEX_WARN("[ENGINE] Script '", script_name, "' is missing from the DLL. Removing from model.");
+                    VORTEX_WARN_TAG("ENGINE", "Script '", script_name, "' is missing from the DLL. Removing from model.");
                 }
             }
 
             model->behaviours = restored_behaviours;
             model->script_names = restored_names;
         }
-        VORTEX_INFO("[ENGINE] Hot Reload Complete! All pointers safely restored.");
+        VORTEX_INFO_TAG("ENGINE", "Hot Reload Complete! All pointers safely restored.");
     }
 }
 
@@ -163,7 +163,7 @@ void VortexCompiler::trigger_compile()
 
     set_status_mutex("Starting CMake Build...");
 
-    std::string project_script_dir = vortex_generatepath(
+    std::string project_script_dir = VortexUtils::vortex_generatepath(
         VortexProject::SAVE_DIRECTORY,
         VortexGUI::m_new_project_name,
         VortexProject::ASSET_DIR_SCRIPTS
@@ -184,7 +184,7 @@ void VortexCompiler::trigger_compile()
         std::string safe_path = absolute_script_dir;
         std::replace(safe_path.begin(), safe_path.end(), '\\', '/');
 
-        std::string compile_cmd = "cmake -DPROJECT_DIR=\"" + safe_path + "\" .. && make VortexGame 2>&1";
+        std::string compile_cmd = "cmake -DPROJECT_DIR=\"" + safe_path + "\" ../.. && make VortexGame 2>&1";
 
         FILE* pipe = POPEN(compile_cmd.c_str(), "r");
 

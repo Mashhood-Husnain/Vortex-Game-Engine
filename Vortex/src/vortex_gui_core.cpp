@@ -29,11 +29,8 @@ char VortexGUI::m_new_project_name[128] = "";
 char VortexGUI::m_project_to_delete[128] = "";
 char VortexGUI::preferred_ide_path[256] = "";
 
-bool VortexGUI::show_inspector = true;
 bool VortexGUI::show_camera_info = false;
-bool VortexGUI::show_creator_window = true;
 bool VortexGUI::show_engine_stats = false;
-bool VortexGUI::show_terminal = false;
 bool VortexGUI::show_skybox_post_process_options = true;
 bool VortexGUI::show_scene_viewport = true;
 bool VortexGUI::show_render_scene_viewport = false;
@@ -109,8 +106,6 @@ bool VortexGUI::is_render_view_visible = false;
 
 bool VortexGUI::is_using_gizmo = false;
 ImGuizmo::MODE VortexGUI::m_current_guizmo_mode = ImGuizmo::LOCAL;
-
-VortexDecal* VortexGUI::g_active_decal_for_gizmo = nullptr;
 
 VortexGUI::VortexGUI()
 {
@@ -208,7 +203,7 @@ void VortexGUI::update()
         ImGui::LoadIniSettingsFromMemory(pending_ini_data.c_str(), pending_ini_data.size());
         pending_layout_load = false;
         pending_ini_data.clear();
-        VORTEX_INFO("[GUI] Restored window layout from save file.");
+        VORTEX_INFO_TAG("GUI", "Restored window layout from save file.");
     }
 
     m_processed_models.clear();
@@ -246,9 +241,9 @@ void VortexGUI::draw_exit_modal()
             ImGui::Separator();
             ImGui::Spacing();
 
-            ImGui::Text("Project Name:");
-            ImGui::SetNextItemWidth(300.0f);
-            ImGui::InputText("##ProjectName", m_new_project_name, IM_ARRAYSIZE(m_new_project_name));
+            // ImGui::Text("Project Name:");
+            // ImGui::SetNextItemWidth(300.0f);
+            // ImGui::InputText("##ProjectName", m_new_project_name, IM_ARRAYSIZE(m_new_project_name));
 
             ImGui::Spacing();
             ImGui::Spacing();
@@ -319,7 +314,7 @@ GLuint VortexGUI::load_editor_icon(const char* file_path)
     unsigned char *data = stbi_load(file_path, &width, &height, &channels, 4);
     if (!data)
     {
-        VORTEX_WARN("[GUI] Failed to load editor icon: ", file_path);
+        VORTEX_WARN_TAG("GUI", "Failed to load editor icon: ", file_path);
         return 0;
     }
 
@@ -340,11 +335,13 @@ GLuint VortexGUI::load_editor_icon(const char* file_path)
 
 void VortexGUI::init_play_mode()
 {
-    show_inspector = false;
     show_camera_info = false;
-    show_creator_window = false;
     show_engine_stats = false;
-    show_terminal = false;
+
+    VortexImGuiManager::set_visibility(getGuiWindowTypeName(GuiWindowTypes::InspectorWindow), false);
+    VortexImGuiManager::set_visibility(getGuiWindowTypeName(GuiWindowTypes::TerminalWindow), false);
+    VortexImGuiManager::set_visibility(getGuiWindowTypeName(GuiWindowTypes::CreatorWindow), false);
+
     show_skybox_post_process_options = false;
     show_scene_viewport = false;
     show_stack_history_window = false;
@@ -369,7 +366,7 @@ void VortexGUI::init_play_mode()
 
 void VortexGUI::clean_up()
 {
-    VORTEX_INFO("[GUI] Cleaning up UI subsystem resources...");
+    VORTEX_INFO_TAG("GUI", "Cleaning up UI subsystem resources...");
 
     m_processed_models.clear();
     m_processed_ps.clear();

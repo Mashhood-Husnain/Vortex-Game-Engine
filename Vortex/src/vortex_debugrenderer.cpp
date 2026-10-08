@@ -9,7 +9,7 @@ void VortexDebugRenderer::init()
 
     glBindVertexArray(VAO);
     glBindBuffer(GL_ARRAY_BUFFER, VBO);
-    
+
     glBufferData(GL_ARRAY_BUFFER, sizeof(DebugVertex) * 100000, nullptr, GL_DYNAMIC_DRAW);
 
     glEnableVertexAttribArray(0);
@@ -80,7 +80,7 @@ void VortexDebugRenderer::update()
 
 void VortexDebugRenderer::clean_up()
 {
-    VORTEX_INFO("[DEBUG] Purging pipeline vertex buffers and clearing debug draw queues...");
+    VORTEX_INFO_TAG("DEBUG", "Purging pipeline vertex buffers and clearing debug draw queues...");
 
     if (m_shader)
     {

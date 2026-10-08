@@ -1,0 +1,17 @@
+{
+    "configurations": [
+        {
+            "name": "VortexEngine",
+            "compilerPath": @COMPILER_PATH@,
+            "includePath": [
+                "${workspaceFolder}/**",
+@INCLUDE_PATHS@
+            ],
+            "defines": [],
+            "intelliSenseMode": @INTELLISENSEMODE@,
+            "cStandard": "c17",
+            "cppStandard": "c++20"
+        }
+    ],
+    "version": 4
+}

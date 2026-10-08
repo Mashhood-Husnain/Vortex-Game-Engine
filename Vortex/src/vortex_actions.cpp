@@ -60,7 +60,7 @@ std::string ActionDecalTransform::get_details() const
         .scale = m_new_scale
     };
 
-    return vortex_ModelDetailsDictToString(model_details);
+    return VortexUtils::vortex_ModelDetailsDictToString(model_details);
 }
 
 ActionCreateDecal::ActionCreateDecal(VortexModel *model, VortexDecal *decal)
@@ -87,7 +87,7 @@ void ActionCreateDecal::undo()
     decals.erase(std::remove(decals.begin(), decals.end(), m_decal), decals.end());
     m_is_in_scene = false;
 
-    if (VortexGUI::g_active_decal_for_gizmo == m_decal) VortexGUI::g_active_decal_for_gizmo = nullptr;
+    if (VortexInspectorWindow::g_active_decal_for_gizmo == m_decal) VortexInspectorWindow::g_active_decal_for_gizmo = nullptr;
 }
 
 void ActionCreateDecal::redo()
@@ -140,7 +140,7 @@ void ActionDeleteDecal::redo()
     decals.erase(std::remove(decals.begin(), decals.end(), m_decal), decals.end());
     m_is_deleted = true;
 
-    if (VortexGUI::g_active_decal_for_gizmo == m_decal) VortexGUI::g_active_decal_for_gizmo = nullptr;
+    if (VortexInspectorWindow::g_active_decal_for_gizmo == m_decal) VortexInspectorWindow::g_active_decal_for_gizmo = nullptr;
 }
 
 std::string ActionDeleteDecal::get_name() const
@@ -210,7 +210,7 @@ std::string ActionTransform::get_details() const
         .scale = m_new_scale
     };
 
-    return vortex_ModelDetailsDictToString(model_details);
+    return VortexUtils::vortex_ModelDetailsDictToString(model_details);
 }
 
 ActionCreate::ActionCreate(VortexModel *model)
@@ -369,5 +369,5 @@ void ActionManager::clear_stack_history()
     }
     redo_stack.clear();
 
-    VORTEX_INFO("[Action Manager] Deleting Action Stack History...");
+    VORTEX_INFO_TAG("Action Manager", "Deleting Action Stack History...");
 }

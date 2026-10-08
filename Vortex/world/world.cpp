@@ -68,11 +68,11 @@ int main(int argc, char **argv)
             std::filesystem::current_path(exe_path.parent_path());
         #endif
 
-        VORTEX_INFO("[SYSTEM] Working Dirtectory set to: ", std::filesystem::current_path());
+        VORTEX_INFO_TAG("SYSTEM", "Working Dirtectory set to: ", std::filesystem::current_path());
     }
     catch(const std::exception &e)
     {
-        VORTEX_ERROR("[SYSTEM] Failed to set working directory: ", e.what());
+        VORTEX_ERROR_TAG("SYSTEM", "Failed to set working directory: ", e.what());
     }
 
     VortexApplication VortexEngineApplication("Vortex Engine");

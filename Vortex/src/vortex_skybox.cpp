@@ -59,7 +59,7 @@ unsigned int VortexSkybox::load_cubemap(std::vector<std::string> faces)
     stbi_set_flip_vertically_on_load(false);
     for (unsigned int i = 0; i < faces.size(); i++)
     {
-        VORTEX_INFO("[SKYBOX] Loading: ", faces[i]);
+        VORTEX_INFO_TAG("SKYBOX", "Loading: ", faces[i]);
 
         unsigned char *data = stbi_load(faces[i].c_str(), &width, &height, &nrChannels, 0);
         if (data)
@@ -82,7 +82,7 @@ unsigned int VortexSkybox::load_cubemap(std::vector<std::string> faces)
         }
         else
         {
-            VORTEX_ERROR("[SKYBOX ERROR] Cubemap texture failed to load at path: ", faces[i]);
+            VORTEX_ERROR_TAG("SKYBOX", "Cubemap texture failed to load at path: ", faces[i]);
             stbi_image_free(data);
 
             exit(EXIT_FAILURE);
@@ -117,7 +117,7 @@ std::vector<std::string> get_skyboxes(std::string path)
 
     if (!std::filesystem::exists(path) || !std::filesystem::is_directory(path))
     {
-        VORTEX_ERROR("[SKYBOX ERROR] Path specified does not exist: ", path);
+        VORTEX_ERROR_TAG("SKYBOX", "Path specified does not exist: ", path);
         exit(EXIT_FAILURE);
     }
 
@@ -136,6 +136,6 @@ std::vector<std::string> get_skyboxes(std::string path)
             }
         }
     }
-    
+
     return names;
 }

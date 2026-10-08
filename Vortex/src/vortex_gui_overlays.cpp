@@ -196,7 +196,7 @@ void VortexGUI::camera_info(VortexCamera *camera)
         ImGui::TextDisabled("Fly Speed");
         ImGui::SetNextItemWidth(-FLT_MIN);
         float camera_movement_speed = camera->get_movement_speed();
-        VortexGuiLambda::ClampedInputFloat("##Speed", &camera_movement_speed, 0.5f, 1.0f, 0.0f, 100.0f);
+        VortexUI::Lambda::ClampedInputFloat("##Speed", &camera_movement_speed, 0.5f, 1.0f, 0.0f, 100.0f);
         camera->set_movement_speed(camera_movement_speed);
 
         ImGui::Spacing();

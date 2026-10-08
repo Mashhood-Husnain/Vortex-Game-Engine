@@ -15,13 +15,13 @@ bool VortexShader::read_shader(const std::string& vertex_path, const std::string
 
     if (!vertex_file.is_open())
     {
-        VORTEX_ERROR("[SHADER ERROR] could not open ", vertex_path, " file");
+        VORTEX_ERROR_TAG("SHADER", "could not open ", vertex_path, " file");
         return false;
     }
 
     if (!fragment_file.is_open())
     {
-        VORTEX_ERROR("[SHADER ERROR] could not open ", fragment_path, " file");
+        VORTEX_ERROR_TAG("SHADER", "could not open ", fragment_path, " file");
         return false;
     }
 

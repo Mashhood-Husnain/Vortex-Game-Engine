@@ -33,7 +33,7 @@ void VortexProject::create_backup(const std::string& project_name)
 {
     if (project_name.empty() || project_name.find("temp_playmode_backup_") == 0) return;
 
-    std::string src_dir = vortex_generatepath(SAVE_DIRECTORY, project_name);
+    std::string src_dir = VortexUtils::vortex_generatepath(SAVE_DIRECTORY, project_name);
     if (!std::filesystem::exists(src_dir)) return;
 
     std::string backup_base_dir = get_global_backup_directory();
@@ -49,77 +49,132 @@ void VortexProject::create_backup(const std::string& project_name)
     std::strftime(time_buf, sizeof(time_buf), "%Y%m%d_%H%M%S", &local_tm);
 
     std::string backup_folder_name = project_name + "_backup_" + std::string(time_buf);
-    std::string dest_dir = vortex_generatepath(backup_base_dir, backup_folder_name);
+    std::string dest_dir = VortexUtils::vortex_generatepath(backup_base_dir, backup_folder_name);
 
     try
     {
         std::filesystem::copy(src_dir, dest_dir, std::filesystem::copy_options::recursive | std::filesystem::copy_options::overwrite_existing);
-        VORTEX_INFO("[PROJECT] Backup securely archived at: ", dest_dir);
+        VORTEX_INFO_TAG("PROJECT", "Backup securely archived at: ", dest_dir);
     }
     catch (const std::filesystem::filesystem_error& e)
     {
-        VORTEX_ERROR("[PROJECT ERROR] Failed to create backup: ", e.what());
+        VORTEX_ERROR_TAG("PROJECT", "Failed to create backup: ", e.what());
     }
 }
 
 void generate_ide_context(const std::string& project_name)
 {
-    std::string scripts_dir = vortex_generatepath(
+    std::string scripts_dir = VortexUtils::vortex_generatepath(
         VortexProject::SAVE_DIRECTORY,
         project_name,
         VortexProject::ASSET_DIR_SCRIPTS
     );
 
-    std::string cmake_path = vortex_generatepath(scripts_dir, "CMakeLists.txt");
-    std::string vscode_dir = vortex_generatepath(scripts_dir, ".vscode");
-    std::string cpp_props_path = vortex_generatepath(vscode_dir, "c_cpp_properties.json");
+    std::string cmake_path = VortexUtils::vortex_generatepath(scripts_dir, "CMakeLists.txt");
+    std::string vscode_dir = VortexUtils::vortex_generatepath(scripts_dir, ".vscode");
+    std::string cpp_props_path = VortexUtils::vortex_generatepath(vscode_dir, "c_cpp_properties.json");
 
     if (std::filesystem::exists(cmake_path) && std::filesystem::exists(cpp_props_path)) return;
 
-    std::string engine_root = std::filesystem::absolute("..").string();
-    std::replace(engine_root.begin(), engine_root.end(), '\\', '/');
+    std::string build_root_str = std::filesystem::current_path().string();
+    std::replace(build_root_str.begin(), build_root_str.end(), '\\', '/');
+
+    std::filesystem::path search_path = std::filesystem::current_path();
+    while (!std::filesystem::exists(VortexUtils::vortex_generatepath(search_path, "Vortex", "include")))
+    {
+        if (!search_path.has_parent_path() || search_path == search_path.parent_path()) break;
+        search_path = search_path.parent_path();
+    }
+
+    std::string source_root_str = std::filesystem::canonical(search_path).string();
+    std::replace(source_root_str.begin(), source_root_str.end(), '\\', '/');
 
     std::vector<std::string> include_paths;
-    include_paths.push_back(engine_root + "/Vortex/include");
-    include_paths.push_back(engine_root + "/Vortex/include/util");
 
-    std::string vendor_path = engine_root + "/vendor";
-    if (std::filesystem::exists(vendor_path) && std::filesystem::is_directory(vendor_path))
+    include_paths.push_back(source_root_str + "/Vortex/include");
+    include_paths.push_back(source_root_str + "/Vortex/include/util");
+
+    auto scan_vendor_folder = [&](const std::string& base_path)
     {
-        for (const auto& entry : std::filesystem::directory_iterator(vendor_path))
+        std::string vendor_path = base_path + "/vendor";
+        if (std::filesystem::exists(vendor_path) && std::filesystem::is_directory(vendor_path))
         {
-            if (entry.is_directory())
+            for (const auto& entry : std::filesystem::directory_iterator(vendor_path))
             {
-                std::string path_to_add = entry.path().string();
-                std::string inc_dir = path_to_add + "/include";
+                if (entry.is_directory())
+                {
+                    std::string path_to_add = entry.path().string();
+                    std::string inc_dir = path_to_add + "/include";
 
-                if (std::filesystem::exists(inc_dir)) path_to_add = inc_dir;
+                    if (std::filesystem::exists(inc_dir)) path_to_add = inc_dir;
+                    std::replace(path_to_add.begin(), path_to_add.end(), '\\', '/');
 
-                std::replace(path_to_add.begin(), path_to_add.end(), '\\', '/');
-                include_paths.push_back(path_to_add);
+                    if (std::find(include_paths.begin(), include_paths.end(), path_to_add) == include_paths.end())
+                    {
+                        include_paths.push_back(path_to_add);
+                    }
+                }
             }
         }
-    }
+    };
+
+    scan_vendor_folder(source_root_str);
+    scan_vendor_folder(build_root_str);
 
     if (!std::filesystem::exists(cmake_path))
     {
-        std::ofstream cmake_file(cmake_path);
-        if (cmake_file.is_open())
-        {
-            cmake_file << "cmake_minimum_required(VERSION 3.10)\n";
-            cmake_file << "project(" << project_name << "_Scripts)\n\n";
-            cmake_file << "set(CMAKE_CXX_STANDARD 20)\n\n";
-            cmake_file << "file(GLOB_RECURSE USER_SCRIPTS \"*.cpp\")\n";
-            cmake_file << "add_library(DummyContext SHARED ${USER_SCRIPTS})\n\n";
-            cmake_file << "target_include_directories(DummyContext PUBLIC\n";
+        std::string template_path = VortexUtils::vortex_generatepath(
+            source_root_str,
+            "Vortex/templates/Scripts_CMakeLists.txt.template"
+        );
 
-            for (const std::string& path : include_paths)
+        std::ifstream template_file(template_path);
+        if (template_file.is_open())
+        {
+            std::stringstream buffer;
+            buffer << template_file.rdbuf();
+
+            std::string content = buffer.str();
+            template_file.close();
+
+            std::string proj_token = "@PROJECT_NAME@";
+            size_t pos = content.find(proj_token);
+
+            if (pos != std::string::npos)
             {
-                cmake_file << "    \"" << path << "\"\n";
+                content.replace(pos, proj_token.length(), project_name);
             }
 
-            cmake_file << ")\n";
-            cmake_file.close();
+            std::string include_str;
+            for (const std::string &path : include_paths)
+            {
+                include_str += "    \"" + path + "\"\n";
+            }
+
+            std::string inc_token = "@INCLUDE_PATHS@";
+            pos = content.find(inc_token);
+
+            if (pos != std::string::npos)
+            {
+                if (!include_str.empty()) include_str.pop_back();
+
+                content.replace(pos, inc_token.length(), include_str);
+            }
+
+            std::ofstream cmake_file(cmake_path);
+            if (cmake_file.is_open())
+            {
+                cmake_file << content;
+                cmake_file.close();
+            }
+            else
+            {
+                VORTEX_ERROR_TAG("PROJECT", "Failed to write generated CMakeLists.txt at: ", cmake_path);
+            }
+        }
+        else
+        {
+            VORTEX_ERROR_TAG("PROJECT", "Could not open CMake template file at: ", template_path);
         }
     }
 
@@ -130,43 +185,85 @@ void generate_ide_context(const std::string& project_name)
 
     if (!std::filesystem::exists(cpp_props_path))
     {
-        std::ofstream props_file(cpp_props_path);
-        if (props_file.is_open())
-        {
-            props_file << "{\n";
-            props_file << "    \"configurations\": [\n";
-            props_file << "        {\n";
-            props_file << "            \"name\": \"VortexEngine\",\n";
-            props_file << "            \"includePath\": [\n";
-            props_file << "                \"${workspaceFolder}/**\",\n";
+        std::string template_path = VortexUtils::vortex_generatepath(
+            source_root_str,
+            "Vortex/templates/Scripts_c_cpp_properties.json.template"
+        );
 
-            for (size_t i = 0; i < include_paths.size(); i++)
+        std::ifstream template_file(template_path);
+        if (template_file.is_open())
+        {
+            std::stringstream buffer;
+            buffer << template_file.rdbuf();
+
+            std::string content = buffer.str();
+            template_file.close();
+
+            std::string cmp_token = "@COMPILER_PATH@";
+            size_t pos = content.find(cmp_token);
+
+            if (pos != std::string::npos)
             {
-                props_file << "                \"" << include_paths[i] << "\"";
-                if (i < include_paths.size() - 1) props_file << ",";
-                props_file << "\n";
+                std::string compiler_path;
+
+                #if defined(_WIN32) || defined(_WIN64)
+                    compiler_path = "\"cl.exe\"";
+                #else
+                    compiler_path = "\"/usr/bin/g++\"";
+                #endif
+
+                content.replace(pos, cmp_token.length(), compiler_path);
             }
 
-            props_file << "            ],\n";
-            props_file << "            \"defines\": [],\n";
+            std::string include_str;
+            for (const std::string &path : include_paths)
+            {
+                include_str += "                \"" + path + "\",\n";
+            }
 
-            #if defined(_WIN32) || defined(_WIN64)
-                props_file << "            \"intelliSenseMode\": \"windows-gcc-x64\",\n";
-            #else
-                props_file << "            \"intelliSenseMode\": \"linux-gcc-x64\",\n";
-            #endif
+            std::string inc_token = "@INCLUDE_PATHS@";
+            pos = content.find(inc_token);
 
-            props_file << "            \"cStandard\": \"c17\",\n";
-            props_file << "            \"cppStandard\": \"c++20\"\n";
-            props_file << "        }\n";
-            props_file << "    ],\n";
-            props_file << "    \"version\": 4\n";
-            props_file << "}\n";
-            props_file.close();
+            if (pos != std::string::npos)
+            {
+                if (!include_str.empty()) include_str.pop_back();
+
+                content.replace(pos, inc_token.length(), include_str);
+            }
+
+            std::string intelli_token = "@INTELLISENSEMODE@";
+            pos = content.find(intelli_token);
+
+            if (pos != std::string::npos)
+            {
+                std::string intelli_mode;
+                #if defined(_WIN32) || defined(_WIN64)
+                    intelli_mode = "\"windows-msvc-x64\"";
+                #else
+                    intelli_mode = "\"linux-gcc-x64\"";
+                #endif
+
+                content.replace(pos, intelli_token.length(), intelli_mode);
+            }
+
+            std::ofstream cpp_props_file(cpp_props_path);
+            if (cpp_props_file.is_open())
+            {
+                cpp_props_file << content;
+                cpp_props_file.close();
+            }
+            else
+            {
+                VORTEX_ERROR_TAG("PROJECT", "Failed to write generated c_cpp_properties file at: ", cpp_props_path);
+            }
+        }
+        else
+        {
+            VORTEX_ERROR_TAG("PROJECT", "Could not open c_cpp_properties template file at: ", template_path);
         }
     }
 
-    VORTEX_INFO("[PROJECT] Generated IDE context for project: ", project_name);
+    VORTEX_INFO_TAG("PROJECT", "Generated IDE context for project: ", project_name);
 }
 
 void VortexProject::save_project(Snapshot *snapshot)
@@ -183,43 +280,43 @@ void VortexProject::save_project(Snapshot *snapshot)
         std::filesystem::create_directory(SAVE_DIRECTORY);
     }
 
-    std::string project_save_dir = vortex_generatepath(SAVE_DIRECTORY, folder_name);
+    std::string project_save_dir = VortexUtils::vortex_generatepath(SAVE_DIRECTORY, folder_name);
     if (!std::filesystem::exists(project_save_dir))
     {
         std::filesystem::create_directory(project_save_dir);
     }
 
-    std::string project_asset_dir = vortex_generatepath(project_save_dir, ASSET_DIR_SCRIPTS);
+    std::string project_asset_dir = VortexUtils::vortex_generatepath(project_save_dir, ASSET_DIR_SCRIPTS);
     if (!std::filesystem::exists(project_asset_dir))
     {
         std::filesystem::create_directory(project_asset_dir);
     }
 
-    std::string project_audio_dir = vortex_generatepath(project_save_dir, ASSET_DIR_AUDIO);
+    std::string project_audio_dir = VortexUtils::vortex_generatepath(project_save_dir, ASSET_DIR_AUDIO);
     if (!std::filesystem::exists(project_audio_dir))
     {
         std::filesystem::create_directory(project_audio_dir);
     }
 
-    std::string project_models_dir = vortex_generatepath(project_save_dir, ASSET_DIR_MODELS);
+    std::string project_models_dir = VortexUtils::vortex_generatepath(project_save_dir, ASSET_DIR_MODELS);
     if (!std::filesystem::exists(project_models_dir))
     {
         std::filesystem::create_directory(project_models_dir);
     }
 
-    std::string project_models_obj_dir = vortex_generatepath(project_models_dir, ASSET_DIR_MODELS_OBJ);
+    std::string project_models_obj_dir = VortexUtils::vortex_generatepath(project_models_dir, ASSET_DIR_MODELS_OBJ);
     if (!std::filesystem::exists(project_models_obj_dir))
     {
         std::filesystem::create_directory(project_models_obj_dir);
     }
 
-    std::string project_models_mtl_dir = vortex_generatepath(project_models_dir, ASSET_DIR_MODELS_MTL);
+    std::string project_models_mtl_dir = VortexUtils::vortex_generatepath(project_models_dir, ASSET_DIR_MODELS_MTL);
     if (!std::filesystem::exists(project_models_mtl_dir))
     {
         std::filesystem::create_directory(project_models_mtl_dir);
     }
 
-    std::string project_models_mtl_textures_dir = vortex_generatepath(project_models_mtl_dir, ASSET_DIR_MODELS_MTL_TEXTURES);
+    std::string project_models_mtl_textures_dir = VortexUtils::vortex_generatepath(project_models_mtl_dir, ASSET_DIR_MODELS_MTL_TEXTURES);
     if (!std::filesystem::exists(project_models_mtl_textures_dir))
     {
         std::filesystem::create_directory(project_models_mtl_textures_dir);
@@ -329,14 +426,14 @@ void VortexProject::save_project(Snapshot *snapshot)
         save_data["camera"]["pitch"] = snapshot->window->get_editor_camera()->get_pitch();
     }
 
-    std::string file_path = vortex_generatepath(project_save_dir, snapshot->project_name + ".vtx");
+    std::string file_path = VortexUtils::vortex_generatepath(project_save_dir, snapshot->project_name + ".vtx");
 
     std::string json_string = save_data.dump(4);
     VortexEncrypt::write_encrypted(file_path, json_string);
 
     if (snapshot->settings_snapshot) save_project_settings(snapshot->settings_snapshot, snapshot->project_name);
 
-    VORTEX_INFO("[PROJECT] Successfully saved to: ", file_path);
+    VORTEX_INFO_TAG("PROJECT", "Successfully saved to: ", file_path);
 }
 
 void VortexProject::save_project_settings(SettingsSnapshot *settings_snapshot, const std::string project_name)
@@ -344,7 +441,7 @@ void VortexProject::save_project_settings(SettingsSnapshot *settings_snapshot, c
     if (!settings_snapshot) return;
     if (project_name.empty() || project_name.find("temp_playmode_backup_") == 0) return;
 
-    std::string path = vortex_generatepath(SAVE_DIRECTORY, project_name, project_name + "_settings.json");
+    std::string path = VortexUtils::vortex_generatepath(SAVE_DIRECTORY, project_name, project_name + "_settings.json");
 
     nlohmann::json j;
     j["preferred_ide_path"] = std::string(settings_snapshot->preferred_ide_path);
@@ -373,7 +470,7 @@ void VortexProject::save_project_settings(SettingsSnapshot *settings_snapshot, c
     {
         file << j.dump(4);
         file.close();
-        VORTEX_INFO("[SETTINGS] Saved project settings: ", path);
+        VORTEX_INFO_TAG("SETTINGS", "Saved project settings: ", path);
     }
 }
 
@@ -414,10 +511,10 @@ void VortexProject::load_project(Snapshot *snapshot)
         folder_name = folder_name.substr(prefix.length());
     }
 
-    std::string file_path = vortex_generatepath(SAVE_DIRECTORY, folder_name, snapshot->project_name  + ".vtx");
+    std::string file_path = VortexUtils::vortex_generatepath(SAVE_DIRECTORY, folder_name, snapshot->project_name  + ".vtx");
     if (!std::filesystem::exists(file_path))
     {
-        VORTEX_WARN("[PROJECT ERROR] Save file not found: ", file_path);
+        VORTEX_ERROR_TAG("PROJECT", "Save file not found: ", file_path);
         return;
     }
 
@@ -430,7 +527,7 @@ void VortexProject::load_project(Snapshot *snapshot)
         save_data = json::parse(decrypted_data);
     } catch(...)
     {
-        VORTEX_ERROR("[LOAD ERROR] Save file is corrupted or wrong encryption key!");
+        VORTEX_ERROR_TAG("PROJECT", "Save file is corrupted or wrong encryption key!");
         return;
     }
 
@@ -596,13 +693,13 @@ void VortexProject::load_project(Snapshot *snapshot)
         }
         else
         {
-            VORTEX_ERROR("[LOAD ERROR] Failed to load camera data: Editor camera is null!");
+            VORTEX_ERROR_TAG("LOAD", "Failed to load camera data: Editor camera is null!");
         }
     }
 
     if (snapshot->settings_snapshot) load_project_settings(snapshot->settings_snapshot, snapshot->project_name);
 
-    VORTEX_INFO("[PROJECT] Successfully loaded ", snapshot->project_name);
+    VORTEX_INFO_TAG("PROJECT", "Successfully loaded ", snapshot->project_name);
 }
 
 void VortexProject::load_project_settings(SettingsSnapshot *settings_snapshot, const std::string project_name)
@@ -618,7 +715,7 @@ void VortexProject::load_project_settings(SettingsSnapshot *settings_snapshot, c
 
     memset(settings_snapshot->preferred_ide_path, 0, 256);
 
-    std::string path = vortex_generatepath(SAVE_DIRECTORY, actual_project_name, actual_project_name + "_settings.json");
+    std::string path = VortexUtils::vortex_generatepath(SAVE_DIRECTORY, actual_project_name, actual_project_name + "_settings.json");
 
     if (std::filesystem::exists(path))
     {
@@ -633,7 +730,7 @@ void VortexProject::load_project_settings(SettingsSnapshot *settings_snapshot, c
                 if (j.contains("preferred_ide_path") && j["preferred_ide_path"].is_string())
                 {
                     std::string ide = j["preferred_ide_path"];
-                    vortex_strncpy(settings_snapshot->preferred_ide_path, 256, ide.c_str());
+                    VortexUtils::vortex_strncpy(settings_snapshot->preferred_ide_path, 256, ide.c_str());
                 }
 
                 if (j.contains("window_layout"))
@@ -656,11 +753,11 @@ void VortexProject::load_project_settings(SettingsSnapshot *settings_snapshot, c
                     settings_snapshot->engine_layout.imgui_ini_data = layout_j.value("imgui_ini_data", "");
                 }
 
-                VORTEX_INFO("[SETTINGS] Loaded project settings: ", path);
+                VORTEX_INFO_TAG("SETTINGS", "Loaded project settings: ", path);
             }
             catch (...)
             {
-                VORTEX_WARN("[SETTINGS] Corrupted settings JSON: ", path);
+                VORTEX_WARN_TAG("SETTINGS", "Corrupted settings JSON: ", path);
             }
             file.close();
         }
@@ -676,7 +773,7 @@ bool VortexProject::check_save_state(Snapshot *snapshot)
         folder_name = folder_name.substr(prefix.length());
     }
 
-    std::string filepath = vortex_generatepath(SAVE_DIRECTORY, folder_name, snapshot->project_name + ".vtx");
+    std::string filepath = VortexUtils::vortex_generatepath(SAVE_DIRECTORY, folder_name, snapshot->project_name + ".vtx");
 
     std::string decrypted_data = VortexEncrypt::read_decrypted(filepath);
 
@@ -832,11 +929,11 @@ void VortexProject::take_snapshot(SnapshotState state, VortexApplication *window
     SettingsSnapshot settings_snapshot = {
         VortexGUI::preferred_ide_path,
         {
-            VortexGUI::show_inspector,
+            VortexImGuiManager::get_visibility(getGuiWindowTypeName(GuiWindowTypes::InspectorWindow)),
             VortexGUI::show_camera_info,
-            VortexGUI::show_creator_window,
+            VortexImGuiManager::get_visibility(getGuiWindowTypeName(GuiWindowTypes::CreatorWindow)),
             VortexGUI::show_engine_stats,
-            VortexGUI::show_terminal,
+            VortexImGuiManager::get_visibility(getGuiWindowTypeName(GuiWindowTypes::TerminalWindow)),
             VortexGUI::show_skybox_post_process_options,
             VortexGUI::show_scene_viewport,
             VortexGUI::show_render_scene_viewport,
@@ -864,10 +961,10 @@ void VortexProject::take_snapshot(SnapshotState state, VortexApplication *window
     {
         if (project_name.find("temp_playmode_backup_") == std::string::npos)
         {
-            std::string base_path = vortex_generatepath(SAVE_DIRECTORY, project_name);
+            std::string base_path = VortexUtils::vortex_generatepath(SAVE_DIRECTORY, project_name);
             if (!std::filesystem::exists(base_path)) std::filesystem::create_directories(base_path);
 
-            std::string scripts_path = vortex_generatepath(base_path, ASSET_DIR_SCRIPTS);
+            std::string scripts_path = VortexUtils::vortex_generatepath(base_path, ASSET_DIR_SCRIPTS);
             if (!std::filesystem::exists(scripts_path)) std::filesystem::create_directories(scripts_path);
 
             generate_ide_context(project_name);
@@ -879,9 +976,10 @@ void VortexProject::take_snapshot(SnapshotState state, VortexApplication *window
     {
         VortexProject::load_project(&snapshot);
 
-        VortexGUI::show_inspector = settings_snapshot.engine_layout.show_inspector;
-        VortexGUI::show_creator_window = settings_snapshot.engine_layout.show_creator_window;
-        VortexGUI::show_terminal = settings_snapshot.engine_layout.show_terminal;
+        VortexImGuiManager::set_visibility(getGuiWindowTypeName(GuiWindowTypes::InspectorWindow), settings_snapshot.engine_layout.show_inspector);
+        VortexImGuiManager::set_visibility(getGuiWindowTypeName(GuiWindowTypes::TerminalWindow), settings_snapshot.engine_layout.show_terminal);
+        VortexImGuiManager::set_visibility(getGuiWindowTypeName(GuiWindowTypes::CreatorWindow), settings_snapshot.engine_layout.show_creator_window);
+
         VortexGUI::show_skybox_post_process_options = settings_snapshot.engine_layout.show_skybox_post_process_options;
         VortexGUI::show_scene_viewport = settings_snapshot.engine_layout.show_scene_viewport;
         VortexGUI::show_render_scene_viewport = settings_snapshot.engine_layout.show_render_scene_viewport;
@@ -895,7 +993,7 @@ void VortexProject::take_snapshot(SnapshotState state, VortexApplication *window
 
         if (!settings_snapshot.engine_layout.imgui_ini_data.empty())
         {
-            VORTEX_INFO("[GUI] Queuing layout restoration (", settings_snapshot.engine_layout.imgui_ini_data.size(), " bytes)");
+            VORTEX_INFO_TAG("GUI", "Queuing layout restoration (", settings_snapshot.engine_layout.imgui_ini_data.size(), " bytes)");
             VortexGUI::pending_ini_data = settings_snapshot.engine_layout.imgui_ini_data;
             VortexGUI::pending_layout_load = true;
         }
@@ -904,12 +1002,12 @@ void VortexProject::take_snapshot(SnapshotState state, VortexApplication *window
 
 void VortexProject::clean_playmode_backups()
 {
-    VORTEX_INFO("[PROJECT] Purging temporary playmode cache files from backup storage directory...");
+    VORTEX_INFO_TAG("PROJECT", "Purging temporary playmode cache files from backup storage directory...");
 
     std::string target_dir = SAVE_DIRECTORY;
     std::string prefix = "temp_playmode_backup_";
 
-    VORTEX_INFO("[PROJECT] Scanning '" + SAVE_DIRECTORY + "/' for stale runtime playmode backups...");
+    VORTEX_INFO_TAG("PROJECT", "Scanning '" + SAVE_DIRECTORY + "/' for stale runtime playmode backups...");
 
     if (!std::filesystem::exists(target_dir) || !std::filesystem::is_directory(target_dir))
     {
@@ -942,11 +1040,11 @@ void VortexProject::clean_playmode_backups()
 
         if (deleted_count > 0)
         {
-            VORTEX_INFO("[PROJECT] Successfully purged ", deleted_count, " temporary playmode backup files.");
+            VORTEX_INFO_TAG("PROJECT", "Successfully purged ", deleted_count, " temporary playmode backup files.");
         }
     }
     catch (const std::filesystem::filesystem_error& e)
     {
-        VORTEX_ERROR("[PROJECT ERROR] Failed to clear playmode backups: ", e.what());
+        VORTEX_ERROR_TAG("PROJECT", "Failed to clear playmode backups: ", e.what());
     }
 }

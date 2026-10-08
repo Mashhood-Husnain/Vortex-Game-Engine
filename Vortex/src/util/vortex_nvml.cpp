@@ -32,8 +32,8 @@ bool VortexNVML::init()
     lib_handle = (void*)LOAD_LIBRARY(NVML_LIB_NAME);
     if (!lib_handle)
     {
-        VORTEX_WARN("[VortexNVML] NVIDIA Driver not found. Disabling GPU metrics.");
-    
+        VORTEX_WARN_TAG("VortexNVML" ,"NVIDIA Driver not found. Disabling GPU metrics.");
+
         return false;
     }
 
@@ -45,7 +45,7 @@ bool VortexNVML::init()
 
     if (!ptr_nvmlInit || !ptr_nvmlDeviceGetHandleByIndex || !ptr_nvmlDeviceGetMemoryInfo || !ptr_nvmlDeviceGetUtilizationRates)
     {
-        VORTEX_WARN("[VortexNVML] Failed to map NVML functions.");
+        VORTEX_WARN_TAG("VortexNVML", "Failed to map NVML functions.");
         FREE_LIBRARY(lib_handle);
         return false;
     }

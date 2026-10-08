@@ -106,7 +106,7 @@ if(EXISTS "${CMAKE_SOURCE_DIR}/.env")
 endif()
 
 # ----------------------------
-# Shaders & Assets
+# Shaders, Assets & Templates
 # ----------------------------
 file(GLOB SHADER_FILES CONFIGURE_DEPENDS "Vortex/shaders/*")
 foreach(SHADER ${SHADER_FILES})
@@ -118,6 +118,12 @@ file(GLOB_RECURSE MODEL_FILES CONFIGURE_DEPENDS "Vortex/assets/*")
 foreach(MODEL ${MODEL_FILES})
     file(RELATIVE_PATH REL_PATH "${CMAKE_SOURCE_DIR}/Vortex/assets" ${MODEL})
     configure_file(${MODEL} "${CMAKE_BINARY_DIR}/assets/${REL_PATH}" COPYONLY)
+endforeach()
+
+file(GLOB_RECURSE TEMPLATE_FILES CONFIGURE_DEPENDS "Vortex/templates/*")
+foreach(TEMPLATE ${TEMPLATE_FILES})
+    get_filename_component(TEMPLATE_NAME ${TEMPLATE} NAME)
+    configure_file(${TEMPLATE} ${CMAKE_BINARY_DIR}/templates/${TEMPLATE_NAME} COPYONLY)
 endforeach()
 
 # ----------------------------
@@ -132,17 +138,22 @@ add_executable(engine
     Vortex/src/vortex_model.cpp
     Vortex/src/vortex_particlesystem.cpp
     Vortex/src/vortex_shadowmanager.cpp
+
     Vortex/src/vortex_gui_core.cpp
-    Vortex/src/vortex_gui_creator.cpp
     Vortex/src/vortex_gui_environment.cpp
-    Vortex/src/vortex_gui_inspector.cpp
     Vortex/src/vortex_gui_overlays.cpp
     Vortex/src/vortex_gui_editor.cpp
     Vortex/src/vortex_gui_dockspace.cpp
-    Vortex/src/vortex_gui_terminal.cpp
     Vortex/src/vortex_gui_menus.cpp
     Vortex/src/vortex_gui_assetbrowser.cpp
     Vortex/src/vortex_gui_settings.cpp
+
+    Vortex/src/vortex_gui_ImGui.cpp
+    Vortex/src/vortex_gui_ImGuiManager.cpp
+    Vortex/src/vortex_gui_terminal_window.cpp
+    Vortex/src/vortex_gui_inspector_window.cpp
+    Vortex/src/vortex_gui_creator_window.cpp
+
     Vortex/src/vortex_postprocessor.cpp
     Vortex/src/vortex_skybox.cpp
     Vortex/src/vortex_grid.cpp

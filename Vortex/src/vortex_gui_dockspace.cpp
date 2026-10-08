@@ -41,12 +41,12 @@ void VortexGUI::build_dockspace()
             ImGui::DockBuilderDockWindow("Image Viewer", dock_main_id);
 
             // Left Region
-            ImGui::DockBuilderDockWindow("Scene Inspector", dock_left_top);
+            ImGui::DockBuilderDockWindow(getGuiWindowTypeName(GuiWindowTypes::InspectorWindow).c_str(), dock_left_top);
             ImGui::DockBuilderDockWindow("SkyBox", dock_left_bottom);
             ImGui::DockBuilderDockWindow("Post-Processing", dock_left_bottom);
 
             // Right Region
-            ImGui::DockBuilderDockWindow("Creator Tools", dock_right);
+            ImGui::DockBuilderDockWindow(getGuiWindowTypeName(GuiWindowTypes::CreatorWindow).c_str(), dock_right);
 
             // Middle-Bottom Region
             ImGui::DockBuilderDockWindow("Asset Browser", dock_middle_bottom);
@@ -119,7 +119,7 @@ void VortexGUI::setup_scene_fbo(int width, int height)
 
     if (glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE)
     {
-        VORTEX_ERROR("ERROR::FRAMEBUFFER:: Scene Framebuffer is not complete!");
+        VORTEX_ERROR_TAG("FRAMEBUFFER", "Scene Framebuffer is not complete!");
     }
 
     glBindFramebuffer(GL_FRAMEBUFFER, 0);
@@ -169,7 +169,7 @@ void VortexGUI::setup_render_scene_fbo(int width, int height)
 
     if (glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE)
     {
-        VORTEX_ERROR("ERROR::FRAMEBUFFER:: Render Scene Framebuffer is not complete!");
+        VORTEX_ERROR_TAG("FRAMEBUFFER", "Render Scene Framebuffer is not complete!");
     }
 
     glBindFramebuffer(GL_FRAMEBUFFER, 0);

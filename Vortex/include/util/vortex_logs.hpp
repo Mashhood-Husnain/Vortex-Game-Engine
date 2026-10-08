@@ -39,20 +39,22 @@
     #endif
 #endif
 
-#define LOG_RESET       "\033[0m"
-#define LOG_BOLD        "\033[1m"
-#define LOG_DIM         "\033[90m"
-#define LOG_COLOR_GREEN "\033[32m"
-#define LOG_COLOR_WARN  "\033[38;5;214m"
-#define LOG_COLOR_RED   "\033[31m"
-#define LOG_COLOR_CYAN  "\033[36m"
+#define LOG_RESET        "\033[0m"
+#define LOG_BOLD         "\033[1m"
+#define LOG_DIM          "\033[90m"
+#define LOG_COLOR_GREEN  "\033[32m"
+#define LOG_COLOR_WARN   "\033[38;5;214m"
+#define LOG_COLOR_RED    "\033[31m"
+#define LOG_COLOR_CYAN   "\033[36m"
+#define LOG_COLOR_ORANGE "\033[38;5;208m"
 
 enum class LogLevel
 {
     INFO,
     WARNING,
     ERROR,
-    FATAL
+    FATAL,
+    DEBUG
 };
 
 struct LogEntry
@@ -60,7 +62,22 @@ struct LogEntry
     LogLevel level;
     std::string time;
     std::string message;
+    std::string tag;
+    std::string subsystemtag;
 };
+
+inline const std::string logleveltostring(LogLevel level)
+{
+    switch(level)
+    {
+        case LogLevel::INFO: return "INFO";
+        case LogLevel::WARNING: return "WARNING";
+        case LogLevel::ERROR: return "ERROR";
+        case LogLevel::FATAL: return "FATAL";
+        case LogLevel::DEBUG: return "DEBUG";
+        default: return "UNKNOWN";
+    }
+}
 
 class VortexLog
 {
@@ -78,28 +95,28 @@ class VortexLog
 
         std::stringstream ss;
         ss << std::put_time(&buf, "[%H:%M:%S]");
-        
+
         return ss.str();
     }
     #ifdef _WIN32
         static void InitializeConsole()
-        {        
-                static bool initialized = false;
-                if (!initialized)
+        {
+            static bool initialized = false;
+            if (!initialized)
+            {
+                HANDLE hOut = GetStdHandle(STD_OUTPUT_HANDLE);
+                if (hOut != INVALID_HANDLE_VALUE)
                 {
-                    HANDLE hOut = GetStdHandle(STD_OUTPUT_HANDLE);
-                    if (hOut != INVALID_HANDLE_VALUE)
+                    DWORD dwMode = 0;
+                    if (GetConsoleMode(hOut, &dwMode))
                     {
-                        DWORD dwMode = 0;
-                        if (GetConsoleMode(hOut, &dwMode))
-                        {
-                            dwMode |= ENABLE_VIRTUAL_TERMINAL_PROCESSING;
-                            SetConsoleMode(hOut, dwMode);
-                        }
+                        dwMode |= ENABLE_VIRTUAL_TERMINAL_PROCESSING;
+                        SetConsoleMode(hOut, dwMode);
                     }
-
-                    initialized = true;
                 }
+
+                initialized = true;
+            }
         }
     #endif
 public:
@@ -119,33 +136,44 @@ public:
     }
 
     template<typename... Args>
-    static void Log(LogLevel level, const char* color, const char* prefix, Args&&... args) 
+    static void LogTagged(LogLevel level, const char* color, const char* prefix, const char* subsystem, Args&&... args)
     {
         #ifdef _WIN32
             InitializeConsole();
         #endif
 
         std::string timeStr = CurrentTime();
+        std::string subStr = subsystem ? subsystem : "";
 
         std::ostringstream oss;
         (oss << ... << std::forward<Args>(args));
-
         std::string messageStr = oss.str();
 
         {
             std::lock_guard<std::mutex> lock(s_LogMutex);
-            s_LogBuffer.push_back({level, timeStr, prefix + messageStr});
+            s_LogBuffer.push_back({level, timeStr, messageStr, logleveltostring(level), subStr});
         }
 
-        std::cout << LOG_DIM << CurrentTime() << LOG_RESET << " ";        
+        std::cout << LOG_DIM << CurrentTime() << LOG_RESET << " ";
         std::cout << color << LOG_BOLD << prefix << LOG_RESET;
 
-        if (level == LogLevel::WARNING || level == LogLevel::ERROR || level == LogLevel::FATAL) 
+        if (!subStr.empty())
+        {
+            std::cout << color << "[" << subStr << "] " << LOG_RESET;
+        }
+
+        if (level == LogLevel::WARNING || level == LogLevel::ERROR || level == LogLevel::FATAL)
         {
             std::cout << color;
         }
 
         std::cout << messageStr << LOG_RESET << std::endl;
+    }
+
+    template<typename... Args>
+    static void Log(LogLevel level, const char* color, const char* prefix, Args&&... args)
+    {
+        LogTagged(level, color, prefix, "", std::forward<Args>(args)...);
     }
 };
 
@@ -153,3 +181,10 @@ public:
 #define VORTEX_WARN(...)  VortexLog::Log(LogLevel::WARNING, LOG_COLOR_WARN,  " [WARN]    ", __VA_ARGS__)
 #define VORTEX_ERROR(...) VortexLog::Log(LogLevel::ERROR,   LOG_COLOR_RED,   " [ERROR]   ", __VA_ARGS__)
 #define VORTEX_FATAL(...) VortexLog::Log(LogLevel::FATAL,   LOG_COLOR_CYAN,  " [FATAL]   ", __FILE__, ":", __LINE__, " - ", __VA_ARGS__)
+
+#define VORTEX_INFO_TAG(tag, ...)  VortexLog::LogTagged(LogLevel::INFO,    LOG_COLOR_GREEN, "[INFO]  ", tag, __VA_ARGS__)
+#define VORTEX_WARN_TAG(tag, ...)  VortexLog::LogTagged(LogLevel::WARNING, LOG_COLOR_WARN,  "[WARN]  ", tag, __VA_ARGS__)
+#define VORTEX_ERROR_TAG(tag, ...) VortexLog::LogTagged(LogLevel::ERROR,   LOG_COLOR_RED,   "[ERROR] ", tag, __VA_ARGS__)
+#define VORTEX_FATAL_TAG(tag, ...) VortexLog::LogTagged(LogLevel::FATAL,   LOG_COLOR_CYAN,  "[FATAL] ", tag, __FILE__, ":", __LINE__, " - ", __VA_ARGS__)
+
+#define VORTEX_DEBUG_MSG(...) VortexLog::LogTagged(LogLevel::DEBUG, LOG_COLOR_ORANGE, " [DEBUG]   ", "", __VA_ARGS__)

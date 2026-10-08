@@ -1,0 +1,43 @@
+#include "VortexEngine.hpp"
+
+class @CLASS_NAME@ : public VortexMonoBehaviour
+{
+private:
+    // declare private variables here
+public:
+    @CLASS_NAME@()
+    {
+        // Call expose_datatype Functions Here For Exposing Variables To The Engine Inspector
+        // e.g
+        // expose_float(...);
+        // expose_int(...);
+        // ...
+    }
+
+    void on_start() override
+    {
+        // Initialization
+    }
+
+    void on_update() override
+    {
+        // Runs Every Frame
+    }
+
+    void late_update() override
+    {
+        // Runs End Of Every Frame
+    }
+
+    void on_destroy() override
+    {
+        // Destroy When Game End
+    }
+
+    void on_message(const std::string& message, void* data) override
+    {
+        // Cross-Script Communication
+    }
+};
+
+VORTEX_REGISTER_SCRIPT(@CLASS_NAME@);

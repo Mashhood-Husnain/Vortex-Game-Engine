@@ -86,7 +86,7 @@ void VortexGUI::draw_editor_viewport(VortexCamera* camera)
                 return;
             }
 
-            if (g_active_decal_for_gizmo)
+            if (VortexInspectorWindow::g_active_decal_for_gizmo)
             {
                 ImGuizmo::SetOrthographic(false);
                 ImGuizmo::SetDrawlist();
@@ -105,18 +105,18 @@ void VortexGUI::draw_editor_viewport(VortexCamera* camera)
                 );
                 glm::quat parent_rot = glm::quat_cast(parent_rot_mat);
 
-                glm::mat4 local_matrix = glm::translate(glm::mat4(1.0f), g_active_decal_for_gizmo->position) *
-                                         glm::mat4_cast(g_active_decal_for_gizmo->orientation) *
-                                         glm::scale(glm::mat4(1.0f), g_active_decal_for_gizmo->scale);
+                glm::mat4 local_matrix = glm::translate(glm::mat4(1.0f), VortexInspectorWindow::g_active_decal_for_gizmo->position) *
+                                         glm::mat4_cast(VortexInspectorWindow::g_active_decal_for_gizmo->orientation) *
+                                         glm::scale(glm::mat4(1.0f), VortexInspectorWindow::g_active_decal_for_gizmo->scale);
                 glm::mat4 true_world = parent_world * local_matrix;
                 glm::vec3 world_pos = glm::vec3(true_world[3]);
-                glm::quat world_rot = parent_rot * g_active_decal_for_gizmo->orientation;
+                glm::quat world_rot = parent_rot * VortexInspectorWindow::g_active_decal_for_gizmo->orientation;
 
                 glm::mat4 gizmo_matrix = glm::translate(glm::mat4(1.0f), world_pos) * glm::mat4_cast(world_rot);
 
                 if (m_current_op == ImGuizmo::SCALE)
                 {
-                    gizmo_matrix = glm::scale(gizmo_matrix, g_active_decal_for_gizmo->scale);
+                    gizmo_matrix = glm::scale(gizmo_matrix, VortexInspectorWindow::g_active_decal_for_gizmo->scale);
                 }
 
                 ImGuizmo::OPERATION decal_op = m_current_op;
@@ -155,7 +155,7 @@ void VortexGUI::draw_editor_viewport(VortexCamera* camera)
                         {
                             glm::vec3 snap_pos = hit.hit_point + (hit.hit_normal * 0.01f);
 
-                            glm::quat current_world_rot = parent_rot * g_active_decal_for_gizmo->orientation;
+                            glm::quat current_world_rot = parent_rot * VortexInspectorWindow::g_active_decal_for_gizmo->orientation;
 
                             glm::vec3 current_z_axis = glm::normalize(current_world_rot * glm::vec3(0.0f, 0.0f, 1.0f));
 
@@ -179,9 +179,9 @@ void VortexGUI::draw_editor_viewport(VortexCamera* camera)
                             );
 
                             glm::mat4 inv_parent_full = glm::inverse(parent_world);
-                            g_active_decal_for_gizmo->position = glm::vec3(inv_parent_full * glm::vec4(snap_pos, 1.0f));
+                            VortexInspectorWindow::g_active_decal_for_gizmo->position = glm::vec3(inv_parent_full * glm::vec4(snap_pos, 1.0f));
 
-                            g_active_decal_for_gizmo->orientation = glm::inverse(parent_rot) * glm::quat_cast(snap_rot_mat);
+                            VortexInspectorWindow::g_active_decal_for_gizmo->orientation = glm::inverse(parent_rot) * glm::quat_cast(snap_rot_mat);
                         }
                     }
                     else if (m_current_op == ImGuizmo::ROTATE)
@@ -193,15 +193,15 @@ void VortexGUI::draw_editor_viewport(VortexCamera* camera)
                             glm::vec4(0.0f, 0.0f, 0.0f, 1.0f)
                         );
                         glm::quat new_world_rot = glm::quat_cast(rot_only);
-                        g_active_decal_for_gizmo->orientation = glm::inverse(parent_rot) * new_world_rot;
+                        VortexInspectorWindow::g_active_decal_for_gizmo->orientation = glm::inverse(parent_rot) * new_world_rot;
                     }
                     else if (m_current_op == ImGuizmo::SCALE)
                     {
                         float mTrans[3], mRot[3], mScale[3];
                         ImGuizmo::DecomposeMatrixToComponents(glm::value_ptr(gizmo_matrix), mTrans, mRot, mScale);
 
-                        g_active_decal_for_gizmo->scale.x = mScale[0];
-                        g_active_decal_for_gizmo->scale.z = mScale[2];
+                        VortexInspectorWindow::g_active_decal_for_gizmo->scale.x = mScale[0];
+                        VortexInspectorWindow::g_active_decal_for_gizmo->scale.z = mScale[2];
                     }
                 }
 
@@ -209,22 +209,22 @@ void VortexGUI::draw_editor_viewport(VortexCamera* camera)
 
                 if (is_using_gizmo && !was_using_gizmo)
                 {
-                    start_pos   = g_active_decal_for_gizmo->position;
-                    start_rot   = g_active_decal_for_gizmo->orientation;
-                    start_scale = g_active_decal_for_gizmo->scale;
+                    start_pos   = VortexInspectorWindow::g_active_decal_for_gizmo->position;
+                    start_rot   = VortexInspectorWindow::g_active_decal_for_gizmo->orientation;
+                    start_scale = VortexInspectorWindow::g_active_decal_for_gizmo->scale;
                 }
 
                 if (!is_using_gizmo && was_using_gizmo)
                 {
-                    if (start_pos != g_active_decal_for_gizmo->position ||
-                        start_rot != g_active_decal_for_gizmo->orientation ||
-                        start_scale != g_active_decal_for_gizmo->scale)
+                    if (start_pos != VortexInspectorWindow::g_active_decal_for_gizmo->position ||
+                        start_rot != VortexInspectorWindow::g_active_decal_for_gizmo->orientation ||
+                        start_scale != VortexInspectorWindow::g_active_decal_for_gizmo->scale)
                     {
                         ActionManager::push_action(new ActionDecalTransform(
-                            g_active_decal_for_gizmo,
-                            start_pos, g_active_decal_for_gizmo->position,
-                            start_rot, g_active_decal_for_gizmo->orientation,
-                            start_scale, g_active_decal_for_gizmo->scale
+                            VortexInspectorWindow::g_active_decal_for_gizmo,
+                            start_pos, VortexInspectorWindow::g_active_decal_for_gizmo->position,
+                            start_rot, VortexInspectorWindow::g_active_decal_for_gizmo->orientation,
+                            start_scale, VortexInspectorWindow::g_active_decal_for_gizmo->scale
                         ));
                     }
                 }
@@ -353,7 +353,7 @@ void VortexGUI::handle_picking(VortexCamera* camera, ImVec2 image_pos)
 
             if (hit.has_hit)
             {
-                if (!ImGui::GetIO().KeyCtrl && VortexObjectManager::selected_models.find(hit.hit_model) == VortexObjectManager::selected_models.end()) g_active_decal_for_gizmo = nullptr;
+                if (!ImGui::GetIO().KeyCtrl && VortexObjectManager::selected_models.find(hit.hit_model) == VortexObjectManager::selected_models.end()) VortexInspectorWindow::g_active_decal_for_gizmo = nullptr;
 
                 if (ImGui::GetIO().KeyCtrl)
                 {
