@@ -76,3 +76,17 @@ inline std::string vortex_generatepath(const Args&... parts)
 
     return path.string();
 }
+
+inline std::string replaceInString(std::string text, const std::string &placeholder, const std::string value)
+{
+    if (placeholder.empty()) return text;
+
+    size_t pos = 0;
+    while ((pos = text.find(placeholder, pos)) != std::string::npos)
+    {
+        text.replace(pos, placeholder.length(), value);
+        pos += value.length();
+    }
+
+    return text;
+}

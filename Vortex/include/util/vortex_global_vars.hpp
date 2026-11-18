@@ -16,7 +16,10 @@ namespace GLOBAL
     inline float deltaTime = 0.0f;
     inline constexpr float GRAVITY = 9.80f;
     inline glm::vec3 LIGHTPOS = glm::vec3(0.0f, 10.0f, 5.0f);
-    inline const std::string VORTEX_VERSION = "\"0.0.0\"";
+    inline const std::string VORTEX_VERSION = "\"0.0.1\"";
+
+    inline const glm::vec3 DEFAULT_CAMERA_POSITION = glm::vec3(15.0f, 2.0f, 1.0f);
+    inline const glm::vec3 DEFAULT_CAMERA_LOOK_AT = glm::vec3(0.0f, 2.0f, 0.0f);
 
     namespace DEFAULT_VERTICES
     {

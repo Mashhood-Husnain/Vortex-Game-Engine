@@ -5,17 +5,31 @@
 
 void create_script(std::string file_path, std::string class_name)
 {
-    std::ofstream script_file(file_path);
-    script_file << "#include \"VortexEngine.hpp\"\n\n";
-    script_file << "class " << class_name << " : public VortexMonoBehaviour\n{\n";
-    script_file << "private:\npublic:\n";
-    script_file << "    void on_start() override\n    {\n        // Initialization\n    }\n\n";
-    script_file << "    void on_update() override\n    {\n        // Every frame\n    }\n\n";
-    script_file << "    void late_update() override\n    {\n        // End of frame\n    }\n\n";
-    script_file << "    void on_destroy() override\n    {\n        // Destroy at the end\n    }\n\n";
-    script_file << "    void on_message(const std::string &message, void *data) override\n    {\n        // Cross-script communication\n    }\n};\n\n";
-    script_file << "VORTEX_REGISTER_SCRIPT(" << class_name << ");\n";
-    script_file.close();
+    std::string template_path = "assets/templates/defaultScript.cpp.template";
+
+    std::ifstream in(template_path, std::ios::binary);
+    if (!in)
+    {
+        VORTEX_ERROR("[EDITOR] Could not open ", template_path, "!\n");
+        return;
+    }
+
+    std::stringstream buffer;
+    buffer << in.rdbuf();
+    std::string content = buffer.str();
+    in.close();
+
+    content = replaceInString(content, "{{CLASSNAME}}", class_name);
+
+    std::ofstream out(file_path, std::ios::binary);
+    if (!out)
+    {
+        VORTEX_ERROR("[Editor] Could not open ", file_path, "!\n");
+        return;
+    }
+
+    out << content;
+    out.close();
 
     VORTEX_INFO("[EDITOR] Auto-Generated Script: ", file_path);
 }

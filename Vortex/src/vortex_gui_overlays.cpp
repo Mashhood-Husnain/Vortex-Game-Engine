@@ -182,6 +182,17 @@ void VortexGUI::camera_info(VortexCamera *camera)
         ImGui::TextDisabled("Position");
         ImGui::Text("X: %.1f  Y: %.1f  Z: %.1f", camera->get_position().x, camera->get_position().y, camera->get_position().z);
 
+        if (ImGui::Button("Reset Camera"))
+        {
+            camera->set_position(GLOBAL::DEFAULT_CAMERA_POSITION);
+            camera->look_at(GLOBAL::DEFAULT_CAMERA_LOOK_AT);
+        }
+
+        if (ImGui::Button("Look to Origin"))
+        {
+            camera->look_at(GLOBAL::DEFAULT_CAMERA_LOOK_AT);
+        }
+
         ImGui::Spacing();
         ImGui::Unindent(10.0f);
     }

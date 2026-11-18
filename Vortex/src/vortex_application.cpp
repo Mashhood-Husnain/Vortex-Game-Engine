@@ -270,8 +270,8 @@ VortexApplication::VortexApplication(std::string window_name)
 
     this->window_name = window_name + " - " + GLOBAL::VORTEX_VERSION;
 
-    editor_camera = new VortexCamera(glm::vec3(15.0f, 2.0f, 1.0f));
-    editor_camera->look_at(glm::vec3(0.0f, 2.0f, 0.0f));
+    editor_camera = new VortexCamera(GLOBAL::DEFAULT_CAMERA_POSITION);
+    editor_camera->look_at(GLOBAL::DEFAULT_CAMERA_LOOK_AT);
     camera = editor_camera;
     render_camera = editor_camera;
 

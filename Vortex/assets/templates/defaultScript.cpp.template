@@ -1,0 +1,34 @@
+#include "VortexEngine.hpp"
+
+class {{CLASSNAME}} : public VortexMonoBehaviour
+{
+private:
+    // private variables here
+public:
+    void on_start() override
+    {
+        // Initialization
+    }
+
+    void on_update() override
+    {
+        // Every frame
+    }
+
+    void late_update() override
+    {
+        // End of frame
+    }
+
+    void on_destroy() override
+    {
+        // Destroy at the end
+    }
+
+    void on_message(const std::string &message, void *data) override
+    {
+        // Cross-Script communication
+    }
+};
+
+VORTEX_REGISTER_SCRIPT({{CLASSNAME}});

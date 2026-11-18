@@ -22,6 +22,12 @@ All notable changes to **VortexEngine** are documented in this file.
 
 ---
 
+## [0.0.1] - 2026-11-18
+
+### Changed
+- Script generation now reads from a template file instead of strings hardcoded in the source.
+- Camera quality of life improvements
+
 ## [0.0.0] - 2026-11-17
 
 First official version of the engine.
