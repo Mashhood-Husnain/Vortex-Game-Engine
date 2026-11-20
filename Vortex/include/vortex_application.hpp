@@ -51,13 +51,6 @@
 class VortexSkybox;
 class VortexGrid;
 
-enum class EngineState
-{
-    EDITOR,
-    PLAY,
-    PROJECT_HUB
-};
-
 class VortexApplication
 {
 private:
@@ -78,14 +71,19 @@ private:
     bool first_mouse = true;
     float last_frame = 0.0f;
 
-    bool enable_splash_screen = true;
+    #if !defined(NDEBUG)
+        bool enable_splash_screen = false;
+    #else
+        bool enable_splash_screen = true
+    #endif
+
+
     bool is_playing_splash = true;
     GLuint splash_texture = 0;
     int splash_width = 0;
     int splash_height = 0;
     float splash_timer = 0.0f;
 
-    EngineState current_state = EngineState::PROJECT_HUB;
     bool show_exit_modal = false;
     static bool has_unsaved_changes;
     bool show_wireframe = false;
@@ -137,7 +135,6 @@ public:
     float get_width() const;
     float get_height() const;
 
-    EngineState get_state() const;
     bool is_wireframe_enabled() const;
     bool is_exit_modal_open() const;
     bool has_unsaved() const;
@@ -148,7 +145,6 @@ public:
 
     void set_camera(VortexCamera *camera);
 
-    void set_state(EngineState state);
     void toggle_wireframe(bool enable);
     void toggle_exit_modal(bool show);
 

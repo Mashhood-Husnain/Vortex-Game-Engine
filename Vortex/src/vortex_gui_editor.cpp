@@ -8,7 +8,7 @@ void VortexGUI::draw_editor_render_viewport(VortexCamera *camera)
 
     // TODO: automatically take up all available space (when scene view is not active)
     ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(0.0f, 0.0f));
-    if (app->get_state() == EngineState::PLAY)
+    if (GLOBAL::current_engine_state == GLOBAL::EngineState::PLAY)
     {
         ImGuiViewport* viewport = ImGui::GetMainViewport();
         ImGui::SetNextWindowPos(viewport->WorkPos);
@@ -55,7 +55,7 @@ void VortexGUI::draw_editor_viewport(VortexCamera* camera)
 
     ImGui::Image((void*)(intptr_t)scene_texture, ImVec2(viewport_width, viewport_height), ImVec2(0, 1), ImVec2(1, 0));
 
-    if (app->get_state() == EngineState::EDITOR)
+    if (GLOBAL::current_engine_state == GLOBAL::EngineState::EDITOR)
     {
         handle_shortcuts();
 

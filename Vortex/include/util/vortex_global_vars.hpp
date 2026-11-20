@@ -19,7 +19,18 @@ namespace GLOBAL
     inline const std::string VORTEX_VERSION = "\"0.0.1\"";
 
     inline const glm::vec3 DEFAULT_CAMERA_POSITION = glm::vec3(15.0f, 2.0f, 1.0f);
+    inline const glm::vec3 DEFAULT_CAMERA_POSITION_X = glm::vec3(15.0f, 2.0f, 0.0f);
+    inline const glm::vec3 DEFAULT_CAMERA_POSITION_Y = glm::vec3(0.0f, 15.0f, 0.0f);
+    inline const glm::vec3 DEFAULT_CAMERA_POSITION_Z = glm::vec3(0.0f, 2.0f, 15.0f);
     inline const glm::vec3 DEFAULT_CAMERA_LOOK_AT = glm::vec3(0.0f, 2.0f, 0.0f);
+
+    enum class EngineState
+    {
+        EDITOR,
+        PLAY,
+        PROJECT_HUB
+    };
+    inline EngineState current_engine_state = EngineState::PROJECT_HUB;
 
     namespace DEFAULT_VERTICES
     {

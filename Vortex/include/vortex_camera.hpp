@@ -15,6 +15,7 @@
 #include <string>
 
 #include "vortex_keyboard.hpp"
+#include "vortex_mouse.hpp"
 #include "vortex_physics.hpp"
 #include "vortex_global_vars.hpp"
 

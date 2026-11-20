@@ -15,6 +15,8 @@ public:
     glm::vec3 min;
     glm::vec3 max;
 
+    bool show_collider_box = true;
+
     VortexBoxCollider();
     ~VortexBoxCollider();
 

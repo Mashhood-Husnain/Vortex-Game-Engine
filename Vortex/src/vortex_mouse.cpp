@@ -9,9 +9,17 @@ double VortexMouse::s_mouse_y = 0.0f;
 double VortexMouse::s_previous_mouse_x = 0.0f;
 double VortexMouse::s_previous_mouse_y = 0.0f;
 
+double VortexMouse::s_scroll_accum_x = 0.0;
+double VortexMouse::s_scroll_accum_y = 0.0;
+double VortexMouse::s_scroll_x = 0.0;
+double VortexMouse::s_scroll_y = 0.0;
+GLFWscrollfun VortexMouse::s_previous_scroll_callback = nullptr;
+
 void VortexMouse::init(GLFWwindow *window)
 {
     s_window = window;
+
+    s_previous_scroll_callback = glfwSetScrollCallback(window, scroll_callback);
 
     if (s_button_map.empty())
     {
@@ -31,6 +39,11 @@ void VortexMouse::init(GLFWwindow *window)
 void VortexMouse::update()
 {
     if (!s_window) return;
+
+    s_scroll_x = s_scroll_accum_x;
+    s_scroll_y = s_scroll_accum_y;
+    s_scroll_accum_x = 0.0;
+    s_scroll_accum_y = 0.0;
 
     for (const auto &pair : s_button_map)
     {
@@ -105,4 +118,25 @@ double VortexMouse::get_delta_y()
 glm::vec2 VortexMouse::get_position()
 {
     return glm::vec2(s_mouse_x, s_mouse_y);
+}
+
+void VortexMouse::scroll_callback(GLFWwindow* window, double x_offset, double y_offset)
+{
+    s_scroll_accum_x += x_offset;
+    s_scroll_accum_y += y_offset;
+
+    if (s_previous_scroll_callback)
+    {
+        s_previous_scroll_callback(window, x_offset, y_offset);
+    }
+}
+
+double VortexMouse::get_scroll()
+{
+    return s_scroll_y;
+}
+
+double VortexMouse::get_scroll_x()
+{
+    return s_scroll_x;
 }

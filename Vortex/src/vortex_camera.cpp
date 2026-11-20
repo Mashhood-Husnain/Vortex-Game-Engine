@@ -67,6 +67,13 @@ void VortexCamera::processMouseMovement(float xoffset, float yoffset)
 
 void VortexCamera::check_camera_movement()
 {
+    double scroll = VortexMouse::get_scroll();
+    if (scroll != 0.0)
+    {
+        float zoom_speed = 1.5f;
+        position += front * static_cast<float>(scroll) * zoom_speed;
+    }
+
     if (VortexKeyboard::get_key("LEFTCONTROL")) return;
 
     if (VortexKeyboard::get_key("W")) processKeyboard("FORWARD");

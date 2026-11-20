@@ -9,7 +9,7 @@ void VortexGUI::project_hub_open_project()
         VortexProject::take_snapshot(SnapshotState::SAVE, app, m_new_project_name);
     }
 
-    app->set_state(EngineState::PROJECT_HUB);
+    GLOBAL::current_engine_state = GLOBAL::EngineState::PROJECT_HUB;
 }
 
 void VortexGUI::project_hub_new_project()
@@ -20,7 +20,7 @@ void VortexGUI::project_hub_new_project()
     }
     memset(m_new_project_name, 0, sizeof(m_new_project_name));
 
-    app->set_state(EngineState::PROJECT_HUB);
+    GLOBAL::current_engine_state = GLOBAL::EngineState::PROJECT_HUB;
 }
 
 void VortexGUI::draw_main_menu_bar()
@@ -202,7 +202,7 @@ void VortexGUI::draw_project_hub()
 
             VortexProject::take_snapshot(SnapshotState::LOAD, app, m_new_project_name);
 
-            app->set_state(EngineState::EDITOR);
+            GLOBAL::current_engine_state = GLOBAL::EngineState::EDITOR;
 
             VortexCompiler::trigger_compile();
 
@@ -273,7 +273,7 @@ void VortexGUI::draw_project_hub()
 
                 VortexProject::take_snapshot(SnapshotState::SAVE, app, m_new_project_name);
 
-                app->set_state(EngineState::EDITOR);
+                GLOBAL::current_engine_state = GLOBAL::EngineState::EDITOR;
 
                 VortexCompiler::trigger_compile();
 

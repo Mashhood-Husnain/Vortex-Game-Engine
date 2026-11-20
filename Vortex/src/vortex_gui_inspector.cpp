@@ -579,6 +579,33 @@ void VortexGUI::draw_model_transform_panel(VortexModel* model, int flags)
         ImGui::Checkbox("Show Physics Collider", &model->show_collider);
         if (model->show_collider)
         {
+            if (ImGui::TreeNodeEx("Collider Components", ImGuiTreeNodeFlags_DefaultOpen))
+            {
+                auto &objects_ = model->shared_data->objects;
+                bool all_comp_selected = std::all_of(
+                    objects_.begin(),
+                    objects_.end(),
+                    [](const auto &obj)
+                    {
+                        return obj.collider.show_collider_box;
+                    }
+                );
+
+                if (ImGui::Button(all_comp_selected ? "Deselect All" : "Select All"))
+                {
+                    for (auto &obj : objects_) obj.collider.show_collider_box = !all_comp_selected;
+                }
+
+                int index = 1;
+                for (auto &obj : objects_)
+                {
+                    std::string collider_label = "Collider component ";
+                    ImGui::Checkbox(collider_label.append(std::to_string(index)).c_str(), &obj.collider.show_collider_box);
+                    index++;
+                }
+                ImGui::TreePop();
+            }
+
             ImGui::Indent(10.0f); ImGui::Spacing();
             ImGui::DragFloat3("Collider Bounds", &model->collider_scale.x, 0.01f, 0.01f, 10.0f);
 

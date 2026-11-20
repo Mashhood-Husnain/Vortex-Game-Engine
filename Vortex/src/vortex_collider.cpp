@@ -48,7 +48,7 @@ void VortexBoxCollider::setup_visual_mesh()
 
 void VortexBoxCollider::draw(VortexShader &collider_shader, VortexCamera &camera, VortexModel *model)
 {
-    if (VAO == 0) return;
+    if (VAO == 0 || !show_collider_box) return;
 
     collider_shader.use();
 

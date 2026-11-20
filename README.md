@@ -2,15 +2,15 @@
 **(Note: I am building this to learn engine architecture, openGL and in the future Vulkan, so expect rough edges as I figure out what I am doing!)**
 
 <p align="center">
-  <img src="screenshots/vortex_logo.png" width="800" alt="Vortex Engine Editor Interface">
+  <img src="docs/images/vortex_logo.png" width="800" alt="Vortex Engine Editor Interface">
 </p>
 
 <p align="center">
-  <img src="screenshots/vortex_engine_screenshot_1.png" width="800" alt="Vortex Engine Editor Interface">
+  <img src="docs/images/vortex_engine_screenshot_1.png" width="800" alt="Vortex Engine Editor Interface">
 </p>
 
 <p align="center">
-  <img src="screenshots/vortex_engine_screenshot_2.png" width="800" alt="Vortex Engine Editor Interface">
+  <img src="docs/images/vortex_engine_screenshot_2.png" width="800" alt="Vortex Engine Editor Interface">
 </p>
 
 Vortex Engine is a personal project currently in its early development stages. It serves as a foundational bridge between basic rendering and a complete game engine, focusing heavily on low-level systems like memory management and pipeline optimization.
@@ -119,70 +119,32 @@ All gameplay scripts are stored in the Vortex/Game/Scripts directory.
   - You can create new scripts directly through the engine's Creator Tool window.
   - Simply specify the name of the file, click create, and then open the file in your preferred IDE to write your C++ code.
 
-### Editor Controls
+### Keyboard Shortcuts & Controls
 When you launch the engine, you will start in Editor Mode attached to the default camera. When you enter Play Mode, these default controls are disassociated from the camera so you can use them in your own game scripts.
 
-| Key | Action (Editor Mode) |
-| --- | --- |
-| **W, A, S, D** | Move camera horizontally |
-| **Q, E** | Move camera up / down |
-| **M** | Release/Capture Mouse (Use this to interact with the Creator Tool or Inspector) |
-| **Z** | Toggle Wireframe view for all models |
-| **F** | Toggle Fullscreen / Windowed mode |
-| **R** | Toggle for Rotating object |
-| **T** | Toggle for Translating object |
-| **Y** | Toggle for Scaling object |
-| **TAB** | Toggle Engine Stats view in Play Mode (this binding only works in Play Mode)|
-| **LEFT CTRL + Mouse Drag** | Snap selected model to grid |
-| **LEFT CTRL + F** | Toggle File viewer |
-| **LEFT CTRL + B** | Toggle Image viewer |
-| **LEFT CTRL + P** | Toggle Engine Terminal |
-| **LEFT CTRL + I** | Toggle Scene Inspector |
-| **LEFT CTRL + X** | Toggle Camera Info |
-| **LEFT CTRL + W** | Toggle Creator Window |
-| **LEFT CTRL + E** | Toggle Engine Stats |
-| **LEFT CTRL + O** | Toggle skybox/post-process Options |
-| **LEFT CTRL + SHIFT + O** | Open Existing Project in Project Hub |
-| **LEFT CTRL + SHIFT + N** | Open New Project in Project Hub |
-| **LEFT CTRL + H** | Toggle Action Stack History |
-| **LEFT CTRL + S** | Save the Current Project |
-| **LEFT CTRL + SHIFT + S** | Toggle Scene View |
-| **LEFT CTRL + D** | Duplicate Current Selected Model(s) |
-| **LEFT CTRL + Z** | Undo Changes |
-| **LEFT CTRL + Y** | Redo Changes |
-| **LEFT CTRL + R** | Enter Play Mode |
-| **LEFT CTRL + SHIFT + R** | Toggle Render View |
-| **LEFT CTRL + C** | Compile Scripts |
-| **LEFT CTRL + A** | Toggle Asset Browser |
-| **LEFT CTRL + L** | Turn on Local Object Transformations |
-| **LEFT CTRL + G** | Turn on Global Object Transformations |
-| **LEFT CTRL + SHIFT + I** | Toggle Engine Settings Window |
-| **LEFT ALT** | Snap selected model to the ground |
-| **Right Mouse Click (on folder)** | Options for Folders |
-| **DEL** | Deletes Selected Model(s) |
-| **Escape** | Exit Play Mode (if playing) OR Exit Engine (if in editor) |
+See the **[full list of keyboard shortcuts](docs/CONTROLS.md)** for camera, object manipulation, panels, project, and play mode controls.
 
 
 <p align="center">
-  <img src="screenshots/vortex_engine_screenshot_3.png" width="800" alt="Vortex Engine Editor Interface">
+  <img src="docs/images/vortex_engine_screenshot_3.png" width="800" alt="Vortex Engine Editor Interface">
 </p>
 
 <p align="center">
-  <img src="screenshots/vortex_engine_screenshot_4.png" width="800" alt="Vortex Engine Editor Interface">
+  <img src="docs/images/vortex_engine_screenshot_4.png" width="800" alt="Vortex Engine Editor Interface">
 </p>
 
 <p align="center">
-  <img src="screenshots/vortex_engine_screenshot_5.png" width="800" alt="Vortex Engine Editor Interface">
+  <img src="docs/images/vortex_engine_screenshot_5.png" width="800" alt="Vortex Engine Editor Interface">
 </p>
 
 <p align="center">
-  <img src="screenshots/vortex_engine_screenshot_6.png" width="800" alt="Vortex Engine Editor Interface">
+  <img src="docs/images/vortex_engine_screenshot_6.png" width="800" alt="Vortex Engine Editor Interface">
 </p>
 
 <p align="center">
-  <img src="screenshots/vortex_engine_screenshot_7.png" width="800" alt="Vortex Engine Editor Interface">
+  <img src="docs/images/vortex_engine_screenshot_7.png" width="800" alt="Vortex Engine Editor Interface">
 </p>
 
 <p align="center">
-  <img src="screenshots/vortex_engine_gif_1.gif" width="800" alt="Vortex Engine Demo">
+  <img src="docs/images/vortex_engine_gif_1.gif" width="800" alt="Vortex Engine Demo">
 </p>

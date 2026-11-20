@@ -99,7 +99,7 @@ void VortexApplication::framebuffer_size_callback(GLFWwindow* window, int width,
 
 void VortexApplication::request_exit()
 {
-    if (current_state == EngineState::PROJECT_HUB)
+    if (GLOBAL::current_engine_state == GLOBAL::EngineState::PROJECT_HUB)
     {
         glfwSetWindowShouldClose(window, GLFW_TRUE);
         return;
@@ -134,15 +134,15 @@ void VortexApplication::window_close_callback(GLFWwindow* window)
 void VortexApplication::check_key_press()
 {
     if (is_playing_splash) return;
-    if (current_state == EngineState::PROJECT_HUB) return;
+    if (GLOBAL::current_engine_state == GLOBAL::EngineState::PROJECT_HUB) return;
 
     if (VortexKeyboard::get_key_down("ESCAPE"))
     {
-        if (current_state == EngineState::PLAY) exit_play_mode();
+        if (GLOBAL::current_engine_state == GLOBAL::EngineState::PLAY) exit_play_mode();
         else request_exit();
     }
 
-    if (current_state == EngineState::EDITOR)
+    if (GLOBAL::current_engine_state == GLOBAL::EngineState::EDITOR)
     {
         if (VortexKeyboard::get_key_down("DELETE") && !VortexObjectManager::selected_models.empty()) VortexObjectManager::delete_selected_models();
 
@@ -183,6 +183,24 @@ void VortexApplication::check_key_press()
 
             if (VortexKeyboard::get_key_down("C")) VortexCompiler::trigger_compile();
             if (VortexKeyboard::get_key_down("D")) VortexObjectManager::duplicate_selected_models();
+        }
+        else if (VortexKeyboard::get_key("LEFTSHIFT"))
+        {
+            if (VortexKeyboard::get_key_down("X"))
+            {
+                editor_camera->set_position(GLOBAL::DEFAULT_CAMERA_POSITION_X);
+                editor_camera->look_at(GLOBAL::DEFAULT_CAMERA_LOOK_AT);
+            }
+            if (VortexKeyboard::get_key_down("Y"))
+            {
+                editor_camera->set_position(GLOBAL::DEFAULT_CAMERA_POSITION_Y);
+                editor_camera->look_at(GLOBAL::DEFAULT_CAMERA_LOOK_AT);
+            }
+            if (VortexKeyboard::get_key_down("Z"))
+            {
+                editor_camera->set_position(GLOBAL::DEFAULT_CAMERA_POSITION_Z);
+                editor_camera->look_at(GLOBAL::DEFAULT_CAMERA_LOOK_AT);
+            }
         }
         else
         {
@@ -482,11 +500,11 @@ void VortexApplication::mouse_callback(GLFWwindow* window, double xposIn, double
         app->mouse_last_y = ypos;
         if (!app->show_mouse_cursor)
         {
-            if (app->current_state == EngineState::EDITOR)
+            if (GLOBAL::current_engine_state == GLOBAL::EngineState::EDITOR)
             {
                 app->editor_camera->processMouseMovement(xoffset, yoffset);
             }
-            else if (app->current_state == EngineState::PLAY && app->camera)
+            else if (GLOBAL::current_engine_state == GLOBAL::EngineState::PLAY && app->camera)
             {
                 app->camera->processMouseMovement(xoffset, yoffset);
             }
@@ -499,6 +517,7 @@ void VortexApplication::run(std::function<void()> draw_callback)
     VORTEX_INFO("VORTEX ENGINE RUNNING ON:");
     VORTEX_INFO("VENDOR:   ", VortexGUI::_vendor_);
     VORTEX_INFO("RENDERER: ", VortexGUI::_renderer_);
+    VORTEX_INFO("Engine version: ", GLOBAL::VORTEX_VERSION);
 
     glfwShowWindow(window);
 
@@ -519,7 +538,7 @@ void VortexApplication::run(std::function<void()> draw_callback)
 
         VortexGUI::update();
 
-        if (current_state == EngineState::PROJECT_HUB)
+        if (GLOBAL::current_engine_state == GLOBAL::EngineState::PROJECT_HUB)
         {
             glBindFramebuffer(GL_FRAMEBUFFER, 0);
             glViewport(0, 0, static_cast<GLsizei>(default_window_width), static_cast<GLsizei>(default_window_height));
@@ -536,9 +555,9 @@ void VortexApplication::run(std::function<void()> draw_callback)
         }
         else
         {
-            if (current_state != EngineState::PROJECT_HUB) VortexCompiler::update(this);
+            if (GLOBAL::current_engine_state != GLOBAL::EngineState::PROJECT_HUB) VortexCompiler::update(this);
 
-            if (!show_mouse_cursor && current_state == EngineState::EDITOR &&
+            if (!show_mouse_cursor && GLOBAL::current_engine_state == GLOBAL::EngineState::EDITOR &&
                 (
                     (VortexGUI::is_scene_view_visible && VortexGUI::show_scene_viewport) ||
                     (VortexGUI::is_render_view_visible && VortexGUI::show_render_scene_viewport)
@@ -553,7 +572,7 @@ void VortexApplication::run(std::function<void()> draw_callback)
                 show_mouse(true);
             }
 
-            if (current_state == EngineState::PLAY)
+            if (GLOBAL::current_engine_state == GLOBAL::EngineState::PLAY)
             {
                 VortexObjectManager::update_scripts();
                 VortexObjectManager::update_physics();
@@ -622,7 +641,7 @@ void VortexApplication::run(std::function<void()> draw_callback)
 
                 VortexDebugRenderer::get().render(editor_camera);
 
-                if (current_state == EngineState::EDITOR)
+                if (GLOBAL::current_engine_state == GLOBAL::EngineState::EDITOR)
                 {
                     environment_grid->draw(*editor_camera);
                 }
@@ -799,14 +818,14 @@ void VortexApplication::show_mouse(bool status)
 
 void VortexApplication::enter_play_mode()
 {
-    if (current_state == EngineState::PLAY) return;
+    if (GLOBAL::current_engine_state == GLOBAL::EngineState::PLAY) return;
 
     VORTEX_INFO("[ENGINE] Entering Play Mode...");
 
     std::string project_name = VortexGUI::m_new_project_name;
     VortexProject::take_snapshot(SnapshotState::SAVE, this, "temp_playmode_backup_" + project_name);
 
-    set_state(EngineState::PLAY);
+    GLOBAL::current_engine_state = GLOBAL::EngineState::PLAY;
     show_mouse(false);
     toggle_wireframe(false);
 
@@ -820,7 +839,7 @@ void VortexApplication::exit_play_mode()
 
     VortexObjectManager::clean_scripts();
 
-    set_state(EngineState::EDITOR);
+    GLOBAL::current_engine_state = GLOBAL::EngineState::EDITOR;
     show_mouse(true);
 
     camera = editor_camera;
@@ -840,7 +859,6 @@ float VortexApplication::get_height() const { return default_window_height; }
 
 bool VortexApplication::is_mouse_visible() { return show_mouse_cursor; }
 
-EngineState VortexApplication::get_state() const { return current_state; }
 bool VortexApplication::is_wireframe_enabled() const { return show_wireframe; }
 bool VortexApplication::is_exit_modal_open() const { return show_exit_modal; }
 bool VortexApplication::has_unsaved() const { return has_unsaved_changes; }
@@ -855,7 +873,6 @@ void VortexApplication::set_camera(VortexCamera *camera)
     this->camera = camera;
 }
 
-void VortexApplication::set_state(EngineState state) { current_state = state; }
 void VortexApplication::toggle_wireframe(bool enable) { show_wireframe = enable; }
 void VortexApplication::toggle_exit_modal(bool show) { show_exit_modal = show; }
 

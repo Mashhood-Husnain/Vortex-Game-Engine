@@ -292,7 +292,7 @@ void VortexObjectManager::draw(VortexCamera &camera, bool show_wireframe, bool i
                 glDisable(GL_STENCIL_TEST);
             }
 
-            if (model->show_collider)
+            if (model->show_collider && !is_render_pass)
             {
                 glDisable(GL_CULL_FACE);
 

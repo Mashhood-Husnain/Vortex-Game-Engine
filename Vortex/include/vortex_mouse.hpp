@@ -19,6 +19,14 @@ class VortexMouse
 
     static double s_previous_mouse_x;
     static double s_previous_mouse_y;
+
+    static double s_scroll_accum_x;
+    static double s_scroll_accum_y;
+    static double s_scroll_x;
+    static double s_scroll_y;
+    static GLFWscrollfun s_previous_scroll_callback;
+
+    static void scroll_callback(GLFWwindow *window, double x_offset, double y_offset);
 public:
     static void init(GLFWwindow *window);
     static void update();
@@ -31,4 +39,7 @@ public:
     static double get_y();
     static double get_delta_y();
     static glm::vec2 get_position();
+
+    static double get_scroll();
+    static double get_scroll_x();
 };
