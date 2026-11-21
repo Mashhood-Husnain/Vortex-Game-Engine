@@ -31,6 +31,13 @@ VortexCamera::VortexCamera(glm::vec3 position, glm::vec3 up, float yaw, float pi
     front = glm::vec3(0.0f, 0.0f, -1.0f);
 
     update_camera_vectors();
+
+    VortexShortcuts::bind(GLOBAL::EngineState::EDITOR, {{Key::W}, true, {}, [this]{ processKeyboard("FORWARD"); }, "Camera Forward"});
+    VortexShortcuts::bind(GLOBAL::EngineState::EDITOR, {{Key::S}, true, {}, [this]{ processKeyboard("BACKWARD"); }, "Camera Backward"});
+    VortexShortcuts::bind(GLOBAL::EngineState::EDITOR, {{Key::A}, true, {}, [this]{ processKeyboard("LEFT"); }, "Camera Left"});
+    VortexShortcuts::bind(GLOBAL::EngineState::EDITOR, {{Key::D}, true, {}, [this]{ processKeyboard("RIGHT"); }, "Camera Right"});
+    VortexShortcuts::bind(GLOBAL::EngineState::EDITOR, {{Key::Q}, true, {}, [this]{ processKeyboard("UP"); }, "Camera Up"});
+    VortexShortcuts::bind(GLOBAL::EngineState::EDITOR, {{Key::E}, true, {}, [this]{ processKeyboard("DOWN"); }, "Camera Down"});
 }
 
 glm::mat4 VortexCamera::getViewMatrix()
@@ -73,15 +80,6 @@ void VortexCamera::check_camera_movement()
         float zoom_speed = 1.5f;
         position += front * static_cast<float>(scroll) * zoom_speed;
     }
-
-    if (VortexKeyboard::get_key("LEFTCONTROL")) return;
-
-    if (VortexKeyboard::get_key("W")) processKeyboard("FORWARD");
-    if (VortexKeyboard::get_key("S")) processKeyboard("BACKWARD");
-    if (VortexKeyboard::get_key("A")) processKeyboard("LEFT");
-    if (VortexKeyboard::get_key("D")) processKeyboard("RIGHT");
-    if (VortexKeyboard::get_key("Q")) processKeyboard("UP");
-    if (VortexKeyboard::get_key("E")) processKeyboard("DOWN");
 }
 
 glm::mat4 VortexCamera::getProjectionMatrix()

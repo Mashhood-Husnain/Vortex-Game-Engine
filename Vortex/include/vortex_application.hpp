@@ -41,6 +41,7 @@
 #include "vortex_uimanager.hpp"
 #include "vortex_debugrenderer.hpp"
 #include "vortex_actions.hpp"
+#include "vortex_shortcuts.hpp"
 
 #include "vortex_global_vars.hpp"
 #include "vortex_save_load.hpp"
@@ -108,11 +109,11 @@ private:
     static void framebuffer_size_callback(GLFWwindow* window, int width, int height);
     static void mouse_callback(GLFWwindow* window, double xposIn, double yposIn);
     static void window_close_callback(GLFWwindow* window);
-    void check_key_press();
     void change_window_size();
     void setup_world_axis_buffers();
     void load_splash_screen();
     void draw_splash_overlay();
+    void snap_camera_to_axis(VortexCamera *camera, glm::vec3 axis_pos);
 public:
     VortexApplication(std::string window_name);
     ~VortexApplication();

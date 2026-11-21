@@ -57,8 +57,6 @@ void VortexGUI::draw_editor_viewport(VortexCamera* camera)
 
     if (GLOBAL::current_engine_state == GLOBAL::EngineState::EDITOR)
     {
-        handle_shortcuts();
-
         if (viewport_height > 0.0f)
         {
             camera->set_aspect_ratio(viewport_width / viewport_height);
@@ -249,7 +247,7 @@ void VortexGUI::draw_editor_viewport(VortexCamera* camera)
                 float snap_values[3] = { 1.0f, 1.0f, 1.0f };
                 if (m_current_op == ImGuizmo::ROTATE) { snap_values[0] = 15.0f; snap_values[1] = 15.0f; snap_values[2] = 15.0f; }
 
-                float* snap_pointer = VortexKeyboard::get_key("LEFTCONTROL") ? snap_values : nullptr;
+                float* snap_pointer = VortexKeyboard::get_key(Key::LEFT_CTRL) ? snap_values : nullptr;
                 ImGuizmo::MODE actual_mode = (m_current_op == ImGuizmo::SCALE) ? ImGuizmo::LOCAL : m_current_guizmo_mode;
 
                 ImGuizmo::Manipulate(
@@ -308,23 +306,6 @@ void VortexGUI::draw_editor_viewport(VortexCamera* camera)
 
     ImGui::End();
     ImGui::PopStyleVar();
-}
-
-void VortexGUI::handle_shortcuts()
-{
-    if (ImGui::IsWindowFocused())
-    {
-        if (VortexKeyboard::get_key_down("T") && !VortexKeyboard::get_key("LEFTCONTROL")) m_current_op = ImGuizmo::TRANSLATE;
-        if (VortexKeyboard::get_key_down("R") && !VortexKeyboard::get_key("LEFTCONTROL")) m_current_op = ImGuizmo::ROTATE;
-        if (VortexKeyboard::get_key_down("Y") && !VortexKeyboard::get_key("LEFTCONTROL")) m_current_op = ImGuizmo::SCALE;
-        if (VortexKeyboard::get_key_down("LEFTALT")) snap_to_floor();
-    }
-
-    if (VortexKeyboard::get_key("LEFTCONTROL"))
-    {
-        if (VortexKeyboard::get_key_down("G")) m_current_guizmo_mode = ImGuizmo::WORLD; // Global
-        if (VortexKeyboard::get_key_down("L")) m_current_guizmo_mode = ImGuizmo::LOCAL; // Local
-    }
 }
 
 void VortexGUI::handle_picking(VortexCamera* camera, ImVec2 image_pos)

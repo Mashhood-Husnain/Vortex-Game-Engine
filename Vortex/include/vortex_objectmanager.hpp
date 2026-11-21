@@ -47,6 +47,8 @@ public:
     static void draw(VortexCamera &camera, bool show_wireframe, bool is_render_pass);
     static void check_object_status();
 
+    static glm::vec3 selected_models_center();
+
     static VortexShader *get_decal_shader();
 
     static void clear_scene();

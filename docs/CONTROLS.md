@@ -29,7 +29,7 @@ All bindings below apply to **Editor Mode** unless noted otherwise.
 | **LEFT CTRL + L** | Use Local object transformations |
 | **LEFT CTRL + G** | Use Global object transformations |
 | **LEFT CTRL + Mouse Drag** | Snap selected model to grid |
-| **LEFT ALT** | Snap selected model to the ground |
+| **RIGHT ALT** | Snap selected model to the ground |
 | **LEFT CTRL + D** | Duplicate selected model(s) |
 | **DEL** | Delete selected model(s) |
 

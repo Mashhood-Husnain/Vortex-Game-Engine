@@ -131,94 +131,6 @@ void VortexApplication::window_close_callback(GLFWwindow* window)
     }
 }
 
-void VortexApplication::check_key_press()
-{
-    if (is_playing_splash) return;
-    if (GLOBAL::current_engine_state == GLOBAL::EngineState::PROJECT_HUB) return;
-
-    if (VortexKeyboard::get_key_down("ESCAPE"))
-    {
-        if (GLOBAL::current_engine_state == GLOBAL::EngineState::PLAY) exit_play_mode();
-        else request_exit();
-    }
-
-    if (GLOBAL::current_engine_state == GLOBAL::EngineState::EDITOR)
-    {
-        if (VortexKeyboard::get_key_down("DELETE") && !VortexObjectManager::selected_models.empty()) VortexObjectManager::delete_selected_models();
-
-        if (VortexKeyboard::get_key("LEFTCONTROL"))
-        {
-            if (VortexKeyboard::get_key("LEFTSHIFT"))
-            {
-                if (VortexKeyboard::get_key_down("S")) VortexGUI::show_scene_viewport = !VortexGUI::show_scene_viewport;
-                if (VortexKeyboard::get_key_down("R")) VortexGUI::show_render_scene_viewport = !VortexGUI::show_render_scene_viewport;
-                if (VortexKeyboard::get_key_down("I")) VortexGUI::show_settings_window = !VortexGUI::show_settings_window;
-
-                if (VortexKeyboard::get_key_down("O")) VortexGUI::project_hub_open_project();
-                if (VortexKeyboard::get_key_down("N")) VortexGUI::project_hub_new_project();
-            }
-            else
-            {
-                if (VortexKeyboard::get_key_down("S")) VortexProject::take_snapshot(SnapshotState::SAVE, this, std::string(VortexGUI::m_new_project_name));
-                if (VortexKeyboard::get_key_down("R")) enter_play_mode();
-
-                if (VortexKeyboard::get_key_down("O")) VortexGUI::show_skybox_post_process_options = !VortexGUI::show_skybox_post_process_options;
-                if (VortexKeyboard::get_key_down("I")) VortexGUI::show_inspector = !VortexGUI::show_inspector;
-            }
-
-            if (!VortexGUI::is_using_gizmo)
-            {
-                if (VortexKeyboard::get_key_down("Z", 0.5f, true)) ActionManager::undo();
-                if (VortexKeyboard::get_key_down("Y", 0.5f, true)) ActionManager::redo();
-            }
-
-            if (VortexKeyboard::get_key_down("P")) VortexGUI::show_terminal = !VortexGUI::show_terminal;
-            if (VortexKeyboard::get_key_down("X")) VortexGUI::show_camera_info = !VortexGUI::show_camera_info;
-            if (VortexKeyboard::get_key_down("W")) VortexGUI::show_creator_window = !VortexGUI::show_creator_window;
-            if (VortexKeyboard::get_key_down("E")) VortexGUI::show_engine_stats = !VortexGUI::show_engine_stats;
-            if (VortexKeyboard::get_key_down("H")) VortexGUI::show_stack_history_window = !VortexGUI::show_stack_history_window;
-            if (VortexKeyboard::get_key_down("A")) VortexGUI::show_asset_browser = !VortexGUI::show_asset_browser;
-            if (VortexKeyboard::get_key_down("F")) VortexGUI::show_file_viewer = !VortexGUI::show_file_viewer;
-            if (VortexKeyboard::get_key_down("B")) VortexGUI::show_image_viewer = !VortexGUI::show_image_viewer;
-
-            if (VortexKeyboard::get_key_down("C")) VortexCompiler::trigger_compile();
-            if (VortexKeyboard::get_key_down("D")) VortexObjectManager::duplicate_selected_models();
-        }
-        else if (VortexKeyboard::get_key("LEFTSHIFT"))
-        {
-            if (VortexKeyboard::get_key_down("X"))
-            {
-                editor_camera->set_position(GLOBAL::DEFAULT_CAMERA_POSITION_X);
-                editor_camera->look_at(GLOBAL::DEFAULT_CAMERA_LOOK_AT);
-            }
-            if (VortexKeyboard::get_key_down("Y"))
-            {
-                editor_camera->set_position(GLOBAL::DEFAULT_CAMERA_POSITION_Y);
-                editor_camera->look_at(GLOBAL::DEFAULT_CAMERA_LOOK_AT);
-            }
-            if (VortexKeyboard::get_key_down("Z"))
-            {
-                editor_camera->set_position(GLOBAL::DEFAULT_CAMERA_POSITION_Z);
-                editor_camera->look_at(GLOBAL::DEFAULT_CAMERA_LOOK_AT);
-            }
-        }
-        else
-        {
-            if (VortexKeyboard::get_key_down("Z")) show_wireframe = !show_wireframe;
-            if (VortexKeyboard::get_key_down("M") && (VortexGUI::show_scene_viewport || VortexGUI::show_render_scene_viewport)) show_mouse(!show_mouse_cursor);
-            if (VortexKeyboard::get_key_down("F"))
-            {
-                is_fullscreen = !is_fullscreen;
-                change_window_size();
-            }
-        }
-    }
-    else
-    {
-        if (VortexKeyboard::get_key_down("TAB")) VortexGUI::show_engine_stats= !VortexGUI::show_engine_stats;
-    }
-}
-
 void VortexApplication::setup_world_axis_buffers()
 {
     glGenVertexArrays(1, &world_axisVAO);
@@ -376,7 +288,37 @@ VortexApplication::VortexApplication(std::string window_name)
         this->render_camera->set_aspect_ratio(aspect_ratio);
     }
 
+    VortexShortcuts::bind(GLOBAL::EngineState::PLAY, {{Key::ESCAPE}, false, {}, [this]{ exit_play_mode(); }, "Exit Play Mode"});
+    VortexShortcuts::bind(GLOBAL::EngineState::EDITOR, {{Key::ESCAPE}, false, {}, [this]{ request_exit(); }, "Exit"});
+    
+    VortexShortcuts::bind(GLOBAL::EngineState::EDITOR, {{Key::DELETE}, false, {}, [this]{ VortexObjectManager::delete_selected_models(); }, "Delete Selected Model(s)"});
+    VortexShortcuts::bind(GLOBAL::EngineState::EDITOR, {{Key::LEFT_CTRL, Key::S}, false, {}, [this]{ VortexProject::take_snapshot(SnapshotState::SAVE, this, std::string(VortexGUI::m_new_project_name)); }, "Save Project"});
+    VortexShortcuts::bind(GLOBAL::EngineState::EDITOR, {{Key::LEFT_CTRL, Key::R}, false, {}, [this]{ enter_play_mode(); }, "Play Mode"});
+    VortexShortcuts::bind(GLOBAL::EngineState::EDITOR, {{Key::LEFT_CTRL, Key::C}, false, {}, [this]{ VortexCompiler::trigger_compile(); }, "Compile"});
+    VortexShortcuts::bind(GLOBAL::EngineState::EDITOR, {{Key::LEFT_CTRL, Key::D}, false, {}, [this]{ VortexObjectManager::duplicate_selected_models(); }, "Duplicate Selected Model(s)"});
+    VortexShortcuts::bind(GLOBAL::EngineState::EDITOR, {{Key::Z}, false, {}, [this]{ show_wireframe = !show_wireframe; }, "Show Wireframe"});
+    VortexShortcuts::bind(GLOBAL::EngineState::EDITOR, {{Key::M}, false, {}, [this]{
+        if (VortexGUI::show_scene_viewport || VortexGUI::show_render_scene_viewport) show_mouse(!show_mouse_cursor);
+    }, "Show/Hide Mouse"});
+    VortexShortcuts::bind(GLOBAL::EngineState::EDITOR, {{Key::F}, false, {}, [this]{
+        is_fullscreen = !is_fullscreen;
+        change_window_size();
+    }, "Full/Minimize Screen"});
+
+    VortexShortcuts::bind(GLOBAL::EngineState::EDITOR, {{Key::LEFT_SHIFT, Key::X}, false, {}, [this]{ snap_camera_to_axis(editor_camera, GLOBAL::DEFAULT_CAMERA_POSITION_X); }, "X View"});
+    VortexShortcuts::bind(GLOBAL::EngineState::EDITOR, {{Key::LEFT_SHIFT, Key::Y}, false, {}, [this]{ snap_camera_to_axis(editor_camera, GLOBAL::DEFAULT_CAMERA_POSITION_Y); }, "Y View"});
+    VortexShortcuts::bind(GLOBAL::EngineState::EDITOR, {{Key::LEFT_SHIFT, Key::Z}, false, {}, [this]{ snap_camera_to_axis(editor_camera, GLOBAL::DEFAULT_CAMERA_POSITION_Z); }, "Z View"});
+
     VortexGUI::init(this, start_width, start_height);
+}
+
+void VortexApplication::snap_camera_to_axis(VortexCamera *camera, glm::vec3 axis_pos)
+{
+    glm::vec3 central_position = VortexObjectManager::selected_models_center();
+    glm::vec3 camera_new_position = central_position + axis_pos;
+
+    camera->set_position(camera_new_position);
+    camera->look_at(central_position);
 }
 
 VortexApplication::~VortexApplication()
@@ -530,7 +472,8 @@ void VortexApplication::run(std::function<void()> draw_callback)
         VortexCompiler::check_for_hot_reload(this);
 
         glfwPollEvents();
-        check_key_press();
+
+        if (!is_playing_splash && GLOBAL::current_engine_state != GLOBAL::EngineState::PROJECT_HUB) VortexShortcuts::update(GLOBAL::current_engine_state);
 
         float currentFrame = static_cast<float>(glfwGetTime());
         GLOBAL::deltaTime = currentFrame - last_frame;

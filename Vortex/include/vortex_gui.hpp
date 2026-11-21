@@ -207,7 +207,6 @@ class VortexGUI
     static void gui_set_post_processor();
 
     static void handle_picking(VortexCamera *camera, ImVec2 image_pos);
-    static void handle_shortcuts();
     static void snap_to_floor();
 
     static GLuint load_editor_icon(const char* file_path);

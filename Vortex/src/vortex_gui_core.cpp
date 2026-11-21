@@ -2,6 +2,7 @@
 #include "vortex_objectmanager.hpp"
 #include "util/vortex_save_load.hpp"
 #include "vortex_application.hpp"
+#include "vortex_shortcuts.hpp"
 
 #include <thread>
 #include <cstdlib>
@@ -195,6 +196,48 @@ void VortexGUI::init(VortexApplication *_app, int width, int height)
     const GLubyte *renderer_ptr = glGetString(GL_RENDERER);
     _vendor_ = vendor_ptr ? reinterpret_cast<const char*>(vendor_ptr) : "Unknown Vendor";
     _renderer_  = renderer_ptr ? reinterpret_cast<const char*>(renderer_ptr) : "Unknown Renderer";
+
+    VortexShortcuts::bind(GLOBAL::EngineState::EDITOR, {{Key::LEFT_CTRL, Key::LEFT_SHIFT, Key::S}, false, {}, []{ show_scene_viewport = !show_scene_viewport; }, "Scene Viewport"});
+    VortexShortcuts::bind(GLOBAL::EngineState::EDITOR, {{Key::LEFT_CTRL, Key::LEFT_SHIFT, Key::R}, false, {}, []{ show_render_scene_viewport = !show_render_scene_viewport; }, "Render Scene Viewport"});
+    VortexShortcuts::bind(GLOBAL::EngineState::EDITOR, {{Key::LEFT_CTRL, Key::LEFT_SHIFT, Key::N}, false, {}, []{ project_hub_new_project(); }, "New Project"});
+    VortexShortcuts::bind(GLOBAL::EngineState::EDITOR, {{Key::LEFT_CTRL, Key::LEFT_SHIFT, Key::I}, false, {}, []{ show_settings_window = !show_settings_window; }, "Settings Window"});
+    VortexShortcuts::bind(GLOBAL::EngineState::EDITOR, {{Key::LEFT_CTRL, Key::LEFT_SHIFT, Key::O}, false, {}, []{ project_hub_open_project(); }, "Open Project"});
+    VortexShortcuts::bind(GLOBAL::EngineState::EDITOR, {{Key::LEFT_CTRL, Key::O}, false, {}, []{ show_skybox_post_process_options = !show_skybox_post_process_options; }, "Skybox/Post-process Window"});
+    VortexShortcuts::bind(GLOBAL::EngineState::EDITOR, {{Key::LEFT_CTRL, Key::I}, false, {}, []{ show_inspector = !show_inspector; }, "Inspector Window"});
+    VortexShortcuts::bind(GLOBAL::EngineState::EDITOR, {{Key::LEFT_CTRL, Key::P}, false, {}, []{ show_terminal = !show_terminal; }, "Terminal"});
+    VortexShortcuts::bind(GLOBAL::EngineState::EDITOR, {{Key::LEFT_CTRL, Key::X}, false, {}, []{ show_camera_info = !show_camera_info; }, "Camera Window"});
+    VortexShortcuts::bind(GLOBAL::EngineState::EDITOR, {{Key::LEFT_CTRL, Key::W}, false, {}, []{ show_creator_window = !show_creator_window; }, "Creator Window"});
+    VortexShortcuts::bind(GLOBAL::EngineState::EDITOR, {{Key::LEFT_CTRL, Key::H}, false, {}, []{ show_engine_stats = !show_engine_stats; }, "Engine Stats"});
+    VortexShortcuts::bind(GLOBAL::EngineState::EDITOR, {{Key::LEFT_CTRL, Key::E}, false, {}, []{ show_stack_history_window = !show_stack_history_window; }, "Stack History"});
+    VortexShortcuts::bind(GLOBAL::EngineState::EDITOR, {{Key::LEFT_CTRL, Key::A}, false, {}, []{ show_asset_browser =! show_asset_browser; }, "Asset Browser"});
+    VortexShortcuts::bind(GLOBAL::EngineState::EDITOR, {{Key::LEFT_CTRL, Key::F}, false, {}, []{ show_file_viewer = !show_file_viewer; }, "File Viewer"});
+    VortexShortcuts::bind(GLOBAL::EngineState::EDITOR, {{Key::LEFT_CTRL, Key::B}, false, {}, []{ show_image_viewer = !show_image_viewer; }, "Image Viewer"});
+    
+    VortexShortcuts::bind(GLOBAL::EngineState::PLAY, {{Key::TAB}, false, {}, []{ show_engine_stats = !show_engine_stats; }, "Engine Stats (play)"});
+
+    VortexShortcuts::bind(GLOBAL::EngineState::EDITOR, {{Key::LEFT_CTRL, Key::Z}, true, {}, []{
+        if (is_using_gizmo) ActionManager::undo();
+    }, "Undo Changes", 0.5f});
+    VortexShortcuts::bind(GLOBAL::EngineState::EDITOR, {{Key::LEFT_CTRL, Key::Y}, true, {}, []{
+        if (is_using_gizmo) ActionManager::redo();
+    }, "Redo Changes", 0.5f});
+
+    VortexShortcuts::bind(GLOBAL::EngineState::EDITOR, {{Key::T}, false, {}, []{
+        if (ImGui::IsWindowFocused) m_current_op = ImGuizmo::TRANSLATE;
+    }, "Translate"});
+    VortexShortcuts::bind(GLOBAL::EngineState::EDITOR, {{Key::R}, false, {}, []{
+        if (ImGui::IsWindowFocused) m_current_op = ImGuizmo::ROTATE;
+    }, "Rotate"});
+    VortexShortcuts::bind(GLOBAL::EngineState::EDITOR, {{Key::T}, false, {}, []{
+        if (ImGui::IsWindowFocused) m_current_op = ImGuizmo::SCALE;
+    }, "Scale"});
+    VortexShortcuts::bind(GLOBAL::EngineState::EDITOR, {{Key::RIGHT_ALT}, false, {}, []{
+        if (ImGui::IsWindowFocused) snap_to_floor();
+    }, "Snap Model to Floor"});
+
+    VortexShortcuts::bind(GLOBAL::EngineState::EDITOR, {{Key::LEFT_CTRL, Key::G}, false, {}, []{ ImGuizmo::WORLD; }, "World Translation Reference"});
+    VortexShortcuts::bind(GLOBAL::EngineState::EDITOR, {{Key::LEFT_CTRL, Key::L}, false, {}, []{ ImGuizmo::LOCAL; }, "Local Translation Reference"});    
+
 }
 
 void VortexGUI::update()

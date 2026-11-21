@@ -161,6 +161,7 @@ add_executable(engine
     Vortex/src/vortex_light.cpp
     Vortex/src/vortex_actions.cpp
     Vortex/src/vortex_decal.cpp
+    Vortex/src/vortex_shortcuts.cpp
 
     Vortex/src/util/vortex_save_load.cpp
     Vortex/src/util/vortex_save_load_encryption.cpp

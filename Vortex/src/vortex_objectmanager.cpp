@@ -190,6 +190,8 @@ void VortexObjectManager::duplicate_selected_models()
 
 void VortexObjectManager::delete_selected_models()
 {
+    if (selected_models.empty()) return;
+
     for (VortexModel *model : VortexObjectManager::selected_models)
     {
         model->is_selected = false;
@@ -441,6 +443,22 @@ void VortexObjectManager::check_object_status()
             }),
         active_models.end()
     );
+}
+
+glm::vec3 VortexObjectManager::selected_models_center()
+{
+    if (selected_models.empty()) return glm::vec3(0.0f);
+
+    glm::vec3 central_position = glm::vec3(0.0f);
+
+    for (auto &obj : selected_models)
+    {
+        central_position += obj->transform.position;
+    }
+
+    central_position /= VortexObjectManager::selected_models.size();
+
+    return central_position;
 }
 
 VortexModel* VortexObjectManager::get_object_by_tag(std::string tag)

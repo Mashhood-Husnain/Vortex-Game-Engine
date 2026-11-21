@@ -64,11 +64,7 @@ void VortexGUI::draw_asset_browser()
 
     if (current_path != base_project_path)
     {
-        if (ImGui::Button("<- Back", ImVec2(75, 25)) ||
-            (VortexKeyboard::get_key("LEFTALT") &&
-            VortexKeyboard::get_key_down("LEFT") &&
-            app->is_mouse_visible())
-        )
+        if (ImGui::Button("<- Back", ImVec2(75, 25)))
         {
             path_to_navigate_to = current_path.parent_path();
         }
