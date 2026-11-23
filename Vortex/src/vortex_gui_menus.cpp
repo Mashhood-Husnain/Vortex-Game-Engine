@@ -272,6 +272,7 @@ void VortexGUI::draw_project_hub()
                 VortexCompiler::init_game_code(app);
 
                 VortexProject::take_snapshot(SnapshotState::SAVE, app, m_new_project_name);
+                VortexShortcuts::save_to_json(vortex_generatepath(target_path, "shortcuts.json"));
 
                 GLOBAL::current_engine_state = GLOBAL::EngineState::EDITOR;
 
@@ -398,32 +399,44 @@ void VortexGUI::draw_file_viewer()
 
     if (!app->is_mouse_visible()) app->show_mouse(true);
 
-    if (!is_current_file_cpp)
-    {
-        ImGui::TextUnformatted(current_file_content.c_str());
-    }
-    else
-    {
-        std::istringstream stream(current_file_content);
-        std::string line;
+    const int total_lines = 1 + static_cast<int>(
+        std::count(
+            current_file_content.begin(),
+            current_file_content.end(),
+            '\n'
+        )
+    );
 
-        ImVec4 keyword_color(0.3f, 0.6f, 0.9f, 1.0f);
-        ImVec4 type_color(0.2f, 0.8f, 0.6f, 1.0f);
-        ImVec4 preproc_color(0.8f, 0.4f, 0.8f, 1.0f);
+    char widest[16];
+    snprintf(widest, sizeof(widest), "%d", total_lines);
+    const float gutter_width = ImGui::CalcTextSize(widest).x;
+    const float gutter_gap = 12.0f;
+    const ImVec4 line_num_color(0.5f, 0.5f, 0.5f, 1.0f);
 
-        while (std::getline(stream, line))
+    ImVec4 preproc_color(0.8f, 0.4f, 0.8f, 1.0f);
+
+    std::istringstream stream(current_file_content);
+    std::string line;
+    int line_no = 1;
+
+    while(std::getline(stream, line))
+    {
+        char num[16];
+        snprintf(num, sizeof(num), "%d", line_no++);
+        const float num_width = ImGui::CalcTextSize(num).x;
+        ImGui::SetCursorPosX(ImGui::GetCursorPosX() + gutter_width - num_width);
+        ImGui::TextColored(line_num_color, "%s", num);
+        ImGui::SameLine(0.0f, gutter_gap);
+
+        if (is_current_file_cpp &&
+            line.find("#include") == 0 || line.find("#pragma") == 0 || line.find("#define") == 0
+        )
         {
-            if (line.empty()) { ImGui::NewLine(); continue; }
-
-            if (line.find("#include") == 0 || line.find("#pragma") == 0 || line.find("#define") == 0)
-            {
-                ImGui::TextColored(preproc_color, "%s", line.c_str());
-                //TODO: add more colors to different word types
-            }
-            else
-            {
-                ImGui::TextUnformatted(line.c_str());
-            }
+            ImGui::TextColored(preproc_color, "%s", line.c_str());
+        }
+        else
+        {
+            ImGui::TextUnformatted(line.c_str());
         }
     }
 

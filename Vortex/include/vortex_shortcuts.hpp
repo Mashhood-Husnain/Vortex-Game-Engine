@@ -4,9 +4,13 @@
 #include <functional>
 #include <unordered_map>
 #include <vector>
+#include <fstream>
+
+#include <json.hpp>
 
 #include "vortex_global_vars.hpp"
 #include "vortex_keyboard.hpp"
+#include "vortex_logs.hpp"
 
 namespace
 {
@@ -40,4 +44,6 @@ class VortexShortcuts
 public:
     static void bind(GLOBAL::EngineState state, Shortcut s);
     static void update(GLOBAL::EngineState state);
+
+    static void save_to_json(const std::string &path);
 };

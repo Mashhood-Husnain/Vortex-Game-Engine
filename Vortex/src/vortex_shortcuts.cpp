@@ -54,3 +54,54 @@ void VortexShortcuts::update(GLOBAL::EngineState state)
         }
     }
 }
+
+void VortexShortcuts::save_to_json(const std::string &path)
+{
+    using json = nlohmann::json;
+    json root = json::object();
+
+    for (const auto &[state, shortcuts] : s_shortcuts)
+    {
+        json shortcut_json = json::array();
+
+        for (const auto &s : shortcuts)
+        {
+            json keys = json::array();
+            for (const auto &key : s.key_comb)
+            {
+                keys.push_back(VortexKeyboard::str_key(key));
+            }
+
+            shortcut_json.push_back({
+                {"Name", s.name},
+                {"Keys", std::move(keys)},
+                {"Timed", s.timed},
+                {"TimedInterval", s.timed_interval}
+            });
+        }
+
+        std::string state_name;
+        switch (state)
+        {
+            case GLOBAL::EngineState::EDITOR: state_name = "Editor"; break;
+            case GLOBAL::EngineState::PLAY: state_name = "Play"; break;
+            case GLOBAL::EngineState::PROJECT_HUB: state_name = "ProjectHub"; break;
+        }
+        if (state_name.empty())
+        {
+            VORTEX_ERROR("Unknow engine state while saving shortcuts (", state_name, ")");
+            continue;
+        }
+
+        root[state_name] = std::move(shortcut_json);
+    }
+
+    std::ofstream file(path);
+    if (!file)
+    {
+        VORTEX_ERROR("Could not open file: ", path);
+        return;
+    }
+
+    file << root.dump(4);
+}

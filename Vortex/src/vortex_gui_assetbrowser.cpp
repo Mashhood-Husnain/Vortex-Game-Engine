@@ -104,7 +104,9 @@ void VortexGUI::draw_asset_browser()
         for (const auto& entry : std::filesystem::directory_iterator(current_path))
         {
             if (entry.path().extension() == ".vtx" || entry.path().filename().string() == settings_filename ||
-                entry.path().filename().string() == "CMakeLists.txt" || entry.path().filename().string() == ".vscode")
+                entry.path().filename().string() == "CMakeLists.txt" || entry.path().filename().string() == ".vscode" ||
+                entry.path().filename().string() == "shortcuts.json"
+            )
             {
                 continue;
             }
