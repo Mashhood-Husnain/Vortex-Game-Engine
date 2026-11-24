@@ -75,7 +75,7 @@ private:
     #if !defined(NDEBUG)
         bool enable_splash_screen = false;
     #else
-        bool enable_splash_screen = true
+        bool enable_splash_screen = true;
     #endif
 
 

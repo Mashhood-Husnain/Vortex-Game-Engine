@@ -169,9 +169,14 @@ void VortexCompiler::trigger_compile()
         VortexProject::ASSET_DIR_SCRIPTS
     );
 
-    std::string absolute_script_dir = std::filesystem::absolute(project_script_dir).string();
+    std::string absolute_script_dir = std::filesystem::absolute(project_script_dir).generic_string();
 
-    std::thread([absolute_script_dir]()
+    std::string build_dir  = std::filesystem::current_path().generic_string();
+    std::string source_dir = std::filesystem::weakly_canonical(
+        std::filesystem::current_path() / ".." / ".."
+    ).generic_string();
+
+    std::thread([absolute_script_dir, build_dir, source_dir]()
     {
         #ifdef _WIN32
             #define POPEN _popen
@@ -181,10 +186,10 @@ void VortexCompiler::trigger_compile()
             #define PCLOSE pclose
         #endif
 
-        std::string safe_path = absolute_script_dir;
-        std::replace(safe_path.begin(), safe_path.end(), '\\', '/');
-
-        std::string compile_cmd = "cmake -DPROJECT_DIR=\"" + safe_path + "\" .. && make VortexGame 2>&1";
+        std::string compile_cmd =
+            "cmake -S \"" + source_dir + "\" -B \"" + build_dir + "\""
+            " -DPROJECT_DIR=\"" + absolute_script_dir + "\""
+            " && cmake --build \"" + build_dir + "\" --target VortexGame 2>&1";
 
         FILE* pipe = POPEN(compile_cmd.c_str(), "r");
 

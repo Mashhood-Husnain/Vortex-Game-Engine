@@ -207,8 +207,8 @@ void VortexGUI::init(VortexApplication *_app, int width, int height)
     VortexShortcuts::bind(GLOBAL::EngineState::EDITOR, {{Key::LEFT_CTRL, Key::P}, false, {}, []{ show_terminal = !show_terminal; }, "Terminal"});
     VortexShortcuts::bind(GLOBAL::EngineState::EDITOR, {{Key::LEFT_CTRL, Key::X}, false, {}, []{ show_camera_info = !show_camera_info; }, "Camera Window"});
     VortexShortcuts::bind(GLOBAL::EngineState::EDITOR, {{Key::LEFT_CTRL, Key::W}, false, {}, []{ show_creator_window = !show_creator_window; }, "Creator Window"});
-    VortexShortcuts::bind(GLOBAL::EngineState::EDITOR, {{Key::LEFT_CTRL, Key::H}, false, {}, []{ show_engine_stats = !show_engine_stats; }, "Engine Stats"});
-    VortexShortcuts::bind(GLOBAL::EngineState::EDITOR, {{Key::LEFT_CTRL, Key::E}, false, {}, []{ show_stack_history_window = !show_stack_history_window; }, "Stack History"});
+    VortexShortcuts::bind(GLOBAL::EngineState::EDITOR, {{Key::LEFT_CTRL, Key::E}, false, {}, []{ show_engine_stats = !show_engine_stats; }, "Engine Stats"});
+    VortexShortcuts::bind(GLOBAL::EngineState::EDITOR, {{Key::LEFT_CTRL, Key::H}, false, {}, []{ show_stack_history_window = !show_stack_history_window; }, "Stack History"});
     VortexShortcuts::bind(GLOBAL::EngineState::EDITOR, {{Key::LEFT_CTRL, Key::A}, false, {}, []{ show_asset_browser =! show_asset_browser; }, "Asset Browser"});
     VortexShortcuts::bind(GLOBAL::EngineState::EDITOR, {{Key::LEFT_CTRL, Key::F}, false, {}, []{ show_file_viewer = !show_file_viewer; }, "File Viewer"});
     VortexShortcuts::bind(GLOBAL::EngineState::EDITOR, {{Key::LEFT_CTRL, Key::B}, false, {}, []{ show_image_viewer = !show_image_viewer; }, "Image Viewer"});
@@ -216,10 +216,10 @@ void VortexGUI::init(VortexApplication *_app, int width, int height)
     VortexShortcuts::bind(GLOBAL::EngineState::PLAY, {{Key::TAB}, false, {}, []{ show_engine_stats = !show_engine_stats; }, "Engine Stats (play)"});
 
     VortexShortcuts::bind(GLOBAL::EngineState::EDITOR, {{Key::LEFT_CTRL, Key::Z}, true, {}, []{
-        if (is_using_gizmo) ActionManager::undo();
+        if (!is_using_gizmo) ActionManager::undo();
     }, "Undo Changes", 0.5f});
     VortexShortcuts::bind(GLOBAL::EngineState::EDITOR, {{Key::LEFT_CTRL, Key::Y}, true, {}, []{
-        if (is_using_gizmo) ActionManager::redo();
+        if (!is_using_gizmo) ActionManager::redo();
     }, "Redo Changes", 0.5f});
 
     VortexShortcuts::bind(GLOBAL::EngineState::EDITOR, {{Key::T}, false, {}, []{
@@ -228,7 +228,7 @@ void VortexGUI::init(VortexApplication *_app, int width, int height)
     VortexShortcuts::bind(GLOBAL::EngineState::EDITOR, {{Key::R}, false, {}, []{
         if (ImGui::IsWindowFocused) m_current_op = ImGuizmo::ROTATE;
     }, "Rotate"});
-    VortexShortcuts::bind(GLOBAL::EngineState::EDITOR, {{Key::T}, false, {}, []{
+    VortexShortcuts::bind(GLOBAL::EngineState::EDITOR, {{Key::Y}, false, {}, []{
         if (ImGui::IsWindowFocused) m_current_op = ImGuizmo::SCALE;
     }, "Scale"});
     VortexShortcuts::bind(GLOBAL::EngineState::EDITOR, {{Key::RIGHT_ALT}, false, {}, []{

@@ -62,6 +62,21 @@ void VortexProject::create_backup(const std::string& project_name)
     }
 }
 
+static std::filesystem::path find_engine_root()
+{
+    std::filesystem::path dir = std::filesystem::current_path();
+    while(true)
+    {
+        if (std::filesystem::exists(dir / "Vortex" / "include")) return dir;
+
+        if (!dir.has_parent_path() || dir == dir.parent_path()) break;
+
+        dir = dir.parent_path();
+    }
+
+    return {};
+}
+
 void generate_ide_context(const std::string& project_name)
 {
     std::string scripts_dir = vortex_generatepath(
@@ -76,8 +91,14 @@ void generate_ide_context(const std::string& project_name)
 
     if (std::filesystem::exists(cmake_path) && std::filesystem::exists(cpp_props_path)) return;
 
-    std::string engine_root = std::filesystem::absolute("..").string();
-    std::replace(engine_root.begin(), engine_root.end(), '\\', '/');
+    std::filesystem::path root = find_engine_root();
+    if (root.empty())
+    {
+        VORTEX_ERROR("[PROJECT] Could not locate engine root folder!");
+        return;
+    }
+
+    std::string engine_root = root.generic_string();
 
     std::vector<std::string> include_paths;
     include_paths.push_back(engine_root + "/Vortex/include");
