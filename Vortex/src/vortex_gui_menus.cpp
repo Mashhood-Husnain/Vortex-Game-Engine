@@ -75,7 +75,7 @@ void VortexGUI::draw_main_menu_bar()
 
             if (ImGui::MenuItem("Compile", "Ctrl+C"))
             {
-                VortexCompiler::trigger_compile();
+                VortexCompiler::trigger_compile(m_new_project_name);
             }
             ImGui::EndMenu();
         }
@@ -204,7 +204,7 @@ void VortexGUI::draw_project_hub()
 
             GLOBAL::current_engine_state = GLOBAL::EngineState::EDITOR;
 
-            VortexCompiler::trigger_compile();
+            VortexCompiler::trigger_compile(m_new_project_name);
 
             selected_project = true;
         }
@@ -276,7 +276,7 @@ void VortexGUI::draw_project_hub()
 
                 GLOBAL::current_engine_state = GLOBAL::EngineState::EDITOR;
 
-                VortexCompiler::trigger_compile();
+                VortexCompiler::trigger_compile(m_new_project_name);
 
                 selected_project = true;
             }

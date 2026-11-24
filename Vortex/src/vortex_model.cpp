@@ -12,6 +12,8 @@
 #include "vortex_application.hpp"
 #include "vortex_shaders.hpp"
 
+#include "vortex_script_registry.hpp"
+
 void VortexModel::bind_lights_to_shader(VortexShader* shader, bool use_scene_lights)
 {
     const int MAX_LIGHTS = 16;
@@ -409,6 +411,69 @@ std::vector<glm::vec3> VortexModel::get_world_bounds_min_max()
     return min_max;
 }
 
+void VortexModel::stash_scripts()
+{
+    for (size_t i = 0; i < behaviours.size() && i < script_names.size(); i++)
+    {
+        json data;
+        behaviours[i]->serialize(data);
+        script_data[script_names[i]] = data;
+    }
+
+    for (VortexMonoBehaviour *script : behaviours) delete script;
+    behaviours.clear();
+
+    pending_script_names.insert(pending_script_names.begin(), script_names.begin(), script_names.end());
+    script_names.clear();
+}
+
+void VortexModel::restore_scripts()
+{
+    std::vector<std::string> still_pending;
+
+    for (const std::string &name : pending_script_names)
+    {
+        VortexMonoBehaviour *script = ScriptRegistry::get().create(name);
+
+        if (!script)
+        {
+            still_pending.push_back(name);
+            continue;
+        }
+
+        script->vortexGameObject = this;
+        script->vortexEngine = app;
+        script->vortexTransform = &transform;
+
+        auto it = script_data.find(name);
+        if (it != script_data.end()) script->deserialize(it->second);
+
+        behaviours.push_back(script);
+        script_names.push_back(name);
+    }
+
+    pending_script_names = std::move(still_pending);
+}
+
+bool VortexModel::has_script(const std::string &name) const
+{
+    bool in_live_scripts = std::find(script_names.begin(), script_names.end(), name) != script_names.end();
+    bool in_pending_scripts = std::find(pending_script_names.begin(), pending_script_names.end(), name) != pending_script_names.end();
+
+    return in_live_scripts || in_pending_scripts;
+}
+
+bool VortexModel::attach_script(const std::string &name)
+{
+    if (has_script(name)) return false;
+
+    VortexMonoBehaviour *script = ScriptRegistry::get().create(name);
+    if (!script) return false;
+
+    add_behaviour(name, script);
+    return true;
+}
+
 VortexModel* VortexModel::clone()
 {
     VortexModel* new_model = new VortexModel(file_path, app);
@@ -462,19 +527,33 @@ VortexModel* VortexModel::clone()
         new_model->decals.push_back(new_decal);
     }
 
-    for (size_t i = 0; i < script_names.size(); i++)
+    for (size_t i = 0; i < script_names.size() && i < behaviours.size(); i++)
     {
-        std::string script_name = script_names[i];
-        VortexMonoBehaviour* original_script = behaviours[i];
+        const std::string &name = script_names[i];
 
-        VortexMonoBehaviour* new_script = ScriptRegistry::get().create(script_name);
+        json data;
+        behaviours[i]->serialize(data);
+
+        VortexMonoBehaviour *new_script = ScriptRegistry::get().create(name);
         if (new_script)
         {
-            json script_data;
-            original_script->serialize(script_data);
-            new_script->deserialize(script_data);
+            new_script->deserialize(data);
+            new_model->add_behaviour(name, new_script);
+        }
+        else
+        {
+            new_model->pending_script_names.push_back(name);
+            new_model->script_data[name] = data;
+        }
+    }
 
-            new_model->add_behaviour(script_name, new_script);
+    for (const std::string &name : pending_script_names)
+    {
+        new_model->pending_script_names.push_back(name);
+        auto it = script_data.find(name);
+        if (it != script_data.end())
+        {
+            new_model->script_data[name] = it->second;
         }
     }
 

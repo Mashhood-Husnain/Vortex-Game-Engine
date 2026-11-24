@@ -333,15 +333,19 @@ void VortexGUI::draw_model_components_panel(VortexModel* model, int flags)
                 if (path_str.find(".cpp") != std::string::npos || path_str.find(".hpp") != std::string::npos)
                 {
                     std::string script_name = std::filesystem::path(path_str).stem().string();
-                    VortexMonoBehaviour *new_script = ScriptRegistry::get().create(script_name);
-                    if (new_script)
+
+                    if (model->has_script(script_name))
                     {
-                        new_script->vortexGameObject = model;
-                        new_script->vortexEngine = app;
-                        new_script->vortexTransform = &model->transform;
-                        model->add_behaviour(script_name, new_script);
+                        VORTEX_WARN("[GUI] '", script_name, "' is already attached to ", model->model_name);
+                    }
+                    else if (model->attach_script(script_name))
+                    {
                         VORTEX_INFO("[GUI] Attached script: ", script_name);
                     }
+                    else
+                    {
+                        VORTEX_WARN("[GUI] No script class '", script_name, "' is registered. Compile first, or the file name doesn't match the class name.");
+                    }                    
                 }
             }
             ImGui::EndDragDropTarget();
@@ -459,14 +463,18 @@ void VortexGUI::draw_model_components_panel(VortexModel* model, int flags)
             }
         }
 
-        if (model->script_names.empty() && !model->rigidbody && !model->light) ImGui::TextDisabled("No components attached.");
+        bool has_any_component = !model->script_names.empty() || !model->pending_script_names.empty() ||
+                                  model->rigidbody || model->light || !model->decals.empty();
+
+        if (!has_any_component) ImGui::TextDisabled("No components attached.");
         else
         {
             int script_to_delete = -1;
             for (size_t i = 0; i < model->script_names.size(); i++)
             {
-                ImGui::PushID(static_cast<int>(i));
-                std::string script_name = model->script_names[i];
+                const std::string &script_name = model->script_names[i];
+                ImGui::PushID(("live_" + script_name).c_str());
+
                 VortexMonoBehaviour *script = model->behaviours[i];
 
                 bool script_open = VortexGuiHelpers::DrawComponentNode(script_name.c_str(), flags, ImVec4(0.18f, 0.18f, 0.18f, 1.0f));
@@ -501,9 +509,40 @@ void VortexGUI::draw_model_components_panel(VortexModel* model, int flags)
 
             if (script_to_delete != -1)
             {
+                const std::string removed_name = model->script_names[script_to_delete];
+
                 delete model->behaviours[script_to_delete];
                 model->behaviours.erase(model->behaviours.begin() + script_to_delete);
                 model->script_names.erase(model->script_names.begin() + script_to_delete);
+
+                model->script_data.erase(removed_name);
+            }
+
+            int pending_to_delete = -1;
+            for (size_t i = 0; i < model->pending_script_names.size(); i++)
+            {
+                ImGui::PushID(("pending_" + model->pending_script_names[i]).c_str());
+
+                std::string label = model->pending_script_names[i] + " (not loaded)";
+                bool open = VortexGuiHelpers::DrawComponentNode(label.c_str(), flags, ImVec4(0.30f, 0.18f, 0.18f, 1.0f));
+
+                if (open)
+                {
+                    ImGui::Indent(10.0f); ImGui::Spacing();
+                    ImGui::TextDisabled("Waiting for compile, or the script no longer exists in this project.");
+
+                    ImGui::Spacing(); ImGui::SetCursorPosX(ImGui::GetWindowContentRegionMax().x - 70.0f);
+                    if (VortexGuiHelpers::DrawDangerButton("Remove", ImVec2(70, 0))) pending_to_delete = static_cast<int>(i);
+
+                    ImGui::Spacing(); ImGui::Unindent(10.0f);
+                }
+                ImGui::PopID();
+            }
+
+            if (pending_to_delete != -1)
+            {
+                model->script_data.erase(model->pending_script_names[pending_to_delete]);
+                model->pending_script_names.erase(model->pending_script_names.begin() + pending_to_delete);
             }
         }
 
@@ -551,17 +590,13 @@ void VortexGUI::draw_model_components_panel(VortexModel* model, int flags)
 
             for (const std::string &script_name : available_scripts)
             {
-                if (ImGui::Selectable(script_name.c_str()))
-                {
-                    VortexMonoBehaviour *new_script = ScriptRegistry::get().create(script_name);
-                    if (new_script)
-                    {
-                        new_script->vortexGameObject = model;
-                        new_script->vortexEngine = app;
-                        new_script->vortexTransform = &model->transform;
-                        model->add_behaviour(script_name, new_script);
-                    }
-                }
+                bool already_attached = model->has_script(script_name);
+
+                if (already_attached) ImGui::BeginDisabled();
+
+                if (ImGui::Selectable(script_name.c_str())) model->attach_script(script_name);
+
+                if (already_attached) ImGui::EndDisabled();
             }
             ImGui::EndCombo();
         }

@@ -107,15 +107,10 @@ void VortexCompiler::check_for_hot_reload(VortexApplication *app)
 
     for (VortexModel* model : VortexObjectManager::active_models)
     {
-        for (VortexMonoBehaviour* script : model->behaviours)
-        {
-            delete script;
-        }
-        model->behaviours.clear();
+        model->stash_scripts();
     }
 
     ScriptRegistry::get().clear();
-
     game_code->unload();
     game_code->load();
 
@@ -123,38 +118,16 @@ void VortexCompiler::check_for_hot_reload(VortexApplication *app)
     {
         game_code->Init(&game_memory, app);
 
-        for (VortexModel* model : VortexObjectManager::active_models)
+        for (VortexModel *model : VortexObjectManager::active_models)
         {
-            std::vector<VortexMonoBehaviour*> restored_behaviours;
-            std::vector<std::string> restored_names;
-
-            for (const std::string& script_name : model->script_names)
-            {
-                VortexMonoBehaviour* fresh_script = ScriptRegistry::get().create(script_name);
-
-                if (fresh_script)
-                {
-                    fresh_script->vortexGameObject = model;
-                    fresh_script->vortexEngine = app;
-                    fresh_script->vortexTransform = &model->transform;
-
-                    restored_behaviours.push_back(fresh_script);
-                    restored_names.push_back(script_name);
-                }
-                else
-                {
-                    VORTEX_WARN("[ENGINE] Script '", script_name, "' is missing from the DLL. Removing from model.");
-                }
-            }
-
-            model->behaviours = restored_behaviours;
-            model->script_names = restored_names;
+            model->restore_scripts();
         }
+
         VORTEX_INFO("[ENGINE] Hot Reload Complete! All pointers safely restored.");
     }
 }
 
-void VortexCompiler::trigger_compile()
+void VortexCompiler::trigger_compile(const std::string &project_name)
 {
     if (compiler_state.is_compiling.load()) return;
 
@@ -165,7 +138,7 @@ void VortexCompiler::trigger_compile()
 
     std::string project_script_dir = vortex_generatepath(
         VortexProject::SAVE_DIRECTORY,
-        VortexGUI::m_new_project_name,
+        project_name,
         VortexProject::ASSET_DIR_SCRIPTS
     );
 

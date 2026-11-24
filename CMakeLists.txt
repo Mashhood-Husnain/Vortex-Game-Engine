@@ -234,7 +234,15 @@ endif()
 add_library(VortexGame SHARED Vortex/src/VortexEngine.cpp)
 
 if(PROJECT_DIR)
-    file(GLOB_RECURSE USER_SCRIPTS CONFIGURE_DEPENDS "${PROJECT_DIR}/*.cpp")
+    file(GLOB_RECURSE ALL_SCRIPTS CONFIGURE_DEPENDS "${PROJECT_DIR}/*.cpp")
+
+    set(USER_SCRIPTS "")
+    foreach(SCRIPT ${ALL_SCRIPTS})
+        file(RELATIVE_PATH REL "${PROJECT_DIR}" "${SCRIPT}")
+        if(NOT REL MATCHES "^(\\.vscode|build|CMakeFiles)/")
+            list(APPEND USER_SCRIPTS "${SCRIPT}")
+        endif()
+    endforeach()
 
     if(USER_SCRIPTS)
         message(STATUS "[VORTEX COMPILER] Found user scripts: ${USER_SCRIPTS}")
@@ -243,6 +251,8 @@ if(PROJECT_DIR)
         message(STATUS "[VORTEX COMPILER] No .cpp files found in ${PROJECT_DIR}")
     endif()
 endif()
+
+set_target_properties(VortexGame PROPERTIES UNITY_BUILD OFF)
 
 # Important: Scripts need the same core includes as the engine to compile against your headers
 target_include_directories(VortexGame PUBLIC

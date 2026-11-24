@@ -275,9 +275,9 @@ void VortexProject::save_project(Snapshot *snapshot)
         j_model["scripts"] = json::array();
         j_model["script_data"] = json::object();
 
-        for (size_t i = 0; i < model->script_names.size(); i++)
+        for (size_t i = 0; i < model->script_names.size() && i < model->behaviours.size(); i++)
         {
-            std::string s_name = model->script_names[i];
+            const std::string &s_name = model->script_names[i];
             j_model["scripts"].push_back(s_name);
 
             json script_json;
@@ -285,6 +285,17 @@ void VortexProject::save_project(Snapshot *snapshot)
             if (!script_json.empty())
             {
                 j_model["script_data"][s_name] = script_json;
+            }
+        }
+
+        for (const std::string &s_name : model->pending_script_names)
+        {
+            j_model["scripts"].push_back(s_name);
+
+            auto it = model->script_data.find(s_name);
+            if (it != model->script_data.end() && !it->second.empty())
+            {
+                j_model["script_data"][s_name] = it->second;
             }
         }
 
@@ -531,17 +542,14 @@ void VortexProject::load_project(Snapshot *snapshot)
             for (const auto &j_script_name : j_model["scripts"])
             {
                 std::string name = j_script_name;
-                VortexMonoBehaviour *new_script = ScriptRegistry::get().create(name);
+                new_model->pending_script_names.push_back(name);
 
-                if (new_script)
+                if (j_model.contains("script_data") && j_model["script_data"].contains(name))
                 {
-                    if (j_model.contains("script_data") && j_model["script_data"].contains(name))
-                    {
-                        new_script->deserialize(j_model["script_data"][name]);
-                    }
-
-                    new_model->add_behaviour(name, new_script);
+                    new_model->script_data[name] = j_model["script_data"][name];
                 }
+
+                new_model->restore_scripts();
             }
         }
 

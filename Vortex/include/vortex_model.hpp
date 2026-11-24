@@ -12,6 +12,7 @@
 #include <vector>
 #include <fstream>
 #include <string>
+#include <unordered_map>
 
 #include <glad/glad.h>
 #include <glm/glm.hpp>
@@ -147,7 +148,16 @@ public:
     std::vector<VortexMonoBehaviour*> behaviours;
     std::vector<std::string> script_names;
 
+    std::vector<std::string> pending_script_names;
+    std::unordered_map<std::string, json> script_data;
+
     std::vector<bool> active_parts;
+
+    void stash_scripts();
+    void restore_scripts();
+
+    bool has_script(const std::string &name) const;
+    bool attach_script(const std::string &name);
 
     VortexModel(const std::string& path, VortexApplication *window, const std::string& loaded_name = "");
     void draw(const VortexShader &shader, VortexCamera &camera, bool wireframe, bool use_scene_lights = true);

@@ -294,9 +294,10 @@ VortexApplication::VortexApplication(std::string window_name)
     VortexShortcuts::bind(GLOBAL::EngineState::EDITOR, {{Key::DELETE}, false, {}, [this]{ VortexObjectManager::delete_selected_models(); }, "Delete Selected Model(s)"});
     VortexShortcuts::bind(GLOBAL::EngineState::EDITOR, {{Key::LEFT_CTRL, Key::S}, false, {}, [this]{ VortexProject::take_snapshot(SnapshotState::SAVE, this, std::string(VortexGUI::m_new_project_name)); }, "Save Project"});
     VortexShortcuts::bind(GLOBAL::EngineState::EDITOR, {{Key::LEFT_CTRL, Key::R}, false, {}, [this]{ enter_play_mode(); }, "Play Mode"});
-    VortexShortcuts::bind(GLOBAL::EngineState::EDITOR, {{Key::LEFT_CTRL, Key::C}, false, {}, [this]{ VortexCompiler::trigger_compile(); }, "Compile"});
+    VortexShortcuts::bind(GLOBAL::EngineState::EDITOR, {{Key::LEFT_CTRL, Key::C}, false, {}, [this]{ VortexCompiler::trigger_compile(VortexGUI::m_new_project_name); }, "Compile"});
     VortexShortcuts::bind(GLOBAL::EngineState::EDITOR, {{Key::LEFT_CTRL, Key::D}, false, {}, [this]{ VortexObjectManager::duplicate_selected_models(); }, "Duplicate Selected Model(s)"});
     VortexShortcuts::bind(GLOBAL::EngineState::EDITOR, {{Key::Z}, false, {}, [this]{ show_wireframe = !show_wireframe; }, "Show Wireframe"});
+    
     VortexShortcuts::bind(GLOBAL::EngineState::EDITOR, {{Key::M}, false, {}, [this]{
         if (VortexGUI::show_scene_viewport || VortexGUI::show_render_scene_viewport) show_mouse(!show_mouse_cursor);
     }, "Show/Hide Mouse"});

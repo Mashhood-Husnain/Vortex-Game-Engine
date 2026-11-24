@@ -32,7 +32,7 @@ class VortexCompiler
 
     static bool initialized;
 public:
-    static void trigger_compile();
+    static void trigger_compile(const std::string &project_name);
     static void check_for_hot_reload(VortexApplication *app);
     static void update(VortexApplication *app);
     static void init_game_code(VortexApplication *app);
