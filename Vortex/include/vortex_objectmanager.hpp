@@ -49,6 +49,8 @@ public:
 
     static glm::vec3 selected_models_center();
 
+    static void snap_selected_models_to_floor();
+
     static VortexShader *get_decal_shader();
 
     static void clear_scene();

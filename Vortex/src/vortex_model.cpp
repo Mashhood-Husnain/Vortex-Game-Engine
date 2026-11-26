@@ -193,7 +193,7 @@ void VortexModel::draw(const VortexShader &shader, VortexCamera &camera, bool wi
     }
 
     // rendering wireframe
-    if (wireframe)
+    if (wireframe && is_selected)
     {
         glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
         glLineWidth(2.0f);
@@ -486,6 +486,7 @@ VortexModel* VortexModel::clone()
     new_model->texture_id = texture_id;
     new_model->texture_path = texture_path;
     new_model->texture_scale = texture_scale;
+    new_model->is_hidden = is_hidden;
 
     new_model->transform.position.x += 1.0f;
 

@@ -128,13 +128,14 @@ public:
     };
 
     bool should_destroy = false;
-    bool is_active = true;
+    bool is_active = true; // used for script updates etc.
+    bool is_hidden = false; // used by the inspector window for invisible objects
 
     bool show_collider = false;
 
     bool is_selected = false;
 
-    bool is_visible = true;
+    bool is_visible = true; // used for the camera occlusion
 
     GLuint occlusion_query;
 

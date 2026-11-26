@@ -143,6 +143,28 @@ void VortexGUI::scene_inspector()
     ImGui::End();
 }
 
+static void DrawEyeIcon(ImDrawList *dl, ImVec2 center, float width, bool visible, ImU32 col)
+{
+    float h = width * 0.32f;
+    ImVec2 left(center.x - width * 0.5f, center.y);
+    ImVec2 right(center.x + width * 0.5f, center.y);
+
+    dl->AddBezierCubic(left, ImVec2(center.x - width * 0.25f, center.y - h * 2.0f),
+                             ImVec2(center.x + width * 0.25f, center.y - h * 2.0f), right, col, 1.5f);
+    dl->AddBezierCubic(left, ImVec2(center.x - width * 0.25f, center.y + h * 2.0f),
+                             ImVec2(center.x + width * 0.25f, center.y + h * 2.0f), right, col, 1.5f);
+
+    if (visible)
+    {
+        dl->AddCircleFilled(center, width * 0.16f, col);   // pupil
+    }
+    else
+    {
+        dl->AddLine(ImVec2(center.x - width * 0.5f, center.y + h * 1.6f),
+                    ImVec2(center.x + width * 0.5f, center.y - h * 1.6f), col, 2.0f);
+    }
+}
+
 void VortexGUI::inspect_model(VortexModel* model)
 {
     if (!show_inspector || !model) return;
@@ -154,9 +176,45 @@ void VortexGUI::inspect_model(VortexModel* model)
     std::string header_id = model->model_name + "###" + std::to_string((uintptr_t)model);
     bool is_currently_selected = (VortexObjectManager::selected_models.find(model) != VortexObjectManager::selected_models.end());
 
+    ImGuiStorage *storage = ImGui::GetStateStorage();
+    ImGuiID header_imgui_id = ImGui::GetID(header_id.c_str());
+    int open_before = storage->GetInt(header_imgui_id, 0);   // remember the dropdown state
+
     bool is_header_open = VortexGuiHelpers::DrawHeader(header_id.c_str(), is_currently_selected);
 
-    if (ImGui::IsItemClicked(ImGuiMouseButton_Left))
+    ImVec2 header_min = ImGui::GetItemRectMin();
+    ImVec2 header_max = ImGui::GetItemRectMax();
+
+    const float eye_width = 18.0f;
+    const float eye_pad = 10.0f;
+    ImVec2 eye_center(header_max.x - eye_pad - eye_width * 0.5f, (header_min.y + header_max.y) * 0.5f);
+    ImVec2 eye_hit_min(eye_center.x - eye_width * 0.5f - 6.0f, header_min.y);
+    ImVec2 eye_hit_max(header_max.x, header_max.y);
+
+    bool eye_hovered = ImGui::IsWindowHovered(ImGuiHoveredFlags_AllowWhenBlockedByActiveItem)
+                    && ImGui::IsMouseHoveringRect(eye_hit_min, eye_hit_max);
+
+    bool eye_clicked = eye_hovered
+                    && ImGui::IsMouseReleased(ImGuiMouseButton_Left)
+                    && !ImGui::IsMouseDragging(ImGuiMouseButton_Left, 3.0f);
+
+    if (eye_clicked)
+    {
+        model->is_hidden = !model->is_hidden;
+
+        storage->SetInt(header_imgui_id, open_before);
+        is_header_open = (open_before != 0);
+    }
+
+    bool shown = !model->is_hidden;
+
+    ImU32 eye_col = shown
+        ? (eye_hovered ? IM_COL32(255, 255, 255, 255) : IM_COL32(200, 200, 200, 255))
+        : (eye_hovered ? IM_COL32(200, 200, 200, 255) : IM_COL32(110, 110, 110, 255));
+
+    DrawEyeIcon(ImGui::GetWindowDrawList(), eye_center, eye_width, shown, eye_col);
+
+    if (ImGui::IsItemClicked(ImGuiMouseButton_Left) && !eye_hovered)
     {
         if (ImGui::GetIO().KeyCtrl)
         {
@@ -180,7 +238,7 @@ void VortexGUI::inspect_model(VortexModel* model)
         }
     }
 
-    if (ImGui::IsItemHovered() && ImGui::IsMouseReleased(ImGuiMouseButton_Left) && !ImGui::GetIO().KeyCtrl)
+    if (ImGui::IsItemHovered() && ImGui::IsMouseReleased(ImGuiMouseButton_Left) && !ImGui::GetIO().KeyCtrl && !eye_hovered)
     {
         if (is_currently_selected && VortexObjectManager::selected_models.size() > 1)
         {
@@ -202,6 +260,8 @@ void VortexGUI::inspect_model(VortexModel* model)
         else ImGui::Text("Moving: %s", model->model_name.c_str());
         ImGui::EndDragDropSource();
     }
+
+    if (eye_hovered) ImGui::SetTooltip(shown ? "Hide object" : "Show object");
 
     if (is_header_open)
     {

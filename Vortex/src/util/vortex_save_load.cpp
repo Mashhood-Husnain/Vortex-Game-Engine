@@ -272,6 +272,8 @@ void VortexProject::save_project(Snapshot *snapshot)
         j_model["texture_path"] = model->texture_path;
         j_model["texture_scale"] = {model->texture_scale.x, model->texture_scale.y};
 
+        j_model["is_hidden"] = model->is_hidden;
+
         j_model["scripts"] = json::array();
         j_model["script_data"] = json::object();
 
@@ -511,6 +513,8 @@ void VortexProject::load_project(Snapshot *snapshot)
         }
         new_model->transform.scale = glm::vec3(j_model["scale"][0], j_model["scale"][1], j_model["scale"][2]);
         new_model->model_name = j_model["name"];
+
+        if (j_model.contains("is_hidden")) new_model->is_hidden = j_model["is_hidden"];
 
         if (j_model.contains("show_collider"))
         {

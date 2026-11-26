@@ -36,3 +36,11 @@ using glm::rotation;
 using glm::distance;
 using glm::normalize;
 using glm::length;
+using glm::cross;
+
+using std::abs;
+using std::sin;
+using std::cos;
+using std::tan;
+
+#define Vortex_PI MA_PI;

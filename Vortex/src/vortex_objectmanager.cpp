@@ -213,7 +213,7 @@ void VortexObjectManager::draw(VortexCamera &camera, bool show_wireframe, bool i
     std::vector<VortexModel*> render_queue;
     for (VortexModel *model : active_models)
     {
-        if (model->is_active) render_queue.push_back(model);
+        if (model->is_active && !model->is_hidden) render_queue.push_back(model);
     }
 
     std::sort(render_queue.begin(), render_queue.end(), [&camera_pos](VortexModel *a, VortexModel *b){
@@ -496,6 +496,60 @@ void VortexObjectManager::clear_scene()
     active_particlesystems.clear();
 
     selected_models.clear();
+}
+
+void VortexObjectManager::snap_selected_models_to_floor()
+{
+    for (VortexModel* model : selected_models)
+    {
+        auto& objects = model->get_objects();
+        if (objects.empty()) continue;
+
+        glm::mat4 model_matrix = model->get_model_matrix();
+        float lowest_world_y = 1e10f;
+
+        for (const auto& obj : objects)
+        {
+            glm::vec3 min_pt = obj.collider.min + obj.transform.position;
+            glm::vec3 max_pt = obj.collider.max + obj.transform.position;
+
+            glm::vec3 corners[8] = {
+                glm::vec3(min_pt.x, min_pt.y, min_pt.z),
+                glm::vec3(min_pt.x, min_pt.y, max_pt.z),
+                glm::vec3(min_pt.x, max_pt.y, min_pt.z),
+                glm::vec3(min_pt.x, max_pt.y, max_pt.z),
+                glm::vec3(max_pt.x, min_pt.y, min_pt.z),
+                glm::vec3(max_pt.x, min_pt.y, max_pt.z),
+                glm::vec3(max_pt.x, max_pt.y, min_pt.z),
+                glm::vec3(max_pt.x, max_pt.y, max_pt.z)
+            };
+
+            for (int i = 0; i < 8; ++i)
+            {
+                glm::vec4 world_corner = model_matrix * glm::vec4(corners[i], 1.0f);
+                if (world_corner.y < lowest_world_y)
+                {
+                    lowest_world_y = world_corner.y;
+                }
+            }
+        }
+
+        glm::vec3 old_position = model->transform.position;
+
+        glm::vec3 new_position = glm::vec3(old_position.x, old_position.y - lowest_world_y, old_position.z);
+
+        if (old_position == new_position) continue;
+
+        ActionManager::push_action(new ActionTransform(
+            model,
+            old_position, new_position,
+            model->transform.orientation, model->transform.orientation,
+            model->transform.scale, model->transform.scale
+        ));
+
+        model->transform.set_position(new_position);
+        model->set_model_matrix(model->get_model_matrix());
+    }
 }
 
 VortexShader *VortexObjectManager::get_decal_shader() { return decal_shader; }

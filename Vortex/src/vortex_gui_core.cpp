@@ -232,12 +232,11 @@ void VortexGUI::init(VortexApplication *_app, int width, int height)
         if (ImGui::IsWindowFocused) m_current_op = ImGuizmo::SCALE;
     }, "Scale"});
     VortexShortcuts::bind(GLOBAL::EngineState::EDITOR, {{Key::RIGHT_ALT}, false, {}, []{
-        if (ImGui::IsWindowFocused) snap_to_floor();
+        if (ImGui::IsWindowFocused) VortexObjectManager::snap_selected_models_to_floor();
     }, "Snap Model to Floor"});
 
-    VortexShortcuts::bind(GLOBAL::EngineState::EDITOR, {{Key::LEFT_CTRL, Key::G}, false, {}, []{ ImGuizmo::WORLD; }, "World Translation Reference"});
-    VortexShortcuts::bind(GLOBAL::EngineState::EDITOR, {{Key::LEFT_CTRL, Key::L}, false, {}, []{ ImGuizmo::LOCAL; }, "Local Translation Reference"});    
-
+    VortexShortcuts::bind(GLOBAL::EngineState::EDITOR, {{Key::LEFT_CTRL, Key::G}, false, {}, []{ m_current_guizmo_mode = ImGuizmo::WORLD; }, "World Translation Reference"});
+    VortexShortcuts::bind(GLOBAL::EngineState::EDITOR, {{Key::LEFT_CTRL, Key::L}, false, {}, []{ m_current_guizmo_mode = ImGuizmo::LOCAL; }, "Local Translation Reference"});    
 }
 
 void VortexGUI::update()

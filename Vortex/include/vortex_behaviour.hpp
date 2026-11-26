@@ -110,18 +110,24 @@ public:
     {
         for (const auto &var : exposed_variables)
         {
-            if (var.type == ScriptVarType::INT) *(int*) var.data_ptr = j[var.name];
-            else if (var.type == ScriptVarType::FLOAT) *(float*) var.data_ptr = j[var.name];
-            else if (var.type == ScriptVarType::BOOL) *(bool*) var.data_ptr = j[var.name];
-            else if (var.type == ScriptVarType::STRING) *(std::string*) var.data_ptr = j[var.name];
-            else if (var.type == ScriptVarType::VEC3)
+            auto it = j.find(var.name);
+            if (it == j.end() || it->is_null()) continue;
+
+            try
             {
-                glm::vec3 *v = (glm::vec3*) var.data_ptr;
-                auto &arr = j[var.name];
-                v->x = arr[0];
-                v->y = arr[1];
-                v->z = arr[2];
+                if (var.type == ScriptVarType::INT && it->is_number()) *(int*) var.data_ptr = it->get<int>();
+                else if (var.type == ScriptVarType::FLOAT && it->is_number()) *(float*) var.data_ptr = it->get<float>();
+                else if (var.type == ScriptVarType::BOOL && it->is_boolean()) *(bool*) var.data_ptr = it->get<bool>();
+                else if (var.type == ScriptVarType::STRING && it->is_string()) *(std::string*) var.data_ptr = it->get<std::string>();
+                else if (var.type == ScriptVarType::VEC3 && it->is_array() && it->size() >= 3)
+                {
+                    glm::vec3 *v = (glm::vec3*) var.data_ptr;
+                    v->x = (*it)[0].get<float>();
+                    v->y = (*it)[1].get<float>();
+                    v->z = (*it)[2].get<float>();
+                }
             }
+            catch (const json::exception &) {}
         }
     }
 

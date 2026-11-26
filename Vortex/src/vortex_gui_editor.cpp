@@ -37,6 +37,37 @@ void VortexGUI::draw_editor_render_viewport(VortexCamera *camera)
     ImGui::PopStyleVar();
 }
 
+static ImVec2 DrawStatusChip(ImDrawList *dl, ImVec2 pos, const char *label, bool on, const char *text = nullptr)
+{
+    const char *state = text ? text : (on ? "ON" : "OFF");
+
+    const float pad_x = 8.0f, pad_y = 4.0f, gap = 6.0f, rounding = 6.0f;
+
+    ImVec2 label_size = ImGui::CalcTextSize(label);
+    ImVec2 state_size = ImGui::CalcTextSize(state);
+
+    ImVec2 size(pad_x * 2.0f + label_size.x + gap + state_size.x,
+                pad_y * 2.0f + label_size.y);
+    ImVec2 max(pos.x + size.x, pos.y + size.y);
+
+    dl->AddRectFilled(pos, max, IM_COL32(40, 42, 48, 150), rounding);
+    dl->AddRect(pos, max, IM_COL32(255, 255, 255, 40), rounding, 0, 1.0f);
+    dl->AddLine(ImVec2(pos.x + rounding, pos.y + 1.0f),
+                ImVec2(max.x - rounding, pos.y + 1.0f), IM_COL32(255, 255, 255, 30), 1.0f);
+
+    ImVec2 text_pos(pos.x + pad_x, pos.y + pad_y);
+    dl->AddText(text_pos, IM_COL32(210, 210, 215, 255), label);
+
+    ImU32 state_col;
+    if (text)    state_col = IM_COL32(130, 180, 255, 255);   // custom text: blue
+    else if (on) state_col = IM_COL32(110, 220, 130, 255);   // ON: green
+    else         state_col = IM_COL32(150, 150, 155, 255);   // OFF: gray
+
+    dl->AddText(ImVec2(text_pos.x + label_size.x + gap, text_pos.y), state_col, state);
+
+    return size;
+}
+
 void VortexGUI::draw_editor_viewport(VortexCamera* camera)
 {
     if (!show_scene_viewport) return;
@@ -54,6 +85,22 @@ void VortexGUI::draw_editor_viewport(VortexCamera* camera)
     float absoluteY = windowPos.y + contentMin.y;
 
     ImGui::Image((void*)(intptr_t)scene_texture, ImVec2(viewport_width, viewport_height), ImVec2(0, 1), ImVec2(1, 0));
+
+    ImDrawList *dl = ImGui::GetWindowDrawList();
+    ImVec2 cursor(absoluteX + 10.0f, absoluteY + 10.0f);
+
+    struct status_Flag { const char *label; bool value; const char *text = nullptr; };
+    status_Flag flags[] = {
+        { "Snap", VortexKeyboard::get_key(Key::LEFT_CTRL) },
+        { "Wireframe", app->is_wireframe_enabled() },
+        { "Space", false, (m_current_guizmo_mode == ImGuizmo::WORLD) ? "World" : "Local" },
+    };
+
+    for (const status_Flag &f : flags)
+    {
+        ImVec2 size = DrawStatusChip(dl, cursor, f.label, f.value, f.text);
+        cursor.y += size.y + 4.0f;
+    }
 
     if (GLOBAL::current_engine_state == GLOBAL::EngineState::EDITOR)
     {
@@ -367,59 +414,5 @@ void VortexGUI::handle_picking(VortexCamera* camera, ImVec2 image_pos)
                 }
             }
         }
-    }
-}
-
-void VortexGUI::snap_to_floor()
-{
-    for (VortexModel* model : VortexObjectManager::selected_models)
-    {
-        auto& objects = model->get_objects();
-        if (objects.empty()) continue;
-
-        glm::mat4 model_matrix = model->get_model_matrix();
-        float lowest_world_y = 1e10f;
-
-        for (const auto& obj : objects)
-        {
-            glm::vec3 min_pt = obj.collider.min + obj.transform.position;
-            glm::vec3 max_pt = obj.collider.max + obj.transform.position;
-
-            glm::vec3 corners[8] = {
-                glm::vec3(min_pt.x, min_pt.y, min_pt.z),
-                glm::vec3(min_pt.x, min_pt.y, max_pt.z),
-                glm::vec3(min_pt.x, max_pt.y, min_pt.z),
-                glm::vec3(min_pt.x, max_pt.y, max_pt.z),
-                glm::vec3(max_pt.x, min_pt.y, min_pt.z),
-                glm::vec3(max_pt.x, min_pt.y, max_pt.z),
-                glm::vec3(max_pt.x, max_pt.y, min_pt.z),
-                glm::vec3(max_pt.x, max_pt.y, max_pt.z)
-            };
-
-            for (int i = 0; i < 8; ++i)
-            {
-                glm::vec4 world_corner = model_matrix * glm::vec4(corners[i], 1.0f);
-                if (world_corner.y < lowest_world_y)
-                {
-                    lowest_world_y = world_corner.y;
-                }
-            }
-        }
-
-        glm::vec3 old_position = model->transform.position;
-
-        glm::vec3 new_position = glm::vec3(old_position.x, old_position.y - lowest_world_y, old_position.z);
-
-        if (old_position == new_position) continue;
-
-        ActionManager::push_action(new ActionTransform(
-            model,
-            old_position, new_position,
-            model->transform.orientation, model->transform.orientation,
-            model->transform.scale, model->transform.scale
-        ));
-
-        model->transform.set_position(new_position);
-        model->set_model_matrix(model->get_model_matrix());
     }
 }
